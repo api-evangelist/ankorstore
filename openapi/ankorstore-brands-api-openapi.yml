@@ -1,0 +1,2401 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Brands API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Brands
+paths:
+  /api/v1/brands:
+    get:
+      summary: List brands
+      operationId: get-brands
+      description: 'Returns a filtered list of brands. Used both publicly (e.g. resolving brand display data
+
+        for a known set of brand UUIDs via `filter[id]`) and internally (full directory listing
+
+        with name / hasOrderFrom / hasIdentifier filters and cursor pagination).
+
+
+        Authenticated brand consumers are auto-scoped to their own brand — filter[id] is ignored
+
+        in their case. Other authenticated consumers (retailers, admins, machine clients) see the
+
+        full filtered result.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: filter[id][]
+        in: query
+        description: Limit the result set to brands matching one of the supplied UUIDs. Unknown or hidden ids are silently omitted. Capped at 50 ids per request — chunk client-side beyond that.
+        schema:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            format: uuid
+      - name: page[from]
+        in: query
+        description: Cursor (brand UUID, exclusive) to start the page from when iterating forward.
+        schema:
+          type: string
+          format: uuid
+      - name: page[to]
+        in: query
+        description: Cursor (brand UUID, exclusive) to end the page at when iterating backward.
+        schema:
+          type: string
+          format: uuid
+      - name: page[limit]
+        in: query
+        description: Maximum number of brands returned per page.
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Brand collection response
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                - jsonapi
+                - data
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id001
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - type
+                      - id
+                      - attributes
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          default: brands
+                        attributes:
+                          type: object
+                          required:
+                          - name
+                          - automationMode
+                          - marketplaceStockLocation
+                          - images
+                          - link
+                          properties:
+                            name:
+                              description: Brand name
+                              type: string
+                            automationMode:
+                              type: string
+                              enum:
+                              - automatic-brand_control
+                              - automatic-confirm-and-request-fulfillment
+                            marketplaceStockLocation:
+                              type: string
+                              description: Location that is used as authoritative for marketplace stock
+                              enum:
+                              - brand
+                              - warehouse
+                            images:
+                              description: Set of brand image links, in different formats.
+                              type: object
+                              properties:
+                                squared:
+                                  type:
+                                  - string
+                                  - 'null'
+                                rounded:
+                                  type:
+                                  - string
+                                  - 'null'
+                                large:
+                                  type:
+                                  - string
+                                  - 'null'
+                            link:
+                              description: Relative path to the brand storefront page (slug-based). Null when the runtime route is not registered.
+                              type:
+                              - string
+                              - 'null'
+        '400':
+          description: Bad request
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id002
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id001
+                    additionalProperties: false
+                required: &id003
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Bad request
+                  status: '400'
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/brands/me:
+    get:
+      summary: Get own brand details
+      operationId: get-api-v1-own-brands
+      description: Get own brand details
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - schema:
+          type: string
+          pattern: ^brand-contacts$
+        name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: brand-contacts)'
+      tags:
+      - Brands
+      responses:
+        '200':
+          description: Single Brand resource response
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                - jsonapi
+                - data
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id004
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - type
+                      - id
+                      - attributes
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          default: brands
+                        attributes:
+                          type: object
+                          required:
+                          - name
+                          - automationMode
+                          - marketplaceStockLocation
+                          - images
+                          - link
+                          properties:
+                            name:
+                              description: Brand name
+                              type: string
+                            automationMode:
+                              type: string
+                              enum:
+                              - automatic-brand_control
+                              - automatic-confirm-and-request-fulfillment
+                            marketplaceStockLocation:
+                              type: string
+                              description: Location that is used as authoritative for marketplace stock
+                              enum:
+                              - brand
+                              - warehouse
+                            images:
+                              description: Set of brand image links, in different formats.
+                              type: object
+                              properties:
+                                squared:
+                                  type:
+                                  - string
+                                  - 'null'
+                                rounded:
+                                  type:
+                                  - string
+                                  - 'null'
+                                large:
+                                  type:
+                                  - string
+                                  - 'null'
+                            link:
+                              description: Relative path to the brand storefront page (slug-based). Null when the runtime route is not registered.
+                              type:
+                              - string
+                              - 'null'
+                  included:
+                    type: array
+                    items:
+                      anyOf:
+                      - title: BrandContactResource
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            const: brand-contacts
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              email:
+                                type: string
+                                format: email
+                              purposes:
+                                type: array
+                                items:
+                                  type: string
+                                  enum:
+                                  - finance
+                                minItems: 1
+                            required:
+                            - email
+                            - purposes
+                        required:
+                        - type
+                        - id
+                        - attributes
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id005
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id004
+                    additionalProperties: false
+                required: &id006
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+  /api/v1/brands/payouts:
+    get:
+      summary: List brand payouts
+      operationId: get-api-v1-brands-payouts
+      description: List payouts for the authenticated brand. Returns paginated payout records including transfer details.
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: page[offset]
+        in: query
+        description: Number of items to skip
+        required: false
+        schema:
+          type: integer
+          default: 0
+      - name: page[limit]
+        in: query
+        description: Maximum number of items to return
+        required: false
+        schema:
+          type: integer
+          default: 20
+      tags:
+      - Brands
+      responses:
+        '200':
+          description: Paginated list of payouts
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                - jsonapi
+                - data
+                - meta
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id009
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - id
+                      - type
+                      - attributes
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                          enum:
+                          - payouts
+                        attributes:
+                          type: object
+                          properties:
+                            amount:
+                              type: object
+                              required: &id007
+                              - amount
+                              - currency
+                              properties: &id008
+                                amount:
+                                  type: integer
+                                  description: Amount in the lowest denomination of the currency
+                                currency:
+                                  type: string
+                                  description: ISO 3-letter currency code
+                                  example: EUR
+                            status:
+                              type: string
+                              enum:
+                              - pending
+                              - paid
+                              - failed
+                              - canceled
+                              - in_transit
+                              - transfer_to_come
+                            pspId:
+                              type:
+                              - string
+                              - 'null'
+                              description: Payment service provider payout identifier (e.g. Stripe payout ID)
+                            createdAt:
+                              type:
+                              - string
+                              - 'null'
+                              format: date-time
+                            arrivedAt:
+                              type:
+                              - string
+                              - 'null'
+                              format: date-time
+                            transfers:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  uuid:
+                                    type: string
+                                    format: uuid
+                                  amount:
+                                    type: object
+                                    required: *id007
+                                    properties: *id008
+                                  pspId:
+                                    type:
+                                    - string
+                                    - 'null'
+                                    description: Payment service provider transfer identifier
+                                  type:
+                                    type: string
+                                    enum:
+                                    - order_payment
+                                    - refund
+                                  source:
+                                    type: object
+                                    required:
+                                    - uuid
+                                    properties:
+                                      uuid:
+                                        type: string
+                                        format: uuid
+                                      reference:
+                                        type: string
+                                        description: Order reference (only present for order_payment transfers)
+                                      masterOrderUuid:
+                                        type: string
+                                        format: uuid
+                                        description: Master order UUID (only present for order_payment transfers)
+                                      customerStoreName:
+                                        type: string
+                                        description: Retailer store name (only present for order_payment transfers)
+                                      type:
+                                        type: string
+                                        enum:
+                                        - internal
+                                        - external
+                                        description: Order type (only present for order_payment transfers)
+                                      invoices:
+                                        type: array
+                                        description: Related invoices (only present for order_payment transfers)
+                                        items:
+                                          type: object
+                                          properties:
+                                            title:
+                                              type: string
+                                            number:
+                                              type:
+                                              - string
+                                              - 'null'
+                                            path:
+                                              type:
+                                              - string
+                                              - 'null'
+                                            isGenerated:
+                                              type: boolean
+                  meta:
+                    type: object
+                    additionalProperties: true
+                    required:
+                    - page
+                    properties:
+                      page:
+                        type: object
+                        additionalProperties: true
+                        properties:
+                          currentPage:
+                            type: integer
+                          from:
+                            type: integer
+                          lastPage:
+                            type: integer
+                          perPage:
+                            type: integer
+                          to:
+                            type: integer
+                          total:
+                            type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id010
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id009
+                    additionalProperties: false
+                required: &id011
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id010
+                required: *id011
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id010
+                required: *id011
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id010
+                required: *id011
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '429':
+          description: '[Too Many Requests](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id010
+                required: *id011
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Too Many Requests
+                  status: '429'
+  /api/v1/brands/franco:
+    get:
+      operationId: list-brands-franco
+      summary: Returns Franco and fee for a given list of brands.
+      description: 'Returns Franco (free shipping threshold) and fee for a given list of brands.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: filter[brandId]
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+      responses:
+        '200':
+          description: Collection of Franco resources
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id012
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    type: array
+                    items:
+                      title: FrancoResource
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          const: franco
+                        id:
+                          type: string
+                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                          format: uuid
+                        attributes:
+                          type: object
+                          properties:
+                            brandId:
+                              type: string
+                              format: uuid
+                            amount:
+                              type: integer
+                            fee:
+                              type: integer
+                            maxFee:
+                              type: integer
+                            currency:
+                              type: string
+                          required:
+                          - brandId
+                          - amount
+                          - fee
+                          - maxFee
+                          - currency
+                      required:
+                      - type
+                      - id
+                      - attributes
+                required:
+                - data
+                - jsonapi
+        '400':
+          description: Bad request
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id013
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id012
+                    additionalProperties: false
+                required: &id014
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Bad request
+                  status: '400'
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/brands/franco-settings:
+    get:
+      operationId: list-brands-franco-settings
+      summary: List the Franco settings of the authenticated brand
+      description: 'List the Franco (free shipping threshold) settings of the authenticated brand.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: isOnboarding
+        in: query
+        required: false
+        schema:
+          type: boolean
+        description: Flag to indicate if the request is part of the brand onboarding process
+      responses:
+        '200':
+          description: Collection of Franco Settings resources
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id017
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    type: array
+                    items:
+                      title: FrancoSettingsResource
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          const: franco-settings
+                        id:
+                          type: string
+                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                          format: uuid
+                        attributes:
+                          type: object
+                          properties:
+                            corridor:
+                              type: string
+                            amount:
+                              type: integer
+                            currency:
+                              type: string
+                            fee:
+                              type: integer
+                          required:
+                          - corridor
+                          - amount
+                          - currency
+                          - fee
+                        meta:
+                          type: object
+                          additionalProperties: true
+                          properties:
+                            amountOptions:
+                              type: array
+                              items:
+                                anyOf:
+                                - title: FrancoSettingsOptionValue
+                                  type: object
+                                  properties: &id015
+                                    amount:
+                                      type: integer
+                                    currency:
+                                      type: string
+                                    isSpecialDeal:
+                                      type: boolean
+                                    isDefault:
+                                      type: boolean
+                                  required: &id016
+                                  - amount
+                                  - currency
+                                  - isSpecialDeal
+                                  - isDefault
+                            feeOptions:
+                              type: array
+                              items:
+                                anyOf:
+                                - title: FrancoSettingsOptionValue
+                                  type: object
+                                  properties: *id015
+                                  required: *id016
+                            defaultMaxFeeAmount:
+                              type: integer
+                          required:
+                          - amountOptions
+                          - feeOptions
+                          - defaultMaxFeeAmount
+                      required:
+                      - type
+                      - id
+                      - attributes
+                      - meta
+                required:
+                - data
+                - jsonapi
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id018
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id017
+                    additionalProperties: false
+                required: &id019
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+    post:
+      operationId: create-brands-franco-settings
+      summary: Save a new Franco Settings entry
+      description: 'If the values change for the given corridor, it saves a new Franco Settings entry and returns a 201 status code. If the values are identical, it only returns the existing entry with a 200 status code.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - franco-settings
+                    attributes:
+                      type: object
+                      properties:
+                        corridor:
+                          type: string
+                          enum:
+                          - domestic
+                          - eu8
+                          - international
+                        amount:
+                          type: integer
+                        fee:
+                          type: integer
+                      required:
+                      - corridor
+                      - amount
+                      - fee
+                  required:
+                  - attributes
+              required:
+              - data
+      responses:
+        '200':
+          description: Franco Settings resource
+          content: &id022
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id023
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    title: FrancoSettingsResource
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        const: franco-settings
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          corridor:
+                            type: string
+                          amount:
+                            type: integer
+                          currency:
+                            type: string
+                          fee:
+                            type: integer
+                        required:
+                        - corridor
+                        - amount
+                        - currency
+                        - fee
+                      meta:
+                        type: object
+                        additionalProperties: true
+                        properties:
+                          amountOptions:
+                            type: array
+                            items:
+                              anyOf:
+                              - title: FrancoSettingsOptionValue
+                                type: object
+                                properties: &id020
+                                  amount:
+                                    type: integer
+                                  currency:
+                                    type: string
+                                  isSpecialDeal:
+                                    type: boolean
+                                  isDefault:
+                                    type: boolean
+                                required: &id021
+                                - amount
+                                - currency
+                                - isSpecialDeal
+                                - isDefault
+                          feeOptions:
+                            type: array
+                            items:
+                              anyOf:
+                              - title: FrancoSettingsOptionValue
+                                type: object
+                                properties: *id020
+                                required: *id021
+                          defaultMaxFeeAmount:
+                            type: integer
+                        required:
+                        - amountOptions
+                        - feeOptions
+                        - defaultMaxFeeAmount
+                    required:
+                    - type
+                    - id
+                    - attributes
+                    - meta
+                required:
+                - data
+                - jsonapi
+        '201':
+          description: Franco Settings resource
+          content: *id022
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id024
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id023
+                    additionalProperties: false
+                required: &id025
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/brands/retailers/{retailerId}:
+    get:
+      summary: Get Retailer relation
+      operationId: get-brand-retailer
+      description: Returns brand retailer relation
+      tags:
+      - Brands
+      parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: retailerId
+        in: path
+        required: true
+        description: Ankorstore retailer UUID
+      - schema:
+          type: string
+        in: header
+        name: Accept
+        description: application/vnd.api+json
+      responses:
+        '200':
+          description: Brand Retailer relation
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        default: brand-retailers
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          automaticOrderValidationMode:
+                            type:
+                            - boolean
+                            - 'null'
+                    required:
+                    - type
+                    - id
+                    - attributes
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id026
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+                - jsonapi
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id027
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id026
+                    additionalProperties: false
+                required: &id028
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id027
+                required: *id028
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id027
+                required: *id028
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id027
+                required: *id028
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id027
+                required: *id028
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id027
+                required: *id028
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/brands/brand-contacts:
+    post:
+      operationId: create-brand-contact
+      summary: Create a new brand contact
+      description: 'Create a new contact for the authenticated brand. The brand is resolved from the authenticated session. This endpoint can be used only by brands.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - brand-contacts
+                    attributes:
+                      type: object
+                      properties:
+                        email:
+                          type: string
+                          format: email
+                        purposes:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                            - finance
+                          minItems: 1
+                      required:
+                      - email
+                      - purposes
+                  required:
+                  - type
+                  - attributes
+              required:
+              - data
+      responses:
+        '200':
+          description: Brand Contact resource
+          content: &id029
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id030
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    title: BrandContactResource
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        const: brand-contacts
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                          purposes:
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                              - finance
+                            minItems: 1
+                        required:
+                        - email
+                        - purposes
+                    required:
+                    - type
+                    - id
+                    - attributes
+                required:
+                - data
+                - jsonapi
+        '201':
+          description: Brand Contact resource
+          content: *id029
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id031
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id030
+                    additionalProperties: false
+                required: &id032
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id031
+                required: *id032
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id031
+                required: *id032
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id031
+                required: *id032
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id031
+                required: *id032
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id031
+                required: *id032
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id031
+                required: *id032
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/brands/brand-contacts/{id}:
+    patch:
+      operationId: update-brand-contact
+      summary: Update an existing brand contact
+      description: 'Update the email or purposes of an existing brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: id
+        in: path
+        description: UUID of the requested resource
+        schema:
+          type: string
+          format: uuid
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - brand-contacts
+                    id:
+                      type: string
+                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                      format: uuid
+                    attributes:
+                      type: object
+                      properties:
+                        email:
+                          type: string
+                          format: email
+                        purposes:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                            - finance
+                          minItems: 1
+                  required:
+                  - type
+                  - id
+              required:
+              - data
+      responses:
+        '200':
+          description: Brand Contact resource
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id033
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    title: BrandContactResource
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        const: brand-contacts
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                          purposes:
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                              - finance
+                            minItems: 1
+                        required:
+                        - email
+                        - purposes
+                    required:
+                    - type
+                    - id
+                    - attributes
+                required:
+                - data
+                - jsonapi
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id034
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id033
+                    additionalProperties: false
+                required: &id035
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id034
+                required: *id035
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id034
+                required: *id035
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id034
+                required: *id035
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id034
+                required: *id035
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id034
+                required: *id035
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id034
+                required: *id035
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+    delete:
+      operationId: delete-brand-contact
+      summary: Delete an existing brand contact
+      description: 'Delete a brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.
+
+        '
+      tags:
+      - Brands
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: id
+        in: path
+        description: UUID of the requested resource
+        schema:
+          type: string
+          format: uuid
+        required: true
+      responses:
+        '204':
+          description: Brand contact successfully deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id036
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id037
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id036
+                required: *id037
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id036
+                required: *id037
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id036
+                required: *id037
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id036
+                required: *id037
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id036
+                required: *id037
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

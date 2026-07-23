@@ -1,0 +1,166 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Users API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Users
+paths:
+  /api/v1/platform/config:
+    get:
+      summary: Generic platform configuration
+      operationId: get-platform-config
+      description: Returns generic platform config parameters used for all users
+      tags:
+      - Users
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      responses:
+        '200':
+          description: Generic platform config parameters used for all users
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    properties:
+                      type:
+                        type: string
+                        default: platform-configs
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          cdn:
+                            type: string
+                          stripePublicKey:
+                            type: string
+                    required:
+                    - type
+                    - id
+                    - attributes
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id001
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+                - jsonapi
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id002
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id001
+                    additionalProperties: false
+                required: &id003
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

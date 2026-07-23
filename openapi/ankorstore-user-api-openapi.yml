@@ -1,0 +1,410 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications User API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: User
+  description: 'ℹ️ This section describes the API endpoints for retrieving user and platform configuration.
+
+
+    ## 💡 User Configuration
+
+
+    The user configuration endpoints return locale and currency settings for the authenticated user. This is useful
+
+    for adapting your integration to the user''s preferences.
+
+
+    ### Current User
+
+
+    Retrieve the configuration for the currently authenticated user:
+
+
+    ```
+
+    [GET] /api/v1/me/config
+
+    ```
+
+
+    Returns:
+
+    - `currency` - The user''s preferred currency (e.g., `"EUR"`, `"GBP"`)
+
+    - `country` - The user''s country code (e.g., `"FR"`, `"DE"`)
+
+    - `browserId` - A browser-session identifier
+
+
+    ### Specific User
+
+
+    You can also retrieve configuration for a specific user by UUID:
+
+
+    ```
+
+    [GET] /api/v1/users/{id}/config
+
+    ```
+
+
+    ## 💡 Platform Configuration
+
+
+    The platform configuration endpoint returns global settings that apply to all users:
+
+
+    ```
+
+    [GET] /api/v1/platform/config
+
+    ```
+
+
+    Returns:
+
+    - `cdn` - The CDN base URL for loading assets (e.g., product images)
+
+    - `stripePublicKey` - The Stripe public key, needed if your integration handles payment flows client-side
+
+    '
+paths:
+  /api/v1/me/config:
+    get:
+      summary: Configuration for the current user
+      operationId: get-me-config
+      description: Returns configuration for the current user
+      tags:
+      - User
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      responses:
+        '200':
+          description: User config
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    properties:
+                      type:
+                        type: string
+                        default: user-configs
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          currency:
+                            type: string
+                          country:
+                            type: string
+                          browserId:
+                            type: string
+                    required:
+                    - type
+                    - id
+                    - attributes
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id001
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+                - jsonapi
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id002
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id001
+                    additionalProperties: false
+                required: &id003
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/users/{id}/config:
+    get:
+      summary: Configuration for the specified user
+      operationId: get-user-config
+      description: Returns configuration of the specified user
+      tags:
+      - User
+      parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+        description: User ID
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      responses:
+        '200':
+          description: User config
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    properties:
+                      type:
+                        type: string
+                        default: user-configs
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          currency:
+                            type: string
+                          country:
+                            type: string
+                          browserId:
+                            type: string
+                    required:
+                    - type
+                    - id
+                    - attributes
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id004
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+                - jsonapi
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id005
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id004
+                    additionalProperties: false
+                required: &id006
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id005
+                required: *id006
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

@@ -1,0 +1,311 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Stock Management API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Stock Management
+paths:
+  /api/v1/operations:
+    post:
+      summary: Bulk Operations
+      operationId: post-api-v1-operations
+      responses:
+        '200':
+          description: Example response
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  atomic:results:
+                    type: array
+                    items:
+                      title: BulkOperationResult
+                      type: object
+                      properties:
+                        data:
+                          type: object
+                          required:
+                          - type
+                          - id
+                          properties:
+                            type:
+                              type: string
+                              default: product-variants
+                            id:
+                              type: string
+                              description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                              format: uuid
+                            attributes:
+                              type: object
+                      required:
+                      - data
+                      description: Single operation result in the list of results in the bulk operation response
+                      examples:
+                      - data:
+                          type: product-variants
+                          id: 6b1a9a20-297c-4f26-8f00-70ece7c37ecd
+                          attributes:
+                            foo: bar
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id001
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id002
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id001
+                required: *id002
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id001
+                required: *id002
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id001
+                required: *id002
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id001
+                required: *id002
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+      tags:
+      - Stock Management
+      description: Multiple operations on different resources by a single request
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                atomic:operations:
+                  type: array
+                  maxItems: 50
+                  minItems: 1
+                  items:
+                    type: object
+                    properties:
+                      op:
+                        type: string
+                        enum:
+                        - update
+                      data:
+                        anyOf:
+                        - title: ProductVariantStockUpdateSetIsAlwaysInStockRequest
+                          type: object
+                          examples:
+                          - type: product-variants
+                            id: ec5d2b52-4911-4eff-9846-71787f9f02df
+                            attributes:
+                              isAlwaysInStock: true
+                          properties:
+                            id:
+                              type: string
+                              description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                              format: uuid
+                            type:
+                              type: string
+                              default: product-variants
+                            attributes:
+                              type: object
+                              required:
+                              - isAlwaysInStock
+                              properties:
+                                isAlwaysInStock:
+                                  type: boolean
+                                  description: Whether the current product variant is always in stock
+                                inventoryPolicy:
+                                  type: string
+                                  enum:
+                                  - deny
+                                  default: deny
+                                  description: 'Sell-when-out-of-stock policy. Only `deny` is accepted in
+
+                                    combination with `isAlwaysInStock=true`; an always-in-stock
+
+                                    variant cannot opt into `continue` because continue-selling
+
+                                    requires tracked stock. Use the `stockQuantity` form of this
+
+                                    endpoint to set `continue`.
+
+                                    '
+                          required:
+                          - id
+                          - type
+                          - attributes
+                          description: A request schema to update product variant stock value by setting option "always in stock" to true. It will also reset any possibly previously existed explicit stock quantities.
+                        - title: ProductVariantStockUpdateSetStockQuantity
+                          type: object
+                          description: A request schema to update product variant stock value by setting explicit stock quantity.
+                          properties:
+                            id:
+                              type: string
+                              description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                              format: uuid
+                            type:
+                              type: string
+                              default: product-variants
+                            attributes:
+                              type: object
+                              required:
+                              - stockQuantity
+                              properties:
+                                stockQuantity:
+                                  description: Total number of units in stock (available + reserved)
+                                  type: integer
+                                  minimum: 0
+                                  example: 100
+                                inventoryPolicy:
+                                  type: string
+                                  enum:
+                                  - deny
+                                  - continue
+                                  default: deny
+                                  description: 'Sell-when-out-of-stock policy. `continue` lets the variant
+
+                                    accept orders even when available stock reaches zero or
+
+                                    goes negative; only valid alongside a tracked stock update
+
+                                    (this schema). Omit to preserve the variant''s current
+
+                                    policy.
+
+                                    '
+                          required:
+                          - id
+                          - type
+                          - attributes
+                          examples:
+                          - type: product-variants
+                            id: 1e7b432b-50d4-4495-b032-6cbbc5f6f023
+                            attributes:
+                              stockQuantity: 100
+                              inventoryPolicy: continue
+                    required:
+                    - op
+                    - data
+              required:
+              - atomic:operations
+            examples: {}
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

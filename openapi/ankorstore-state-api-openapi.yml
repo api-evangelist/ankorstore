@@ -1,0 +1,493 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications State API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: State
+paths:
+  /api/astral/v1/stock/state:
+    get:
+      tags:
+      - State
+      summary: Stock quantities by location and status
+      description: 'Return the current quantity for a given product variant across locations, statuses and potentially lots.
+
+        One stock state entity is returned per product variant, so the identifier of each entity will correspond with
+
+        the product variant identifier for which quantities are returned.
+
+        '
+      operationId: list-state
+      parameters:
+      - $ref: '#/components/parameters/acceptInHeader'
+      - $ref: '#/components/parameters/xAksBrandUuidHeader'
+      - $ref: '#/components/parameters/xAksRetailerUuidHeader'
+      - $ref: '#/components/parameters/productVariantIdFilter'
+      - $ref: '#/components/parameters/statusFilter'
+      - $ref: '#/components/parameters/locationTypeFilter'
+      - $ref: '#/components/parameters/locationIdFilter'
+      - $ref: '#/components/parameters/productTypeFilter'
+      - $ref: '#/components/parameters/pageLimit'
+      - $ref: '#/components/parameters/pageBefore'
+      - $ref: '#/components/parameters/pageAfter'
+      - $ref: '#/components/parameters/stateAt'
+      responses:
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          $ref: '#/components/responses/StockStateCollectionResponse'
+    patch:
+      tags:
+      - State
+      summary: Update stock state
+      description: 'Override the stock state for one or more product variants.
+
+        * Only brand locations and available or onHand statuses are available for update.
+
+        * You may only specify either onHand or available for the same product variant and location, not both.
+
+        * Please include only absolute quantities.
+
+        '
+      operationId: patch-state
+      parameters:
+      - $ref: '#/components/parameters/acceptInHeader'
+      - $ref: '#/components/parameters/xAksBrandUuidHeader'
+      - $ref: '#/components/parameters/xAksRetailerUuidHeader'
+      requestBody:
+        $ref: '#/components/requestBodies/StockStateRequest'
+      responses:
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+        '204':
+          $ref: '#/components/responses/NoContent'
+components:
+  schemas:
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+    meta:
+      type: object
+      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+    Lot:
+      type: object
+      properties:
+        number:
+          type: string
+        expiryDate:
+          type: string
+          nullable: true
+          format: date
+          x-go-type: civil.Date
+          x-go-type-import:
+            path: github.com/ankorstore/astral/pkg/civil
+            name: civil
+      required:
+      - number
+    paginationMeta:
+      type: object
+      description: Meta with Pagination Details
+      additionalProperties: true
+      properties:
+        page:
+          $ref: '#/components/schemas/paginationPage'
+      required:
+      - page
+    ProductVariantStockStateResource:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/ProductVariantStockState'
+      required:
+      - type
+      - id
+      - attributes
+    id:
+      type: string
+      format: uuid
+      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
+    ErrorMeta:
+      type: object
+      properties:
+        stack:
+          type: array
+          items:
+            type: string
+    ProductVariantStockState:
+      type: object
+      title: ProductVariantStockState
+      properties:
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantStockQuantity'
+      required:
+      - quantities
+    Error:
+      type: object
+      required:
+      - status
+      - title
+      properties:
+        status:
+          type: integer
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+        title:
+          type: string
+        detail:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
+    ProductType:
+      type: string
+      enum:
+      - single
+      - bundle
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+    paginationPage:
+      description: Cursor pagination details
+      type: object
+      properties:
+        from:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        to:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        hasMore:
+          type: boolean
+        perPage:
+          type: integer
+      required:
+      - from
+      - to
+      - hasMore
+      - perPage
+    ProductVariantStockQuantity:
+      type: object
+      title: ProductVariantStockQuantity
+      properties:
+        quantity:
+          type: integer
+        locationId:
+          type: string
+          format: uuid
+        locationType:
+          $ref: '#/components/schemas/LocationType'
+        status:
+          $ref: '#/components/schemas/StockStatus'
+        lot:
+          $ref: '#/components/schemas/Lot'
+        unitMultiplier:
+          type: integer
+          minimum: 1
+          description: The number of units each product variant (batch) consists of
+        productType:
+          $ref: '#/components/schemas/ProductType'
+      required:
+      - quantity
+      - locationId
+      - locationType
+      - status
+      - unitMultiplier
+    paginationLinks:
+      description: Pagination links
+      type: object
+      properties:
+        first:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[limit]=15
+          nullable: true
+        prev:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15
+          nullable: true
+        next:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15
+          nullable: true
+      required:
+      - first
+      - next
+      - prev
+    LocationType:
+      type: string
+      enum:
+      - warehouse
+      - brand
+      - retailer
+    StockStatus:
+      type: string
+      enum:
+      - onHand
+      - available
+      - damaged
+      - reserved
+      - qualityControl
+      - blocked
+      - incoming
+  parameters:
+    statusFilter:
+      name: filter[status][]
+      in: query
+      description: A set of statuses to check quantities for
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/StockStatus'
+    stateAt:
+      name: stateAt
+      in: query
+      description: obtain state up to and including transactions for the given timestamp
+      required: false
+      schema:
+        type: integer
+    locationIdFilter:
+      name: filter[locationIds][]
+      in: query
+      description: A set of identifiers representing the locations to check quantities at
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          format: uuid
+    xAksBrandUuidHeader:
+      name: X-Aks-Brand-Uuid
+      in: header
+      description: Brand entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
+    productVariantIdFilter:
+      name: filter[productVariantIds][]
+      in: query
+      description: A set of identifiers representing the items to check quantities for
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          format: uuid
+    locationTypeFilter:
+      name: filter[locationTypes][]
+      in: query
+      description: A set of location types to check quantities at
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/LocationType'
+    pageBefore:
+      name: page[before]
+      in: query
+      description: show items before the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
+    pageLimit:
+      name: page[limit]
+      in: query
+      description: limit the amount of results returned
+      required: false
+      schema:
+        type: integer
+        format: int
+        default: 10
+    xAksRetailerUuidHeader:
+      name: X-Aks-Retailer-Uuid
+      in: header
+      description: Retailer entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
+    productTypeFilter:
+      name: filter[productType]
+      in: query
+      description: A specific product type to check quantities for
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProductType'
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
+    pageAfter:
+      name: page[after]
+      in: query
+      description: show items after the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NoContent:
+      description: No content
+    StockStateCollectionResponse:
+      description: Set of stock state records
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductVariantStockStateResource'
+              jsonapi:
+                $ref: '#/components/schemas/jsonapi'
+              meta:
+                $ref: '#/components/schemas/paginationMeta'
+              links:
+                $ref: '#/components/schemas/paginationLinks'
+            required:
+            - data
+            - jsonapi
+          examples:
+            example-get-stock-quantities:
+              value:
+                data:
+                - type: stock-state
+                  id: 1ed86ab7-c16e-6002-b4d0-0242ac15000c
+                  attributes:
+                    quantities:
+                    - quantity: 10
+                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                      locationType: warehouse
+                      status: available
+                      lot:
+                        lotNumber: lot-20240915-a
+                        expiryDate: '2024-09-15'
+                    - quantity: 7
+                      locationId: 0f358c35-9698-46f4-8856-d0441e0533e5
+                      locationType: warehouse
+                      status: reserved
+                      lot:
+                        lotNumber: lot-20240915-a
+                        expiryDate: '2024-09-15'
+                    - quantity: 3
+                      locationId: 0f358c35-9698-46f4-8856-d0441e0533e5
+                      locationType: warehouse
+                      status: reserved
+                    - quantity: 2
+                      locationId: 0f358c35-9698-46f4-8856-d0441e0533e5
+                      locationType: warehouse
+                      status: blocked
+                      lot:
+                        lotNumber: lot-20231215-x
+                        expiryDate: '2023-12-15'
+                - type: stock-state
+                  id: 018fc37c-d9bc-7a25-96e0-9c80c843b6ea
+                  attributes:
+                    quantities:
+                    - quantity: 5
+                      locationId: 018fc37e-4460-7b27-8151-ee7422b71f2e
+                      locationType: warehouse
+                      status: incoming
+                      lot:
+                        lotNumber: lot-without-expiry
+                    - quantity: 7
+                      locationId: 0f358c35-9698-46f4-8856-d0441e0533e5
+                      locationType: warehouse
+                      status: available
+                      lot:
+                        lotNumber: lot-without-expiry
+                jsonapi:
+                  version: string
+                  meta: {}
+    ErrorResponse:
+      description: Example response
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+              jsonapi:
+                $ref: '#/components/schemas/jsonapi'
+            required:
+            - errors
+  requestBodies:
+    StockStateRequest:
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductVariantStockStateResource'
+            required:
+            - data
+          examples:
+            example-change-stock-state:
+              value:
+                data:
+                - type: stock-state
+                  id: 1ed86ab7-c16e-6002-b4d0-0242ac15000c
+                  attributes:
+                    quantities:
+                    - quantity: 10
+                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                      status: available
+                - type: stock-state
+                  id: 1841c9e9-33cc-4fd5-8045-32654adcc78a
+                  attributes:
+                    quantities:
+                    - quantity: 80
+                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                      status: onHand
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

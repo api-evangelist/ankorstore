@@ -1,0 +1,2290 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Catalog Integrations API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Catalog Integrations
+  description: "## \U0001F44B Getting Started\n\nThe catalogue integration process relies on the concept of operations. An operation is a batch of records\nrepresenting the products to create, update or delete. The completion state of an operation depends\non the execution result for every record it contains. It means an operation might fail without necessarily\nstopping or marking the whole operation as failed (this particular state is defined as “Partially failed”).\n\n- Operations can be of type `import`, `update` or `delete`.\n- Only one open operation (not yet started) is allowed at a time.\n- Only one operation can be performed (`started`) at a time.\n  - Any subsequent operation will be queued with status `pending` until previous one has finished processing.\n  - If no previous operation is being processed, operation will start processing right away.\n\n### Operation Statuses\n\nThe `status` attribute represents the current state of the operation, below is a table that describes each state:\n\n| Status             | Description                                                                                                                                                                              |\n|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| `created`          | The operation was created and not yet started. At this stage, the operation is considered open and products can still be added to the batch.                                             |\n| `skipped`          | The operation is empty and was skipped (No action required). When an operation is skipped, an empty report is generated and the callback URL is called to notify operation is completed. |\n| `started`          | The operation started and is processing.                                                                                                                                                 |\n| `pending`          | Operation is waiting for its turn on the processing queue. The operation could not be started because another one was being processed.                                                                                                                               |\n| `succeeded`        | All products were successfully processed.                                                                                                                                                |\n| `failed`           | All products failed to be processed.                                                                                                                                                     |\n| `partially_failed` | Not all products were successfully processed.                                                                                                                                            |\n\n## \U0001F4A1 Operation workflow\n\nThe complete workflow for an operation occurs in 3 stages: operation creation, operation processing and reporting.\nThe following diagram illustrates these stages and how they are chained.\n\n<pre class=\"mermaid\">\n%%{init: {\"flowchart\": {\"curve\":\"basis\", \"htmlLabels\":false, \"diagramPadding\":24 } } }%%\ngraph LR\n\ncreated(\"Operation Created\")\nstart(\"Start Processing\")\nstarted(\"Processing\\nStarted\")\nsucceeded(Succeeded):::success\nskipped(\"Processing Skipped\"):::success\npending(\"Operation pending\")\nfailed(Failed):::failure\npartial(Partially Failed):::warning\nreport(\"Report\\nGenerated\")\nnotified(Callback Sent)\n\nsubgraph creating[Creating Operation]\ncreated -- Add Products --> created\nend\n\ncreated -- Start Operation --> Start{?}\nStart -->|\"Another Operation execution in progress\"| pending\nStart --->|\"No other Operation in progress\"| start --> E{?}\nE -->|\"Batch.size > 0\"| processing\nE --->|\"Batch is empty\"| skipped\n\nsubgraph processing[Processing Operation]\ndirection LR\nstarted --> succeeded\nstarted --> partial\nstarted --> failed\nend\n\nsucceeded --> operationCompletedActions\npartial --> operationCompletedActions\nfailed --> operationCompletedActions\n\nsubgraph reporting[Reporting]\nreport -- Notify --> notified\nend\n\nsubgraph triggerNext[Trigger next pending Operation]\nend\n\nsubgraph operationCompletedActions[Post-Complete Operation Actions]\nreporting\ntriggerNext\nend\n\npending -- Wait for previous Operation to finish execution --> start\n\nskipped -- Generate empty report --> operationCompletedActions\n\nclassDef default stroke:#4b475f,stroke-width:1px,fill:#ffffff,color:#4b475f\nclassDef success stroke:#1aae9f,stroke-width:1px,fill:#cfeeeb,color:#293845\nclassDef failure stroke:#d3455b,stroke-width:1px,fill:#f6d8dd,color:#293845\nclassDef warning stroke:#f7c325,stroke-width:1px,fill:#fdf2d1,color:#293845\nlinkStyle default stroke:#788896,stroke-width:1px,fill:transparent\n</pre>\n\n### Creating an Operation\n\nThe full flow of creating a complete operation consists in two steps:\n\n#### 1. Create a new operation\n\nSend a `POST` request to `/api/v1/catalog/integrations/operations`\n\nExample request:\n```json\n{\n    \"data\": {\n        \"type\": \"catalog-integration-operation\",\n        \"attributes\": {\n            \"source\": \"shopify\",\n            \"callbackUrl\": \"https://callback.url/called/after/processing\",\n            \"operationType\": \"import\"\n        }\n    }\n}\n```\n\n- At this point the new operation has been created and waiting to receive products data\n- Operation ID will be returned in the response payload\n\n#### 2. Add product data to operation\n\nSend a `POST` request to `/api/v1/catalog/integrations/operations/{operationId}/products`\n\nProducts can be added only to operations with status `created`.\n\nIf operation has been started already (having any of `started`, `pending`, `skipped`, `succeeded`, `partially_failed`, `failed`, `cancelled` status),\nthe request will fail with a `403 Forbidden` status code.\n\nExample request:\n```json\n{\n    \"products\": [\n        {\n            \"id\": \"B006GWO5WK\",\n            \"type\": \"catalog-integration-product\",\n            \"attributes\": {\n                \"external_id\": \"B006GWO5WK\",\n                \"name\": \"Example product\"\n                // ...\n            }\n        }\n    ]\n}\n```\n\nYou can perform as many requests as needed to append product data during this stage.\n\n### Operation Processing\n\nIn order to start processing the operation, you have to send a `PATCH` request\nto `/api/v1/catalog/integrations/operations/{operationId}` with the expected operation status (i.e. “started”).\n\nIf there is any other operation being executed at that time, the operation will be enqueued to be processed\nwith the status `pending` and will be started as soon as it gets a free slot in the queue. Otherwise, the\noperation will be started right away.\n\nExample request:\n```json\n{\n    \"data\": {\n        \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n        \"type\": \"catalog-integration-operation\",\n        \"attributes\": {\n            \"status\": \"started\"\n        }\n    }\n}\n```\n\n### Execution Report\n\nWhen an operation completes, an execution report is generated.\nIt provides the execution results (success or failure) for every product of the operation.\n\nYou can access this report by reading from the following endpoint.\n\n```http\nGET /api/v1/catalog/integrations/operations/{operationId}/results\n```\n\n## \U0001F4A1 Event Callbacks\n\nCallbacks enable you to get notified when events occur in the operation process. For example, you can\nconfigure a callback to notify you when the operation is completed. The notification is sent via\nan HTTP request to the URL you specify in the operation settings.\n\nCallbacks can be used to trigger automated actions in your integration.\n\n### Supported events\n\nYou can find here below the complete list of all the topics `{{resource}}.{{event}}` you can monitor:\n\n| Topic                                     | Trigger                                                                                                                                                        |\n|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| `catalog-integration-operation.completed` | An operation reaches a completed state such as **Success**, **Failed**, or **Partially Failed**                                                                |\n| `catalog-integration-operation.cancelled` | An operation was cancelled. This event is triggered when an operation processing is **Skipped** (i.e. the operation batch is empty and no action is required). |\n\n### Event schema\n\nA callback event is represented as a JSON object and has the following properties:\n\n- `event` — the name of the event that occurred (e.g. “completed”)\n- `topic` — the event category represented as a unique identifier of the event type.\n  The topic is defined as a concatenation of the resource and event names `{$.data.type}.{$.event}`,\n  e.g. “catalog-integration-operation.completed”. You might use this topic as a partition key to distribute\n  the callback events you receive to separate queues or pools of workers to process the callbacks asynchronously.\n- `occurredAt` — the date and time when the event occurred\n- `data` — the JSON:API resource describing the state of the entity which triggered the callback\n\nA callback event is delivered as a `POST` request to your endpoint. The following payload represents the notification\nrequest that is triggered when an operation successfully completes:\n\n```json\n{\n    \"event\": \"completed\",\n    \"topic\": \"catalog-integration-operation.completed\",\n    \"occurredAt\": \"2024-03-21T13:42:54+00:00\",\n    \"data\": {\n        \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n        \"type\": \"catalog-integration-operation\",\n        \"attributes\": {\n            // ...\n            \"status\": \"succeeded\",\n            \"createdAt\": \"2024-03-21T13:13:03+00:00\",\n            \"startedAt\": \"2024-03-21T13:19:32+00:00\",\n            \"completedAt\": \"2024-03-21T13:42:54+00:00\"\n            // ...\n        }\n    }\n}\n```\n\n### Handling callbacks\n\nThe endpoint listening for callbacks has **3 seconds** to respond with a `2xx` (usually `200`)\nresponse code, acknowledging a successful delivery. If the request times out or gets a response\nwith a status code other than `2xx`, it is considered failed.\n\n<div class=\"warning\">\n\n#### Handling webhook failures\n\nIf a callback fails (whatever the reason) no further calls to the related endpoint are made.\n</div>\n\n### Testing callback\n\nA number of websites, such as https://webhook.site and https://requestbin.com, provide free URLs that\ncan be used to test callbacks. Simply create a URL on one of these sites, then configure your webhook\nto use it. These sites allow you to see the details of the request sent to them by the callback service.\n\nIn addition, the Ngrok service (https://ngrok.com) allows you to tunnel callback requests to a non-publicly\naccessible server, enabling you to test your callback-handling code before making it public.\n\n### Operations and Drafts behaviour\n\n| Type     | Behaviour                                                                                                                                                                  |\n|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| `import` | When executing an import operation existing drafts will be cleaned and new ones will be created if any of the products attached to the operation has any validation issue. |\n| `update` | Will not have any impact on existing drafts.                                                                                                                               |\n| `delete` | Will not have any impact on existing drafts.                                                                                                                               |\n"
+paths:
+  /api/v1/catalog/integrations/operations:
+    post:
+      summary: Create a new operation
+      description: "Create new Operation to process over related Catalog Integration\n> ID of the operation will be returned on the response payload.\n  This ID should be used to add products data through `POST /catalog/integrations/operations/{ID}`\n"
+      operationId: post-catalog-integration-operations
+      tags:
+      - Catalog Integrations
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      description: The type of resource to create
+                      enum:
+                      - catalog-integration-operation
+                    attributes:
+                      type: object
+                      description: The operation attributes
+                      required:
+                      - source
+                      - operationType
+                      - callbackUrl
+                      optional:
+                      - updateFields
+                      properties:
+                        source:
+                          title: OperationSource
+                          description: Source of the operation
+                          type: string
+                          enum: &id001
+                          - shopify
+                          - woocommerce
+                          - prestashop
+                          - other
+                        callbackUrl:
+                          type: string
+                          description: 'The url of the endpoint that will be called when an operation completes. When an operation reaches a completed state such as **Success**, **Failed**, or **Partially Failed** the API platform will trigger a request to your endpoint.
+
+                            '
+                        operationType:
+                          title: OperationType
+                          description: Operation type
+                          type: string
+                          enum:
+                          - import
+                          - update
+                          - delete
+                        updateFields:
+                          type: array
+                          description: 'Optional list of fields that will be taken into account when updating the products provided. This list will be
+
+                            only taken into account for operations of type `update`.
+
+                            - For sources `shopify`, `woocommerce` and `prestashop`: If list is not provided or empty, all `stock`
+
+                            and `prices` related fields will be updated
+
+                            - For source `other`: If list is not provided or empty, all fields will be updated
+
+
+                            Group fields:
+
+                            - If `stock` is provided, both `stock_quantity` and `is_always_in_stock` properties will be updated
+
+                            - If `prices` is provided, both `wholesale_price` and `retail_price` will be updated
+
+                            '
+                          items:
+                            type: string
+                            enum:
+                            - stock
+                            - prices
+                            - description
+                            - dimensions
+                            - images
+                            - name
+                            - prices
+                            - retail_price
+                            - stock
+                            - tags
+                            - unit_multiplier
+                            - vat_rate
+                            - wholesale_price
+            examples:
+              import:
+                value:
+                  data:
+                    type: catalog-integration-operation
+                    attributes:
+                      source: shopify
+                      callbackUrl: https://callback.url/called/after/processing
+                      operationType: import
+              update:
+                value:
+                  data:
+                    type: catalog-integration-operation
+                    attributes:
+                      source: shopify
+                      callbackUrl: https://callback.url/called/after/processing
+                      operationType: update
+                      updateFields:
+                      - stock
+      responses:
+        '201':
+          description: The operation that was successfully created
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Operation
+                    description: An operation resource
+                    type: object
+                    required: &id004
+                    - id
+                    - type
+                    properties: &id005
+                      id:
+                        type: string
+                        format: uuid
+                        description: A globally-unique identifier for the operation
+                        readOnly: true
+                      type:
+                        type: string
+                        description: Resource type.
+                        enum:
+                        - catalog-integration-operation
+                        readOnly: true
+                      attributes:
+                        type: object
+                        description: The operation attributes.
+                        properties:
+                          source:
+                            title: OperationSource
+                            description: Source of the operation
+                            type: string
+                            enum: *id001
+                          status:
+                            title: OperationStatus
+                            type: string
+                            enum:
+                            - created
+                            - started
+                            - skipped
+                            - succeeded
+                            - partially_failed
+                            - failed
+                          operationType:
+                            title: OperationType
+                            description: Operation type
+                            type: string
+                            enum:
+                            - import
+                            - update
+                            - delete
+                          updateFields:
+                            title: updateFields
+                            description: List of fields or group of fields that will be updated on provided products
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                              - stock
+                              - prices
+                          createdAt:
+                            type: string
+                            format: date-time
+                            description: Date and time when operation was created
+                          startedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation processing started
+                          completedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation was completed
+                          callbackUrl:
+                            type:
+                            - 'null'
+                            - string
+                            format: uri
+                            description: a URL where the user will be notified after the operation is complete
+                          totalProductsCount:
+                            type: integer
+                            description: Total number of products in the batch
+                          processedProductsCount:
+                            type: integer
+                            description: Number of products successfully processed
+                          failedProductsCount:
+                            type: integer
+                            description: Number of products which processing failed
+              examples:
+                Operation Created:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: created
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: null
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                Operation Started:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: started
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:22Z'
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                Operation Succeeded:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: succeeded
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:45Z'
+                        completedAt: '2024-01-01T16:10:03Z'
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 132
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id002
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id003
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+      callbacks:
+        operationCallback:
+          '{$request.body#/data/attributes/callbackUrl}':
+            post:
+              summary: A callback triggered when events occur in the operation process
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      title: CallbackEvent
+                      type: object
+                      required:
+                      - event
+                      - topic
+                      - occurredAt
+                      properties:
+                        event:
+                          type: string
+                          description: The name of the event that occurred
+                          example: completed
+                        topic:
+                          type: string
+                          description: 'The event category represented as a unique identifier of the event type. The topic is defined as a concatenation of the resource and event names `{$.data.type}.{$.event}`. You might use this topic as a partition key to distribute the callback events you receive to separate queues or pools of workers to process the callbacks asynchronously.
+
+                            '
+                          example: catalog-integration-operation.completed
+                        occurredAt:
+                          type: string
+                          description: The date and time when event occurred
+                          format: date-time
+                        data:
+                          description: the JSON:API resource describing the state of the entity which triggered the callback
+                          title: Operation
+                          type: object
+                          required: *id004
+                          properties: *id005
+              responses:
+                '200':
+                  description: Acknowledge a successful delivery of the callback
+  /api/v1/catalog/integrations/operations/delete:
+    post:
+      summary: Create a deletion operation
+      description: 'Creates an Operation that deletes products from Ankorstore''s catalog. The operation is started directly after creation.
+
+        '
+      operationId: create-delete-catalog-integration-operations
+      tags:
+      - Catalog Integrations
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+              - source
+              - callbackUrl
+              - products
+              properties:
+                source:
+                  title: OperationSource
+                  description: Source of the operation
+                  type: string
+                  enum: &id006
+                  - shopify
+                  - woocommerce
+                  - prestashop
+                  - other
+                callbackUrl:
+                  type: string
+                  description: 'The url of the endpoint that will be called when an operation completes. When an operation reaches a completed state such as **Success**, **Failed**, or **Partially Failed** the API platform will trigger a request to your endpoint.
+
+                    '
+                products:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: The type of resource to create
+                        enum:
+                        - catalog-integration-product
+                      attributes:
+                        type: object
+                        properties:
+                          external_id:
+                            type: string
+                            description: The external identifier of the product to delete
+                          variants:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                sku:
+                                  type: string
+                                  description: The SKU of the product variant to delete
+            examples:
+              default:
+                value:
+                  source: shopify
+                  callbackUrl: https://callback.url/called/after/processing
+                  products:
+                  - type: catalog-integration-product
+                    attributes:
+                      external_id: '123456'
+                      variants:
+                      - sku: 123456-1
+                      - sku: 123456-2
+      responses:
+        '201':
+          description: The operation that was successfully created
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Operation
+                    description: An operation resource
+                    type: object
+                    required: &id009
+                    - id
+                    - type
+                    properties: &id010
+                      id:
+                        type: string
+                        format: uuid
+                        description: A globally-unique identifier for the operation
+                        readOnly: true
+                      type:
+                        type: string
+                        description: Resource type.
+                        enum:
+                        - catalog-integration-operation
+                        readOnly: true
+                      attributes:
+                        type: object
+                        description: The operation attributes.
+                        properties:
+                          source:
+                            title: OperationSource
+                            description: Source of the operation
+                            type: string
+                            enum: *id006
+                          status:
+                            title: OperationStatus
+                            type: string
+                            enum:
+                            - created
+                            - started
+                            - skipped
+                            - succeeded
+                            - partially_failed
+                            - failed
+                          operationType:
+                            title: OperationType
+                            description: Operation type
+                            type: string
+                            enum:
+                            - import
+                            - update
+                            - delete
+                          updateFields:
+                            title: updateFields
+                            description: List of fields or group of fields that will be updated on provided products
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                              - stock
+                              - prices
+                          createdAt:
+                            type: string
+                            format: date-time
+                            description: Date and time when operation was created
+                          startedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation processing started
+                          completedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation was completed
+                          callbackUrl:
+                            type:
+                            - 'null'
+                            - string
+                            format: uri
+                            description: a URL where the user will be notified after the operation is complete
+                          totalProductsCount:
+                            type: integer
+                            description: Total number of products in the batch
+                          processedProductsCount:
+                            type: integer
+                            description: Number of products successfully processed
+                          failedProductsCount:
+                            type: integer
+                            description: Number of products which processing failed
+              examples:
+                default:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: started
+                        operationType: delete
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:22Z'
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id007
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id008
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id007
+                required: *id008
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id007
+                required: *id008
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id007
+                required: *id008
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+      callbacks:
+        operationCallback:
+          '{$request.body#/data/attributes/callbackUrl}':
+            post:
+              summary: A callback triggered when events occur in the operation process
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      title: CallbackEvent
+                      type: object
+                      required:
+                      - event
+                      - topic
+                      - occurredAt
+                      properties:
+                        event:
+                          type: string
+                          description: The name of the event that occurred
+                          example: completed
+                        topic:
+                          type: string
+                          description: 'The event category represented as a unique identifier of the event type. The topic is defined as a concatenation of the resource and event names `{$.data.type}.{$.event}`. You might use this topic as a partition key to distribute the callback events you receive to separate queues or pools of workers to process the callbacks asynchronously.
+
+                            '
+                          example: catalog-integration-operation.completed
+                        occurredAt:
+                          type: string
+                          description: The date and time when event occurred
+                          format: date-time
+                        data:
+                          description: the JSON:API resource describing the state of the entity which triggered the callback
+                          title: Operation
+                          type: object
+                          required: *id009
+                          properties: *id010
+              responses:
+                '200':
+                  description: Acknowledge a successful delivery of the callback
+  /api/v1/catalog/integrations/operations/{operationId}:
+    get:
+      summary: Retrieve an operation
+      description: Returns specific Operation resource data
+      operationId: get-catalog-integration-operation
+      tags:
+      - Catalog Integrations
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier of the operation
+      responses:
+        '200':
+          description: The operation resource
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Operation
+                    description: An operation resource
+                    type: object
+                    required:
+                    - id
+                    - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: A globally-unique identifier for the operation
+                        readOnly: true
+                      type:
+                        type: string
+                        description: Resource type.
+                        enum:
+                        - catalog-integration-operation
+                        readOnly: true
+                      attributes:
+                        type: object
+                        description: The operation attributes.
+                        properties:
+                          source:
+                            title: OperationSource
+                            description: Source of the operation
+                            type: string
+                            enum:
+                            - shopify
+                            - woocommerce
+                            - prestashop
+                            - other
+                          status:
+                            title: OperationStatus
+                            type: string
+                            enum:
+                            - created
+                            - started
+                            - skipped
+                            - succeeded
+                            - partially_failed
+                            - failed
+                          operationType:
+                            title: OperationType
+                            description: Operation type
+                            type: string
+                            enum:
+                            - import
+                            - update
+                            - delete
+                          updateFields:
+                            title: updateFields
+                            description: List of fields or group of fields that will be updated on provided products
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                              - stock
+                              - prices
+                          createdAt:
+                            type: string
+                            format: date-time
+                            description: Date and time when operation was created
+                          startedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation processing started
+                          completedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation was completed
+                          callbackUrl:
+                            type:
+                            - 'null'
+                            - string
+                            format: uri
+                            description: a URL where the user will be notified after the operation is complete
+                          totalProductsCount:
+                            type: integer
+                            description: Total number of products in the batch
+                          processedProductsCount:
+                            type: integer
+                            description: Number of products successfully processed
+                          failedProductsCount:
+                            type: integer
+                            description: Number of products which processing failed
+              examples:
+                Operation Created:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: created
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: null
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                Operation Started:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: started
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:22Z'
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                Operation Succeeded:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: succeeded
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:45Z'
+                        completedAt: '2024-01-01T16:10:03Z'
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 132
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id011
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id012
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id011
+                required: *id012
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id011
+                required: *id012
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id011
+                required: *id012
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+    patch:
+      summary: Patch Operation resource
+      description: Patch Operation resource
+      operationId: patch-catalog-integration-operation
+      tags:
+      - Catalog Integrations
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier of the operation
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: The unique identifier of the operation to update
+                      format: uuid
+                    type:
+                      type: string
+                      description: The type of resource to be updated
+                      enum:
+                      - catalog-integration-operation
+                    attributes:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                          description: 'The operation status. Set this attribute to `started` in order to start processing the operation. Please note that an attempt to start processing an empty operation (i.e. an operation with no products attached) always leads to the operation being marked as "Skipped" and triggers the generation of an empty report.
+
+                            Only one Operation is allowed to be started at a time. Any attempt of starting an Operation while another one is currently being processed (started, but not completed/cancelled yet) will result on a `pending` status.
+
+                            Once an Operation processing has been completed, next `pending` one for the Brand will be executed automatically.
+
+                            '
+                          enum:
+                          - started
+            examples:
+              default:
+                value:
+                  data:
+                    id: 90567710-de47-49e4-8536-aab80c1a469c
+                    type: catalog-integration-operation
+                    attributes:
+                      status: started
+      responses:
+        '200':
+          description: The successfully updated operation
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Operation
+                    description: An operation resource
+                    type: object
+                    required:
+                    - id
+                    - type
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: A globally-unique identifier for the operation
+                        readOnly: true
+                      type:
+                        type: string
+                        description: Resource type.
+                        enum:
+                        - catalog-integration-operation
+                        readOnly: true
+                      attributes:
+                        type: object
+                        description: The operation attributes.
+                        properties:
+                          source:
+                            title: OperationSource
+                            description: Source of the operation
+                            type: string
+                            enum:
+                            - shopify
+                            - woocommerce
+                            - prestashop
+                            - other
+                          status:
+                            title: OperationStatus
+                            type: string
+                            enum:
+                            - created
+                            - started
+                            - skipped
+                            - succeeded
+                            - partially_failed
+                            - failed
+                          operationType:
+                            title: OperationType
+                            description: Operation type
+                            type: string
+                            enum:
+                            - import
+                            - update
+                            - delete
+                          updateFields:
+                            title: updateFields
+                            description: List of fields or group of fields that will be updated on provided products
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                              - stock
+                              - prices
+                          createdAt:
+                            type: string
+                            format: date-time
+                            description: Date and time when operation was created
+                          startedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation processing started
+                          completedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: date-time
+                            description: Date and time when operation was completed
+                          callbackUrl:
+                            type:
+                            - 'null'
+                            - string
+                            format: uri
+                            description: a URL where the user will be notified after the operation is complete
+                          totalProductsCount:
+                            type: integer
+                            description: Total number of products in the batch
+                          processedProductsCount:
+                            type: integer
+                            description: Number of products successfully processed
+                          failedProductsCount:
+                            type: integer
+                            description: Number of products which processing failed
+              examples:
+                Operation Created:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: created
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: null
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                Operation Started:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: started
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:22Z'
+                        completedAt: null
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 0
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                Operation Succeeded:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+                    data:
+                      id: 90567710-de47-49e4-8536-aab80c1a469c
+                      type: catalog-integration-operation
+                      attributes:
+                        source: shopify
+                        status: succeeded
+                        operationType: import
+                        createdAt: '2024-01-01T14:15:22Z'
+                        startedAt: '2024-01-01T15:27:45Z'
+                        completedAt: '2024-01-01T16:10:03Z'
+                        callbackUrl: https://callback.url/called/after/processing
+                        totalProductsCount: 132
+                        processedProductsCount: 132
+                        failedProductsCount: 0
+                      relationships:
+                        results:
+                          links:
+                            related: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results
+                            self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results
+                      links:
+                        self: https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id013
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id014
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/catalog/integrations/operations/{operationId}/products:
+    post:
+      summary: Add products to an operation
+      description: Add products data to an existing Operation resource
+      operationId: post-catalog-integration-operation-products
+      tags:
+      - Catalog Integrations
+      parameters:
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier of the operation
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    - type
+                    properties:
+                      id:
+                        type: string
+                        description: User-defined unique identifier of the product
+                      type:
+                        type: string
+                        description: Type of resource
+                        default: catalog-integration-product
+                      attributes:
+                        type: object
+                        description: "The product attributes. In case of a deletion operation, no attribute is expected. The only required information is the unique product identifier to delete (see following example).\n```json\n {\n    \"id\": \"<User-defined Identifier>\",\n    \"type\": \"catalog-integration-product\"\n }\n```\n"
+                        properties:
+                          external_id:
+                            type: string
+                            description: ID from external source
+                          name:
+                            type: string
+                            description: Product name
+                          tags:
+                            type: array
+                            description: List of product tags
+                            items:
+                              tag:
+                                type: string
+                                description: Tag name
+                                enum:
+                                - tags_fresh_product
+                                - tags_frozen_product
+                                - tags_organic
+                                - tags_handmade
+                                - tags_eco_friendly
+                                - tags_zero_waste
+                                - tags_cruelty_free
+                                - tags_bestseller
+                                - tags_vegan
+                                - tags_contains_alcohol
+                          main_image:
+                            type: string
+                            description: 'URL of the image that will be used as main one for the product
+
+                              > It will have the number 1 order
+
+                              '
+                          images:
+                            type: array
+                            description: List of additional images for the product (Variants will inherit them)
+                            items:
+                              type: object
+                              description: Image
+                              properties: &id016
+                                order:
+                                  type: integer
+                                  description: "Order number for the image to be shown\n> Product Images:\n    > 1 belongs to main image\n    > Additional ones need to use 2 onwards\n\n> Variant Images:\n    > Will inherit from parent product if not provided\n    > Will be shown in the provided order\n"
+                                url:
+                                  type: string
+                                  description: URL of the image
+                          hs_code:
+                            type: string
+                            description: HS code
+                          currency:
+                            type: string
+                            description: Currency used in pricing
+                            enum:
+                            - GBP
+                            - EUR
+                            - SEK
+                          vat_rate:
+                            type: number
+                            format: float
+                            description: VAT rate
+                          description:
+                            type: string
+                            description: 'Product description
+
+                              > Must be at least 30 chars long
+
+                              '
+                          discount_rate:
+                            type: number
+                            format: float
+                            description: 'Discount rate applied
+
+                              > Must be between 0 and 100
+
+                              '
+                          unit_multiplier:
+                            type: number
+                            format: integer
+                            description: 'The minimum quantity in which a product is sold. When adding the product on the cart, cart price is computed by multiplying wholesale price * unit_multiplier
+
+                              > Must be at least 1
+
+                              '
+                          wholesale_price:
+                            type: number
+                            format: float
+                            description: Wholesale price
+                          retail_price:
+                            type: number
+                            format: float
+                            description: Retail price
+                          made_in_country:
+                            type: string
+                            description: Country code in Alpha-2 format
+                          shelf_life_days:
+                            type: integer
+                            minimum: 1
+                            maximum: 32767
+                          storage_temperature:
+                            type: string
+                            enum:
+                            - controlled
+                            - fresh
+                            - frozen
+                            - ultra_fresh_highly_perishable
+                            - ultra_fresh_strict_chilled
+                          shape_properties:
+                            type: object
+                            description: Shape properties of the item
+                            properties: &id015
+                              dimensions:
+                                type: object
+                                description: Item dimensions
+                                properties:
+                                  unit_code:
+                                    type: string
+                                    description: Unit of the measure
+                                  width:
+                                    type: number
+                                    format: float
+                                    description: Width
+                                  height:
+                                    type: number
+                                    format: float
+                                    description: height
+                                  length:
+                                    type: number
+                                    format: float
+                                    description: length
+                              capacity:
+                                type: object
+                                description: Item capacity
+                                properties:
+                                  unit_code:
+                                    type: string
+                                    description: Unit of the measure
+                                  amount:
+                                    type: number
+                                    format: float
+                                    description: Number of units of capacity
+                              weight:
+                                type: object
+                                description: Item weight
+                                properties:
+                                  unit_code:
+                                    type: string
+                                    description: Unit of the measure
+                                  amount:
+                                    type: number
+                                    format: float
+                                    description: Number of units of weight
+                          variants:
+                            type: array
+                            description: 'Variant of the product
+
+                              > Every product must have at least one variant > In the case of multiple variants, unique options should be provided for each of them
+
+                              '
+                            items:
+                              type: object
+                              description: Variant of the product
+                              properties:
+                                ian:
+                                  type: string
+                                  description: 'IAN code
+
+                                    > Must be exactly 13 chars long
+
+                                    '
+                                sku:
+                                  type: string
+                                  description: SKU code
+                                stock_quantity:
+                                  type: integer
+                                  description: Stock available, 0 means out of stock
+                                is_always_in_stock:
+                                  type: boolean
+                                  description: If the product is always in stock, we will ignore the stock value
+                                inventory_policy:
+                                  type: string
+                                  enum:
+                                  - deny
+                                  - continue
+                                  default: deny
+                                  description: 'Sell-when-out-of-stock policy. `continue` lets the variant accept
+
+                                    orders even when available stock reaches zero or goes negative;
+
+                                    requires `is_always_in_stock = false`. Omit to inherit the
+
+                                    variant''s current policy (or `deny` for new variants).
+
+                                    '
+                                external_id:
+                                  type: string
+                                  description: ID for the variant from external source
+                                discount_rate:
+                                  type: number
+                                  format: float
+                                  description: 'Discount rate applied
+
+                                    > Must be between 0 and 100 > Will be inherited from parent Product if not provided
+
+                                    '
+                                retail_price:
+                                  type: number
+                                  format: float
+                                  description: 'Retail price
+
+                                    > Will be inherited from parent Product if not provided
+
+                                    '
+                                wholesale_price:
+                                  type: number
+                                  format: float
+                                  description: 'Wholesale price
+
+                                    > Will be inherited from parent Product if not provided
+
+                                    '
+                                shape_properties:
+                                  type: object
+                                  description: Shape properties of the item
+                                  properties: *id015
+                                options:
+                                  type: array
+                                  description: Options specific to the variant
+                                  items:
+                                    type: object
+                                    description: 'Specific options related to a variant
+
+                                      > Should not be provided in the case of having only one variant > Combination of values should be unique in the case of multiple variants
+
+                                      '
+                                    properties:
+                                      name:
+                                        type: string
+                                        description: Name of the property
+                                        enum:
+                                        - color
+                                        - size
+                                        - material
+                                        - style
+                                      value:
+                                        type: string
+                                        description: Value for the option name
+                                images:
+                                  type: array
+                                  description: 'Images related to specific variant. Will be shown after the ones inherited from parent product in the provided order.
+
+                                    '
+                                  items:
+                                    type: object
+                                    description: Image
+                                    properties: *id016
+            examples:
+              default:
+                value:
+                  products:
+                  - id: a12aef05-7c20-4efb-a336-ea53be904d0e
+                    type: catalog-integration-product
+                    attributes:
+                      external_id: a12aef05-7c20-4efb-a336-ea53be904d0e
+                      name: Example product 1
+                      tags:
+                      - tags_fresh_product
+                      - tags_frozen_produc
+                      - tags_organic
+                      - tags_handmade
+                      - tags_eco_friendly
+                      - tags_zero_waste
+                      - tags_cruelty_free
+                      - tags_bestseller
+                      - tags_vegan
+                      - tags_contains_alcohol
+                      main_image: https://url.of/product_main_image.png
+                      images":
+                      - order: 2
+                        url: https://image.2/
+                      - order: 3
+                        url: https://image.3/
+                      - order: 4
+                        url: https://image.4/
+                      hs_code: '123456'
+                      currency: EUR
+                      vat_rate: 20
+                      description: This is an example of product description received in the payload.
+                      discount_rate: 0
+                      unit_multiplier: 1
+                      retail_price: 25
+                      wholesale_price: 20
+                      made_in_country: ES
+                      shelf_life_days: 1
+                      storage_temperature: controlled
+                      shape_properties:
+                        dimensions:
+                          unit_code: cm
+                          width: 10
+                          height: 10
+                          length: 10
+                        capacity:
+                          unit_code: L
+                          amount: 1
+                        weight:
+                          unit_code: kg
+                          amount: 1
+                      variants:
+                      - ian: '1234567890123'
+                        sku: Example SKU
+                        stock_quantity: 100
+                        is_always_in_stock: false
+                        external_id: 747476f8-e268-4fab-9788-7f7752f61095
+                        discount_rate: 0
+                        retail_price: 25
+                        wholesale_price: 20
+                        shape_properties:
+                          dimensions:
+                            unit_code: cm
+                            width: 10
+                            height: 10
+                            length: 10
+                          capacity:
+                            unit_code: L
+                            amount: 1
+                          weight:
+                            unit_code: kg
+                            amount: 1
+                        options:
+                        - name: size
+                          value: XXL
+                        - name: color
+                          value: blue
+                        images:
+                        - order: 1
+                          url: https://image.1/
+                        - order: 2
+                          url: https://image.2/
+                        - order: 3
+                          url: https://image.3/
+      responses:
+        '200':
+          description: The products were successfully added to the operation
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      totalProductsCount:
+                        type: integer
+                        description: The total number of products attached to the operation
+              examples:
+                default:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    meta:
+                      totalProductsCount: 104
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id017
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id018
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id017
+                required: *id018
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id017
+                required: *id018
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id017
+                required: *id018
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id017
+                required: *id018
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/catalog/integrations/operations/{operationId}/results:
+    get:
+      summary: Retrieve an operation report
+      description: 'Once an operation is completed, an execution report is generated. This report summarises the result of the operation execution for each of its products.
+
+        '
+      operationId: get-catalog-integration-operation-report
+      tags:
+      - Catalog Integrations
+      parameters:
+      - name: operationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: The unique identifier of the operation
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: page[limit]
+        in: query
+        description: limit the amount of results returned
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page[before]
+        in: query
+        description: show items before the provided ID (uuid format)
+        required: false
+        schema:
+          type: string
+      - name: page[after]
+        in: query
+        description: show items after the provided ID (uuid format)
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The execution result of the operation
+          content:
+            application/vnd.api+json:
+              schema:
+                title: Product Integration Resource list
+                description: Product Integration Resource list
+                type: object
+                additionalProperties: false
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id019
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    type: array
+                    items:
+                      title: OperationResult
+                      type: object
+                      required:
+                      - id
+                      - type
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: A globally-unique identifier for the result
+                          readOnly: true
+                        type:
+                          type: string
+                          default: catalog-integration-result
+                          description: Type of resource object
+                          readOnly: true
+                        attributes:
+                          type: object
+                          required:
+                          - externalProductId
+                          - status
+                          properties:
+                            externalProductId:
+                              type: string
+                              description: User-defined unique identifier of the product. May become "undefined" if the error concerns to the entire operation
+                            status:
+                              type: string
+                              description: The operation execution result for this product
+                              enum:
+                              - success
+                              - failure
+                            failureReason:
+                              type:
+                              - string
+                              - 'null'
+                              description: The reason for the failure if the operation processing failed
+                            issues:
+                              description: List of related issues found when processing - Only validation issues are exposed
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  field:
+                                    type: string
+                                    description: Property name
+                                  reason:
+                                    type: string
+                                    description: Reason of the validation failure
+                                    enum:
+                                    - required_field
+                                    - invalid_field
+                                    - invalid_image
+                                    - internal_error
+                                  message:
+                                    type: string
+                                    description: Details related to the validation failure
+                  meta:
+                    type: object
+                    description: Meta with Pagination Details
+                    required:
+                    - page
+                    additionalProperties: true
+                    properties:
+                      page:
+                        description: Cursor pagination details
+                        type: object
+                        properties:
+                          from:
+                            type:
+                            - string
+                            - 'null'
+                          to:
+                            type:
+                            - string
+                            - 'null'
+                          hasMore:
+                            type: boolean
+                          perPage:
+                            type: integer
+                        required:
+                        - from
+                        - to
+                        - perPage
+                  links:
+                    description: Pagination navigation links. If a link does not exist then you cannot paginate any further in that direction.
+                    type: object
+                    properties:
+                      first:
+                        type: string
+                        format: url
+                      next:
+                        type: string
+                        format: url
+                      prev:
+                        type: string
+                        format: url
+              examples:
+                example:
+                  value:
+                    meta:
+                      page:
+                        from: 29c60b89-0fb6-4bd9-9c1e-2d312cf141e3
+                        hasMore: true
+                        perPage: 100
+                        to: 03dcf453-b9d3-4cc7-be24-b0e0f0453fb2
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      first: https://www.ankorstore.com/api/v1/catalog/integrations/3de86ffd-aa50-49e2-b178-e2ffd6e6f0e5/products?include=&page%5Blimit%5D=2
+                      next: https://www.ankorstore.com/api/v1/catalog/integrations/3de86ffd-aa50-49e2-b178-e2ffd6e6f0e5/products?include=&page%5Bafter%5D=797910&page%5Blimit%5D=2
+                      prev: https://www.ankorstore.com/api/v1/catalog/integrations/3de86ffd-aa50-49e2-b178-e2ffd6e6f0e5/products?include=&page%5Bbefore%5D=904234&page%5Blimit%5D=2
+                    data:
+                    - id: a830fb5a-c2f9-4227-a46a-4e1c72b5f4c1
+                      type: catalog-integration-result
+                      attributes:
+                        externalProductId: fab0ccb6-2e5c-484e-994d-05475b54a013
+                        status: success
+                        failureReason: null
+                        issues: []
+                    - id: a52bdb84-8d4c-49f6-9457-6aafda51abda
+                      type: catalog-integration-result
+                      attributes:
+                        externalProductId: 07734e55-ca17-4bb3-8f1d-e6d957270d7d
+                        status: failure
+                        failureReason: validation_error
+                        issues:
+                        - field: variants[0].sku
+                          reason: required_field
+                          message: Variant SKU is required
+                        - field: variants[0].ian
+                          reason: invalid_field
+                          message: This value should have exactly 13 characters
+                    - id: 1cd7c89c-9428-44c5-9a77-9448467453c3
+                      type: catalog-integration-result
+                      attributes:
+                        externalProductId: 8d290277-b40e-4d53-98b8-c65b251fedae
+                        status: success
+                        failureReason: null
+                        issues: []
+                    - id: 2246214c-f7b8-4d84-8fd4-de957c192b9a
+                      type: catalog-integration-result
+                      attributes:
+                        externalProductId: ecfcb82c-3178-46ef-805f-1cdf2c22b14a
+                        status: failure
+                        failureReason: validation_error
+                        issues:
+                        - field: variants[0].sku
+                          reason: required_field
+                          message: Variant SKU is required
+                        - field: variants[0].ian
+                          reason: invalid_field
+                          message: This value should have exactly 13 characters
+                    - id: a830fb5a-c2f9-4227-a46a-4e1c72b5f4c2
+                      type: catalog-integration-result
+                      attributes:
+                        externalProductId: unknown
+                        status: failure
+                        failureReason: internal_error
+                        issues:
+                        - message: This is an internal error, that should not have happened. Please contact support team.
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id020
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id019
+                    additionalProperties: false
+                required: &id021
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id020
+                required: *id021
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id020
+                required: *id021
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id020
+                required: *id021
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

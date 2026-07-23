@@ -1,0 +1,327 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Applications
+paths:
+  /api/v1/applications:
+    get:
+      summary: List Applications
+      operationId: list-applications
+      responses:
+        '200':
+          description: Collection of application resources
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: ApplicationResource
+                    type: object
+                    example:
+                      id: 43efbfbd-bfbd-1eef-1e6a-6200efbfbdef
+                      type: application
+                      attributes:
+                        name: My sandbox
+                        developerEmail: dev@my-app.com
+                        clientId: k322k7frs87e8w7hri3jkke7ry7
+                        clientSecret: null
+                    properties:
+                      type:
+                        type: string
+                        const: application
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: Application given name
+                          developerEmail:
+                            type: string
+                            description: Email of the developer to contact
+                            format: email
+                            example: developer@application.com
+                          clientId:
+                            type: string
+                            description: Client ID generated for this application
+                            readOnly: true
+                          clientSecret:
+                            type:
+                            - 'null'
+                            description: Secret to be used for access token issuance. Can be invoked only once on application creation
+                        required:
+                        - name
+                        - developerEmail
+                        - clientId
+                        - clientSecret
+                      relationships:
+                        type: object
+                        description: Only presented if asked explicitly in the request
+                        properties:
+                          webhookSubscriptions:
+                            type: object
+                            properties:
+                              data:
+                                description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                type: array
+                                items:
+                                  description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                  type: object
+                                  required:
+                                  - id
+                                  - type
+                                  properties:
+                                    id:
+                                      type: string
+                                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      format: uuid
+                                    type:
+                                      type: string
+                                      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    meta:
+                                      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                      type: object
+                                      additionalProperties: true
+                                  additionalProperties: false
+                                uniqueItems: true
+                    required:
+                    - id
+                    - type
+                    - attributes
+                  included:
+                    type: array
+                    items:
+                      anyOf:
+                      - title: ApplicationWebhookSubscriptionResource
+                        type: object
+                        description: Application webhook subscription resource
+                        properties:
+                          type:
+                            type: string
+                            default: webhook-subscriptions
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              webhookUrl:
+                                type: string
+                                description: URL of the service where webhook request will be sent when one of the events from the list occurs
+                                format: uri
+                                example: https://my.app/webhook/listener
+                              events:
+                                type: array
+                                description: 'List of subscribed event types:
+
+                                  - `order.brand_created` — A new order has been created and is pending brand confirmation
+
+                                  - `order.brand_accepted` — The brand has accepted the order
+
+                                  - `order.brand_rejected` — The brand has rejected the order
+
+                                  - `order.shipping_labels_generated` — Shipping labels have been generated for the order
+
+                                  - `order.shipped` — The order has been shipped
+
+                                  - `order.shipment_received` — The retailer has confirmed receipt of the order
+
+                                  - `order.shipment_refused` — The retailer has refused the shipment
+
+                                  - `order.brand_paid` — Payment has been transferred to the brand
+
+                                  - `order.cancelled` — The order has been cancelled
+
+                                  '
+                                uniqueItems: true
+                                items:
+                                  type: string
+                                  enum:
+                                  - order.brand_created
+                                  - order.brand_accepted
+                                  - order.brand_rejected
+                                  - order.shipping_labels_generated
+                                  - order.shipped
+                                  - order.shipment_received
+                                  - order.shipment_refused
+                                  - order.brand_paid
+                                  - order.cancelled
+                              signingSecret:
+                                type: string
+                            required:
+                            - webhookUrl
+                            - events
+                            - signingSecret
+                        required:
+                        - id
+                        - type
+                        - attributes
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id001
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id002
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id001
+                    additionalProperties: false
+                required: &id003
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+      description: List existing application for the current authenticated user
+      parameters:
+      - schema:
+          type: string
+        in: header
+        name: Accept
+        description: application/vnd.api+json
+      - schema:
+          type: string
+          enum:
+          - webhookSubscriptions
+        name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: webhookSubscriptions)'
+      tags:
+      - Applications
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

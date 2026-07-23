@@ -1,0 +1,3231 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Deprecated API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Deprecated
+  description: 'ℹ️ Here you can find the endpoints which are currently deprecated and will be removed in the future versions of the API.
+
+    We strongly encourage you to migrate away from these endpoints in order to prevent any future problems with API.
+
+
+    ## ❄️ Shipping an Order
+
+
+    | ⚡ This documentation is deprecated |
+
+    |------------------------------------|
+
+    ### Schedule a Pickup
+
+
+    If the brand is not taking the parcels to the local drop-off point for the carrier the brand can schedule a pickup for this order. A pickup can only be scheduled on a working day (monday to friday). For full information please refer to the API documentation.
+
+
+    <div class="info">
+
+
+    #### Pickup is not accepted
+
+
+    For now, Ankorstore does not know in advance which date/time configuration is available, if the requested pickup is denied please try a different date or time frame.
+
+
+    </div>
+
+    '
+paths:
+  /api/v1/orders/{order}/accept:
+    post:
+      summary: '[Ordering] Accept Order'
+      deprecated: true
+      tags:
+      - Deprecated
+      operationId: brand-accept-order
+      description: '[Deprecated] Please use the Order Transition endpoint.'
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: order
+        in: path
+        required: true
+        schema:
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      - name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included.'
+        schema:
+          type: string
+          enum:
+          - retailer
+          - billingItems
+          - orderItems
+          - orderItems.productVariant
+          - orderItems.productVariant.product
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                title: Order Get
+                type: object
+                additionalProperties: false
+                examples:
+                - jsonapi:
+                    version: '1.0'
+                  data:
+                    type: orders
+                    id: 1ecb023e-7ec0-6d5c-a477-0242ac170007
+                    attributes:
+                      masterOrderId: a35ec01f-d2b7-4124-a7ed-c82320c629fa
+                      status: shipped
+                      reference: 3434273911
+                      brandCurrency: EUR
+                      brandTotalAmount: 12588
+                      brandTotalAmountVat: 693
+                      brandTotalAmountWithVat: 13281
+                      shippingMethod: ankorstore
+                      shippingOverview:
+                        availableShippingMethods:
+                        - custom
+                        - ankorstore
+                        shipToAddress:
+                          name: John Smith
+                          organisationName: Test Retailer
+                          street: Test Street
+                          city: Roma
+                          postalCode: '00222'
+                          countryCode: IT
+                        expectedShippingDates:
+                          minimum: '2022-03-28T00:00:00+00:00'
+                          maximum: '2022-03-30T23:59:59+00:00'
+                          updatedMaximum: '2022-04-27T23:59:59+00:00'
+                        provider: ups
+                        tracking: null
+                        latestQuote:
+                          id: 5cc76f26-0f5d-1ecb-a0d6-0242ac170009
+                          provider: ups
+                        parcels:
+                        - length: 50
+                          width: 100
+                          height: 50
+                          weight: 10000
+                          distanceUnit: cm
+                          massUnit: g
+                          trackedPackage:
+                            labelUrl: https://www.ankorstore.com/api/v1/orders/1ecb023e-7ec0-6d5c-a477-0242ac170007/shipping-labels/335654/pdf
+                            eta: null
+                            trackingNumber: 1Z8A76E49136380279
+                            trackingLink: https://www.ups.com/track?tracknum=1Z8A76E49136380279&requester=WT/trackdetails
+                            currentStatus:
+                              status: UNKNOWN
+                              statusDetails: null
+                              updatedAt: '2022-03-28T15:35:19+00:00'
+                              location:
+                                city: null
+                                state: null
+                                zip: null
+                                country: null
+                        - length: 75
+                          width: 50
+                          height: 50
+                          weight: 5200
+                          distanceUnit: cm
+                          massUnit: g
+                          trackedPackage:
+                            labelUrl: https://www.ankorstore.com/api/v1/orders/1ecb023e-7ec0-6d5c-a477-0242ac170007/shipping-labels/335655/pdf
+                            eta: null
+                            trackingNumber: 1Z8A76E49137225882
+                            trackingLink: https://www.ups.com/track?tracknum=1Z8A76E49137225882&requester=WT/trackdetails
+                            currentStatus:
+                              status: UNKNOWN
+                              statusDetails: null
+                              updatedAt: '2022-03-28T15:35:19+00:00'
+                              location:
+                                city: null
+                                state: null
+                                zip: null
+                                country: null
+                        transaction:
+                          pickup:
+                            pickupDate: '2022-03-30T00:00:00+00:00'
+                            closeTime: '15:00:00'
+                            readyTime: 09:00:00
+                            externalReferenceId: 2929602E9CP
+                          tracking:
+                            eta: null
+                            trackingNumber: 1Z8A76E49136380279
+                            trackingLink: https://www.ups.com/track?tracknum=1Z8A76E49136380279&requester=WT/trackdetails
+                            currentStatus:
+                              status: UNKNOWN
+                              statusDetails: null
+                              updatedAt: '2022-03-28T15:35:19+00:00'
+                              location:
+                                city: null
+                                state: null
+                                zip: null
+                                country: null
+                      brandRejectReason: null
+                      retailerRejectReason: null
+                      retailerCancellationRequestReason: null
+                      billingName: Charles Attan
+                      billingOrganisationName: Jumbo
+                      billingStreet: Kortricklaan 101
+                      billingPostalCode: 8121 GW
+                      billingCity: Arnhem
+                      billingCountryCode: NL
+                      submittedAt: '2022-02-02T20:15:05.000000Z'
+                      shippedAt: '2022-02-09T15:05:27.000000Z'
+                      brandPaidAt: null
+                      createdAt: '2022-02-02T19:42:31.000000Z'
+                      updatedAt: '2022-03-11T08:57:56.000000Z'
+                    relationships:
+                      retailer:
+                        data:
+                          type: retailers
+                          id: 092b63ce-c5b9-1eca-b05f-0242ac170007
+                  included:
+                  - type: retailers
+                    id: 092b63ce-c5b9-1eca-b05f-0242ac170007
+                    attributes:
+                      companyName: null
+                      storeName: TEST RETAILER
+                      storeUrl: null
+                      email: test-retailer@gmail.com
+                      firstName: Marie-France
+                      lastName: DESCHAMPS
+                      taxNumber: '819470824'
+                      vatNumber: FR58819470824
+                      eoriNumber: null
+                      phoneNumberE164: '+33688615593'
+                      businessIdentifier: '819470824'
+                      createdAt: '2020-06-19T11:59:30.000000Z'
+                      updatedAt: '2020-06-21T15:27:39.000000Z'
+                properties:
+                  data:
+                    description: The resource object for Order
+                    type: object
+                    additionalProperties: false
+                    title: Order Resource
+                    properties:
+                      type:
+                        type: string
+                        default: orders
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        additionalProperties: false
+                        properties:
+                          masterOrderId:
+                            type: string
+                            description: The identifier of the linked master order
+                            format: uuid
+                          status:
+                            type: string
+                            example: ankor_confirmed
+                            enum:
+                            - ankor_confirmed
+                            - rejected
+                            - brand_confirmed
+                            - shipping_labels_generated
+                            - fulfillment_requested
+                            - shipped
+                            - reception_refused
+                            - received
+                            - invoiced
+                            - brand_paid
+                            - cancelled
+                          reference:
+                            type: integer
+                            description: The order reference used on shipping labels, communication etc
+                          brandCurrency:
+                            type: string
+                            description: The currency the brand is paid in
+                          brandNetAmount:
+                            description: The amount the brand is paid (total - fees - shipping cost + shipping refund). You may find the Ankorstore fees and the other amounts by including the orders billing items.
+                            type: integer
+                          brandTotalAmount:
+                            description: The total of all order items not including VAT
+                            type: integer
+                          brandTotalAmountVat:
+                            description: The total VAT of all order items
+                            type: integer
+                          brandTotalAmountWithVat:
+                            description: The total of all order items including VAT
+                            type: integer
+                          shippingMethod:
+                            type:
+                            - 'null'
+                            - string
+                            description: The chosen shipping method after going through the shipping process
+                            enum:
+                            - ankorstore
+                            - custom
+                            - null
+                          shippingOverview:
+                            title: Order Resource -> Shipping Overview
+                            description: Contains all information related to either shipping method (`ankorstore` or `custom`). This field is ONLY included when fetching a single order at a time.
+                            type: object
+                            properties:
+                              availableShippingMethods:
+                                type: array
+                                description: Available shipping methods to use. Custom is ship with your own carrier outside of Ankorstore.
+                                items:
+                                  enum:
+                                  - ankorstore
+                                  - custom
+                              shipToAddress:
+                                type: object
+                                description: The address the order needs to be shipped to
+                                required:
+                                - street
+                                - city
+                                - postalCode
+                                properties:
+                                  name:
+                                    type:
+                                    - 'null'
+                                    - string
+                                    description: The first and last name of the recipient
+                                  organisationName:
+                                    type:
+                                    - 'null'
+                                    - string
+                                    description: The organisational name of the recipient
+                                  street:
+                                    type:
+                                    - 'null'
+                                    - string
+                                  city:
+                                    type:
+                                    - 'null'
+                                    - string
+                                  postalCode:
+                                    type:
+                                    - 'null'
+                                    - string
+                                  countryCode:
+                                    type:
+                                    - 'null'
+                                    - string
+                              expectedShippingDates:
+                                type: object
+                                description: The minimum and maximum expected shipping dates
+                                required:
+                                - minimum
+                                - maximum
+                                properties:
+                                  minimum:
+                                    type: string
+                                    format: datetime
+                                  maximum:
+                                    type: string
+                                    format: datetime
+                                  updatedMaximum:
+                                    type:
+                                    - 'null'
+                                    - string
+                                    format: datetime
+                              provider:
+                                type:
+                                - 'null'
+                                - string
+                                description: The company providing the shipping service
+                                enum:
+                                - ups
+                                - tnt
+                                - gls
+                                - dpd
+                                - dhl
+                                - dhl_express
+                                - colissimo
+                                - chronopost
+                                - null
+                              tracking:
+                                type:
+                                - 'null'
+                                - object
+                                description: Tracking details of the order
+                                properties:
+                                  number:
+                                    type: string
+                                  link:
+                                    type: string
+                                    format: url
+                                    description: A URL to view the tracking status
+                              latestQuote:
+                                description: 'The quote is the price of the parcel(s) shipping.
+
+                                  If this object is null then no quote has been generated.'
+                                type:
+                                - 'null'
+                                - object
+                                properties:
+                                  id:
+                                    type: string
+                                    description: Id of the last quote generated. Every time a ship call is done, a new calculation is made based on parcels dimensions and weight sent
+                                  provider:
+                                    type: string
+                                    enum:
+                                    - custom
+                                    - ups
+                                    description: 'Provider responsible for the calculation. If custom, the calculation is done by Ankorstore and refunded.
+
+                                      If any other, the calculation is done by the provider and the shipping price is covered by Ankorstore (most of the case, see shippingCostsOverview section).'
+                                  rateProvider:
+                                    type: string
+                                    description: The provider of the rate for `rateAmount`.
+                                    enum:
+                                    - ups
+                                    - ankorstore
+                                  rateAmount:
+                                    type: object
+                                    description: Amount calculated for the parcels provided.
+                                    properties:
+                                      amount:
+                                        type: integer
+                                        description: Lowest denomination of the currency this amount belongs to.
+                                      currency:
+                                        type: string
+                                  shippingCostsOverview:
+                                    type: object
+                                    description: Overview of costs related to shipping. This object is displayed only if a shipping cost fee or a refund exists
+                                    properties:
+                                      amount:
+                                        type: integer
+                                        description: Lowest denomination of the currency this amount belongs to.
+                                      currency:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                        - refund
+                                        - fee
+                                        description: 'Type of shipping costs:
+
+                                          If type = `refund` the amount will be refunded to the brand (added to brand net amount).
+
+                                          if type = `fee` the amount will be subtracted from brand net amount as a contribution to shipping costs.'
+                                required:
+                                - id
+                                - provider
+                              parcels:
+                                type: array
+                                uniqueItems: true
+                                items:
+                                  description: Shipping Label Parcel
+                                  type: object
+                                  properties:
+                                    length:
+                                      type: integer
+                                      maximum: 274
+                                    width:
+                                      type: integer
+                                      maximum: 274
+                                    height:
+                                      type: integer
+                                      maximum: 274
+                                    distanceUnit:
+                                      type: string
+                                      description: The unit of distance
+                                      enum:
+                                      - cm
+                                    weight:
+                                      type: integer
+                                      minimum: 1
+                                      maximum: 30000
+                                    massUnit:
+                                      type: string
+                                      description: The unit of mass
+                                      enum:
+                                      - g
+                                    trackedPackage:
+                                      type:
+                                      - 'null'
+                                      - object
+                                      description: The tracking per parcel
+                                      properties:
+                                        labelUrl:
+                                          description: The URL to download the shipping label
+                                          type:
+                                          - 'null'
+                                          - string
+                                          format: url
+                                        eta:
+                                          type:
+                                          - 'null'
+                                          - string
+                                          format: datetime
+                                        trackingNumber:
+                                          type: string
+                                        trackingLink:
+                                          type: string
+                                        currentStatus:
+                                          type: object
+                                          properties: &id001
+                                            status:
+                                              type: string
+                                              description: The current status of the order/parcel
+                                              enum:
+                                              - UNKNOWN
+                                              - PRE_TRANSIT
+                                              - DELIVERED
+                                              - RETURNED
+                                              - FAILURE
+                                            statusDetails:
+                                              description: Human readable version of status
+                                              type:
+                                              - string
+                                              - 'null'
+                                            updatedAt:
+                                              type: string
+                                              description: Last time the status was updated
+                                              format: datetime
+                                            location:
+                                              type: object
+                                              description: Last known location
+                                              properties:
+                                                city:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                                state:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                                zip:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                                country:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                      required:
+                                      - labelUrl
+                                      - eta
+                                      - trackingLink
+                                      - currentStatus
+                                  required:
+                                  - length
+                                  - width
+                                  - height
+                                  - distanceUnit
+                                  - weight
+                                  - massUnit
+                                  - trackedPackage
+                              transaction:
+                                type:
+                                - 'null'
+                                - object
+                                properties:
+                                  pickup:
+                                    description: The scheduled pickup, requires an API call to be made after the shipping labels have been generated.
+                                    type:
+                                    - 'null'
+                                    - object
+                                    required:
+                                    - pickupDate
+                                    - closeTime
+                                    - readyTime
+                                    - externalReferenceId
+                                    properties:
+                                      pickupDate:
+                                        type: string
+                                        format: datetime
+                                        description: The date of the pickup
+                                      readyTime:
+                                        type: string
+                                        description: 'Opening time of pickup Eg: 10:00:00'
+                                      closeTime:
+                                        type: string
+                                        description: 'Close time (pickup required to happen before this time) Eg: 13:00:00'
+                                      externalReferenceId:
+                                        type: string
+                                        description: The reference number for this pickup
+                                  tracking:
+                                    description: The tracking details for the overall shipment
+                                    type: object
+                                    properties:
+                                      eta:
+                                        type:
+                                        - 'null'
+                                        - string
+                                        format: datetime
+                                        description: The estimated time of arrival for the order
+                                      trackingNumber:
+                                        type: string
+                                        description: The tracking number of the order
+                                      trackingLink:
+                                        type: string
+                                        format: url
+                                        description: The tracking link for the order
+                                      currentStatus:
+                                        type: object
+                                        properties: *id001
+                                required:
+                                - pickup
+                                - tracking
+                            required:
+                            - availableShippingMethods
+                            - shipToAddress
+                            - expectedShippingDates
+                          brandRejectReason:
+                            type:
+                            - 'null'
+                            - string
+                            description: The reason the brand has given for rejecting the order
+                          retailerRejectReason:
+                            type:
+                            - 'null'
+                            - string
+                            description: The reason the retailer rejected the reception of the order
+                          retailerCancellationRequestReason:
+                            type:
+                            - 'null'
+                            - string
+                            description: The reason the retailer has given for a cancellation request
+                          billingName:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address name
+                          billingOrganisationName:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address organisation name
+                          billingStreet:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address street name
+                          billingPostalCode:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address postal code
+                          billingCity:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address city
+                          billingCountryCode:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address country code - ISO format
+                          submittedAt:
+                            type: string
+                            format: datetime
+                            description: The timestamp of when the order was submitted (order is placed)
+                          shippedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: datetime
+                            description: The timestamp of when the order was shipped
+                          brandPaidAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: datetime
+                            description: The timestamp of when the brand was paid
+                          createdAt:
+                            type: string
+                            format: datetime
+                            description: (deprecated) The timestamp of when the order was created (before retailer payment)
+                          updatedAt:
+                            type: string
+                            format: datetime
+                            description: The timestamp of when the order was updated (does not include other resources)
+                      relationships:
+                        type: object
+                        properties:
+                          retailer:
+                            description: Related Retailer Resource
+                            type: object
+                            properties:
+                              data:
+                                allOf:
+                                - description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                  type: object
+                                  required: &id002
+                                  - id
+                                  - type
+                                  properties: &id003
+                                    id:
+                                      type: string
+                                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      format: uuid
+                                    type:
+                                      type: string
+                                      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    meta:
+                                      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                      type: object
+                                      additionalProperties: true
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      const: retailers
+                          billingItems:
+                            description: Related Billing Item Resources
+                            type: object
+                            properties:
+                              data:
+                                type: array
+                                uniqueItems: true
+                                items:
+                                  allOf:
+                                  - description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id002
+                                    properties: *id003
+                                    additionalProperties: false
+                                  - type: object
+                                    properties:
+                                      type:
+                                        const: billing-items
+                          orderItems:
+                            description: Related Order Item Resources
+                            type: object
+                            properties:
+                              data:
+                                type: array
+                                uniqueItems: true
+                                items:
+                                  allOf:
+                                  - description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id002
+                                    properties: *id003
+                                    additionalProperties: false
+                                  - type: object
+                                    properties:
+                                      type:
+                                        const: order-items
+                          orderItems-productOption:
+                            description: 'Schema: Order Item -> Product Option Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id002
+                                properties: *id003
+                                additionalProperties: false
+                          orderItems-productOption-product:
+                            description: 'Schema: Order Item -> Product Option Resource -> Product'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id002
+                                properties: *id003
+                                additionalProperties: false
+                          orderItems-productVariant:
+                            description: 'Schema: Order Item -> Product Variant Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id002
+                                properties: *id003
+                                additionalProperties: false
+                          orderItems-productVariant-product:
+                            description: 'Schema: Order Item -> Product Variant Resource -> Product'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id002
+                                properties: *id003
+                                additionalProperties: false
+                    required:
+                    - type
+                    - id
+                  included:
+                    description: To reduce the number of HTTP requests, servers **MAY** allow responses that include related resources along with the requested primary resources. Such responses are called `compound documents`.
+                    type: array
+                    uniqueItems: true
+                    items:
+                      anyOf:
+                      - title: Retailer Resource
+                        type: object
+                        additionalProperties: false
+                        example:
+                          type: retailers
+                          id: 092b63ce-c5b9-1eca-b05f-0242ac170007
+                          attributes:
+                            companyName: null
+                            storeName: TEST RETAILER
+                            storeUrl: null
+                            email: retailer@example.com
+                            firstName: John
+                            lastName: Smith
+                            taxNumber: '12345678'
+                            vatNumber: FR123456789
+                            eoriNumber: null
+                            phoneNumberE164: '+3345656456456'
+                            businessIdentifier: '3454353455'
+                            createdAt: '2020-06-19T11:59:30.000000Z'
+                            updatedAt: '2020-06-21T15:27:39.000000Z'
+                        properties:
+                          type:
+                            type: string
+                            default: retailers
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              companyName:
+                                type:
+                                - string
+                                - 'null'
+                                description: The registered company of the retailer
+                              storeName:
+                                type: string
+                                description: The name of the store
+                              storeUrl:
+                                type:
+                                - string
+                                - 'null'
+                                format: url
+                                description: The store's website
+                              email:
+                                type: string
+                                format: email
+                                description: Contact email for the retailer
+                              firstName:
+                                type: string
+                                description: Retailer's first name
+                              lastName:
+                                type: string
+                                description: Retailer's last name
+                              taxNumber:
+                                type: string
+                                description: Retailer's tax number
+                              vatNumber:
+                                type: string
+                                description: Retailer's VAT number
+                              eoriNumber:
+                                type:
+                                - string
+                                - 'null'
+                                description: Retailer's EORI number
+                              phoneNumberE164:
+                                type: string
+                                description: Retailer's phone number (E164 format)
+                              businessIdentifier:
+                                type: string
+                                description: The tax field to use - tax or vat number. If the retailer is a sole trader, this field will instead be their sole trading number
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the retailer was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the retailer was updated
+                          relationships:
+                            type: object
+                            properties:
+                              orders:
+                                description: The order's belonging to a retailer. See [Order Resource](https://ankorstore.github.io/api-docs/#tag/Order/operation/list-orders)
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: &id004
+                                      description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                      type: object
+                                      required: *id002
+                                      properties: *id003
+                                      additionalProperties: false
+                                    uniqueItems: true
+                        required:
+                        - type
+                        - id
+                        - attributes
+                      - title: Order Item Resource
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: order-items
+                          id: 62b263a8-00e1-1ecb-98d2-0242ac170007
+                          attributes:
+                            brandCurrency: EUR
+                            quantity: 1
+                            multipliedQuantity: 12
+                            vatRate: 5.5
+                            brandAmount: 3996
+                            brandAmountVat: 220
+                            brandAmountWithVat: 4216
+                            brandUnitPrice: 333
+                            createdAt: '2022-02-02T19:43:14.000000Z'
+                            updatedAt: '2022-02-02T19:43:14.000000Z'
+                          relationships:
+                            productOption:
+                              data:
+                                type: productOption
+                                id: '114135'
+                        properties:
+                          type:
+                            type: string
+                            default: order-items
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              brandCurrency:
+                                type: string
+                                description: The currency of the amounts for the brand
+                              quantity:
+                                type: integer
+                                description: The ordered quantity of the product
+                              multipliedQuantity:
+                                type: integer
+                                description: Some products are sold in fixed quantities, e.g a case of 6 wine bottles. If the quantity was 2, the multiplied quantity of wine bottles would be 12 (6 x 2). This "unitMultiplier" can be found on the product.
+                              vatRate:
+                                type: number
+                                format: float
+                                description: The VAT percentage rate of the order item (0-100)
+                              brandAmount:
+                                description: The amount due to the brand for this item
+                                type: integer
+                              brandAmountVat:
+                                description: The VAT amount due to the brand for this item
+                                type: integer
+                              brandAmountWithVat:
+                                description: The amount + VAT due to the brand for this item
+                                type: integer
+                              brandUnitPrice:
+                                description: The cost of a single unit of this item
+                                type: integer
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp this order item was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp this order item was updated
+                          relationships:
+                            type: object
+                            properties:
+                              productOptions:
+                                description: 'Reference: Product Option Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: *id004
+                                    uniqueItems: true
+                          meta:
+                            description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                            type: object
+                            additionalProperties: true
+                        required:
+                        - type
+                        - id
+                      - title: Billing Item Resource
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: billing-items
+                          id: f1dd6498-c5f8-1eca-a6b7-0242ac170007
+                          attributes:
+                            type: brand_platform_fees
+                            currency: EUR
+                            vatRate: 20
+                            currencyRate: 1
+                            amount: -1259
+                            amountVat: -252
+                            amountWithVat: -1511
+                            createdAt: '2022-02-02T19:42:32.000000Z'
+                            updatedAt: '2022-02-02T20:15:06.000000Z'
+                        properties:
+                          type:
+                            type: string
+                            default: billing-items
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              type:
+                                description: 'The `brand_platform_fees` is a commission for using our platform. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_new_customer_fees` is a commission on the first Order between brand and retailer. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_payment_fees` is a commission to guarantee Payment for brand. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_fast_payment` is a commission for using our fast payment feature. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_flat_shipping_fees` is the shipping cost collected from the retailer when the order is below brand Franco. It is positive and adds to the total amount paid.
+
+
+                                  The `brand_shipping_fees` is a shipping cost. This type reduces the amount paid to the brand (but will be a positive value).
+
+
+                                  The `brand_shipping_fees_refund` is a refund from Ankorstore to brand for shipping. This type is positive and adds to the total amount paid.
+
+
+                                  The `brand_shipping_fees_discount` is a referral shipping offer. This type is positive and adds to the total amount paid.
+
+
+                                  There still might also be legacy types which are not listed here but they will be removed in the nearest future.
+
+                                  '
+                                type: string
+                                enum:
+                                - brand_platform_fees
+                                - brand_new_customer_fees
+                                - brand_payment_fees
+                                - brand_fast_payment
+                                - brand_flat_shipping_fees
+                                - brand_shipping_fees
+                                - brand_shipping_fees_refund
+                                - brand_shipping_fees_discount
+                              currency:
+                                type: string
+                                description: The currency of the billing item
+                              vatRate:
+                                type: number
+                                format: float
+                                description: The VAT percentage rate of the billing item, (from 0 - 100).
+                              currencyRate:
+                                type: number
+                                format: float
+                                description: If the currency is not in EUR, this is the conversion rate used
+                              amount:
+                                description: The amount for the billing item
+                                type: integer
+                              amountVat:
+                                description: The VAT amount for the billing item
+                                type: integer
+                              amountWithVat:
+                                description: The amount including VAT for the billing item
+                                type: integer
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the billing item was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the billing item was updated
+                        required:
+                        - type
+                        - id
+                      - title: Product Option Resource
+                        description: A unique option for a product
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: product-options
+                          id: 7ec06d5c-023e-1ecb-a477-0242ac170007
+                          attributes:
+                            name: Test Product Option
+                            sku: '051100'
+                            ian: '3770005999506'
+                            outOfStock: false
+                            createdAt: '2020-08-27T14:29:15.000000Z'
+                            updatedAt: '2021-10-04T12:03:31.000000Z'
+                            archivedAt: null
+                          relationships:
+                            product:
+                              data:
+                                type: products
+                                id: 7f4665f6-023e-1ecb-a4b2-0242ac170007
+                        properties:
+                          type:
+                            type: string
+                            default: product-options
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the option
+                              sku:
+                                type: string
+                                description: The SKU of the option
+                              ian:
+                                type:
+                                - 'null'
+                                - string
+                                description: The IAN (EAN) of the option, can be null
+                              outOfStock:
+                                type: boolean
+                                description: Whether the product is in stock or not
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this option was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this option was updated
+                              archivedAt:
+                                type:
+                                - 'null'
+                                - string
+                                description: Timestamp of when this option was archived
+                          relationships:
+                            type: object
+                            properties:
+                              product:
+                                description: 'Reference: Product Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id002
+                                    properties: *id003
+                                    additionalProperties: false
+                        required:
+                        - type
+                        - id
+                      - title: Product Variant Resource
+                        description: Variant details for a given product. Unique products will have one single variant.
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: product-variants
+                          id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                          attributes:
+                            name: Test Product Variant
+                            sku: Product-Variant-001
+                            ian: '1924859325863'
+                            createdAt: '2020-08-27T14:29:15.000000Z'
+                            updatedAt: '2021-10-04T12:03:31.000000Z'
+                            archivedAt: null
+                            retailPrice: 800
+                            wholesalePrice: 500
+                            originalWholesalePrice: 500
+                            availableQuantity: 125
+                            reservedQuantity: 25
+                            stockQuantity: 150
+                            isAlwaysInStock: false
+                            inventoryPolicy: deny
+                            fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                            availableAt: '2028-01-01T00:00:00.000000Z'
+                            images:
+                            - order: 1
+                              url: https://example.com/image1.jpg
+                            - order: 2
+                              url: https://example.com/image2.jpg
+                          relationships:
+                            product:
+                              data:
+                                type: products
+                                id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                        properties:
+                          type:
+                            type: string
+                            default: product-variants
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the product variant
+                              sku:
+                                type: string
+                                description: The SKU of the product variant
+                              ian:
+                                type:
+                                - 'null'
+                                - string
+                                description: The IAN (EAN) of the product variant, can be null
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this product variant was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this product variant was updated
+                              archivedAt:
+                                type:
+                                - 'null'
+                                - string
+                                description: Timestamp of when this product variant was archived
+                              retailPrice:
+                                description: The suggested retail price of the product
+                                type: integer
+                              wholesalePrice:
+                                description: The wholesale price after the discount rate is applied
+                                type: integer
+                              originalWholesalePrice:
+                                description: The original wholesale price set by the brand
+                                type: integer
+                              availableQuantity:
+                                type:
+                                - 'null'
+                                - integer
+                                description: Number of units that are available to order
+                              reservedQuantity:
+                                type: integer
+                                description: Number of units in stock that are reserved
+                              stockQuantity:
+                                type:
+                                - 'null'
+                                - integer
+                                description: Total number of units in stock (available + reserved)
+                              isAlwaysInStock:
+                                type: boolean
+                                description: True if the product is always in stock, false otherwise
+                              inventoryPolicy:
+                                type: string
+                                description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                                  available stock reaches zero; `continue` allows the variant to accept
+
+                                  orders even when available stock is zero or negative. `continue`
+
+                                  requires `isAlwaysInStock=false`.
+
+                                  '
+                                enum:
+                                - deny
+                                - continue
+                                default: deny
+                              fulfillableId:
+                                type:
+                                - 'null'
+                                - string
+                                format: uuid
+                                description: Resource ID used for interacting with the fulfillment service
+                              availableAt:
+                                type: string
+                                nullable: true
+                                format: date
+                                description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                              images:
+                                type: array
+                                description: List of variant images ordered by display priority
+                                items:
+                                  type: object
+                                  properties:
+                                    order:
+                                      type: integer
+                                      description: Display order of the image (lower is higher priority)
+                                    url:
+                                      type: string
+                                      description: URL of the variant image
+                          relationships:
+                            type: object
+                            properties:
+                              product:
+                                description: 'Reference: Product Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id002
+                                    properties: *id003
+                                    additionalProperties: false
+                        required:
+                        - type
+                        - id
+                      - title: Product Resource
+                        description: The resource object for Product
+                        type: object
+                        additionalProperties: false
+                        properties:
+                          type:
+                            type: string
+                            default: products
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the product
+                              description:
+                                type: string
+                                description: The description of the product
+                              language:
+                                type: string
+                                description: The language of the title and description
+                              dimensions:
+                                type: string
+                                description: The human readable dimensions of the product
+                              netWeight:
+                                type: string
+                                description: The weight of the product itself
+                              capacity:
+                                type: string
+                                description: eg. Capacity in weight eg 100g
+                              position:
+                                type: number
+                                description: The position of the product in the brands catalog, lower the higher it is
+                              unitMultiplier:
+                                type: integer
+                                description: How many products are shipped together, ie a case of 6 wine bottles. Presented options then would be 6, 12, 18 etc.
+                              vatRate:
+                                type: number
+                                format: float
+                                description: The VAT rate of the product
+                              discountRate:
+                                description: The percentage discount if a brand is offering one (0 - 1)
+                                type: number
+                                format: float
+                              productTypeId:
+                                description: 'Product Type ID
+
+                                  <div class="warning"> <b>Deprecation Notice</b><br/> <p>This attribute is deprecated and will be removed in a future release.</p> <p> We strongly encourage all users to update their integrations accordingly to ensure continued compatibility. If you have any questions or need assistance, please contact support. </p> </div>
+
+                                  '
+                                type: number
+                                format: integer
+                              active:
+                                type: boolean
+                                description: Whether the product is active or not
+                              outOfStock:
+                                type: boolean
+                                description: Whether the product is out of stock or not
+                              archived:
+                                type: boolean
+                                description: Whether the product is archived or not
+                              retailPrice:
+                                description: The suggested retail price of the product
+                                type: integer
+                              wholesalePrice:
+                                description: The wholesale price after the discount rate is applied
+                                type: integer
+                              originalWholesalePrice:
+                                description: The original wholesale price set by the brand
+                                type: integer
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the product was created
+                              indexedAt:
+                                type:
+                                - 'null'
+                                - string
+                                format: datetime
+                                description: The timestamp when the product was indexed
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the product was updated
+                              images:
+                                type: array
+                                description: List of product images ordered by display priority
+                                items:
+                                  type: object
+                                  properties:
+                                    order:
+                                      type: integer
+                                      description: Display order of the image (lower is higher priority)
+                                    url:
+                                      type: string
+                                      description: URL of the product image
+                              tags:
+                                type: array
+                                description: List of tags associated with the product
+                                items:
+                                  type: string
+                          relationships:
+                            type: object
+                            properties:
+                              productOption:
+                                description: 'Reference: Product Option Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: *id004
+                                    uniqueItems: true
+                              productVariant:
+                                description: 'Reference: Product Variant Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: *id004
+                                    uniqueItems: true
+                        required:
+                        - type
+                        - id
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id005
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+              examples:
+                example:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    data:
+                      type: order
+                      id: 1ecb023e-8ec0-6d5c-a477-0242ac170007
+                      attributes:
+                        status: brand_confirmed
+                        reference: 3434273911
+                        brandCurrency: EUR
+                        brandNetAmount: 10229
+                        brandTotalAmount: 10940
+                        brandTotalAmountVat: 602
+                        brandTotalAmountWithVat: 11542
+                        brandRejectReason: null
+                        retailerRejectReason: null
+                        retailerCancellationRequestReason: null
+                        billingName: Charles Attan
+                        billingOrganisationName: Jumbo
+                        billingStreet: Kortricklaan 101
+                        billingPostalCode: 8121 GW
+                        billingCity: Arnhem
+                        billingCountryCode: NL
+                        submittedAt: '2022-03-17T13:19:33+00:00'
+                        shippedAt: null
+                        brandPaidAt: null
+                        createdAt: '2022-02-01T14:37:10+00:00'
+                        updatedAt: '2022-03-31T15:10:07+00:00'
+                        shippingMethod: null
+                        shippingOverview:
+                          availableShippingMethods:
+                          - custom
+                          - ankorstore
+                          shipToAddress:
+                            name: John Smith
+                            organisationName: Test
+                            street: Test Street
+                            city: Commentry
+                            postalCode: '03633'
+                            countryCode: FR
+                          expectedShippingDates:
+                            minimum: '2022-03-22T00:00:00+00:00'
+                            maximum: '2022-03-24T23:59:59+00:00'
+                            updatedMaximum: '2022-03-30T23:59:59+00:00'
+                          provider: null
+                          tracking: null
+                          latestQuote: null
+                          parcels: []
+                          transaction: null
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id006
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id005
+                    additionalProperties: false
+                required: &id007
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '409':
+          description: Conflict
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                errors:
+                - code: ORDER_ACTION_ACCEPT_FAILED
+                  detail: Order cannot be accepted from this state
+                  status: '409'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+  /api/v1/orders/{order}/reject:
+    post:
+      summary: '[Ordering] Reject Order'
+      deprecated: true
+      tags:
+      - Deprecated
+      operationId: brand-reject-order
+      description: '[Deprecated] Please use the Order Transition endpoint.'
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: order
+        in: path
+        required: true
+        schema:
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      - name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included.'
+        schema:
+          type: string
+          enum:
+          - retailer
+          - billingItems
+          - orderItems
+          - orderItems.productVariant
+          - orderItems.productVariant.product
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                title: Order Get
+                type: object
+                additionalProperties: false
+                examples:
+                - jsonapi:
+                    version: '1.0'
+                  data:
+                    type: orders
+                    id: 1ecb023e-7ec0-6d5c-a477-0242ac170007
+                    attributes:
+                      masterOrderId: a35ec01f-d2b7-4124-a7ed-c82320c629fa
+                      status: shipped
+                      reference: 3434273911
+                      brandCurrency: EUR
+                      brandTotalAmount: 12588
+                      brandTotalAmountVat: 693
+                      brandTotalAmountWithVat: 13281
+                      shippingMethod: ankorstore
+                      shippingOverview:
+                        availableShippingMethods:
+                        - custom
+                        - ankorstore
+                        shipToAddress:
+                          name: John Smith
+                          organisationName: Test Retailer
+                          street: Test Street
+                          city: Roma
+                          postalCode: '00222'
+                          countryCode: IT
+                        expectedShippingDates:
+                          minimum: '2022-03-28T00:00:00+00:00'
+                          maximum: '2022-03-30T23:59:59+00:00'
+                          updatedMaximum: '2022-04-27T23:59:59+00:00'
+                        provider: ups
+                        tracking: null
+                        latestQuote:
+                          id: 5cc76f26-0f5d-1ecb-a0d6-0242ac170009
+                          provider: ups
+                        parcels:
+                        - length: 50
+                          width: 100
+                          height: 50
+                          weight: 10000
+                          distanceUnit: cm
+                          massUnit: g
+                          trackedPackage:
+                            labelUrl: https://www.ankorstore.com/api/v1/orders/1ecb023e-7ec0-6d5c-a477-0242ac170007/shipping-labels/335654/pdf
+                            eta: null
+                            trackingNumber: 1Z8A76E49136380279
+                            trackingLink: https://www.ups.com/track?tracknum=1Z8A76E49136380279&requester=WT/trackdetails
+                            currentStatus:
+                              status: UNKNOWN
+                              statusDetails: null
+                              updatedAt: '2022-03-28T15:35:19+00:00'
+                              location:
+                                city: null
+                                state: null
+                                zip: null
+                                country: null
+                        - length: 75
+                          width: 50
+                          height: 50
+                          weight: 5200
+                          distanceUnit: cm
+                          massUnit: g
+                          trackedPackage:
+                            labelUrl: https://www.ankorstore.com/api/v1/orders/1ecb023e-7ec0-6d5c-a477-0242ac170007/shipping-labels/335655/pdf
+                            eta: null
+                            trackingNumber: 1Z8A76E49137225882
+                            trackingLink: https://www.ups.com/track?tracknum=1Z8A76E49137225882&requester=WT/trackdetails
+                            currentStatus:
+                              status: UNKNOWN
+                              statusDetails: null
+                              updatedAt: '2022-03-28T15:35:19+00:00'
+                              location:
+                                city: null
+                                state: null
+                                zip: null
+                                country: null
+                        transaction:
+                          pickup:
+                            pickupDate: '2022-03-30T00:00:00+00:00'
+                            closeTime: '15:00:00'
+                            readyTime: 09:00:00
+                            externalReferenceId: 2929602E9CP
+                          tracking:
+                            eta: null
+                            trackingNumber: 1Z8A76E49136380279
+                            trackingLink: https://www.ups.com/track?tracknum=1Z8A76E49136380279&requester=WT/trackdetails
+                            currentStatus:
+                              status: UNKNOWN
+                              statusDetails: null
+                              updatedAt: '2022-03-28T15:35:19+00:00'
+                              location:
+                                city: null
+                                state: null
+                                zip: null
+                                country: null
+                      brandRejectReason: null
+                      retailerRejectReason: null
+                      retailerCancellationRequestReason: null
+                      billingName: Charles Attan
+                      billingOrganisationName: Jumbo
+                      billingStreet: Kortricklaan 101
+                      billingPostalCode: 8121 GW
+                      billingCity: Arnhem
+                      billingCountryCode: NL
+                      submittedAt: '2022-02-02T20:15:05.000000Z'
+                      shippedAt: '2022-02-09T15:05:27.000000Z'
+                      brandPaidAt: null
+                      createdAt: '2022-02-02T19:42:31.000000Z'
+                      updatedAt: '2022-03-11T08:57:56.000000Z'
+                    relationships:
+                      retailer:
+                        data:
+                          type: retailers
+                          id: 092b63ce-c5b9-1eca-b05f-0242ac170007
+                  included:
+                  - type: retailers
+                    id: 092b63ce-c5b9-1eca-b05f-0242ac170007
+                    attributes:
+                      companyName: null
+                      storeName: TEST RETAILER
+                      storeUrl: null
+                      email: test-retailer@gmail.com
+                      firstName: Marie-France
+                      lastName: DESCHAMPS
+                      taxNumber: '819470824'
+                      vatNumber: FR58819470824
+                      eoriNumber: null
+                      phoneNumberE164: '+33688615593'
+                      businessIdentifier: '819470824'
+                      createdAt: '2020-06-19T11:59:30.000000Z'
+                      updatedAt: '2020-06-21T15:27:39.000000Z'
+                properties:
+                  data:
+                    description: The resource object for Order
+                    type: object
+                    additionalProperties: false
+                    title: Order Resource
+                    properties:
+                      type:
+                        type: string
+                        default: orders
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        additionalProperties: false
+                        properties:
+                          masterOrderId:
+                            type: string
+                            description: The identifier of the linked master order
+                            format: uuid
+                          status:
+                            type: string
+                            example: ankor_confirmed
+                            enum:
+                            - ankor_confirmed
+                            - rejected
+                            - brand_confirmed
+                            - shipping_labels_generated
+                            - fulfillment_requested
+                            - shipped
+                            - reception_refused
+                            - received
+                            - invoiced
+                            - brand_paid
+                            - cancelled
+                          reference:
+                            type: integer
+                            description: The order reference used on shipping labels, communication etc
+                          brandCurrency:
+                            type: string
+                            description: The currency the brand is paid in
+                          brandNetAmount:
+                            description: The amount the brand is paid (total - fees - shipping cost + shipping refund). You may find the Ankorstore fees and the other amounts by including the orders billing items.
+                            type: integer
+                          brandTotalAmount:
+                            description: The total of all order items not including VAT
+                            type: integer
+                          brandTotalAmountVat:
+                            description: The total VAT of all order items
+                            type: integer
+                          brandTotalAmountWithVat:
+                            description: The total of all order items including VAT
+                            type: integer
+                          shippingMethod:
+                            type:
+                            - 'null'
+                            - string
+                            description: The chosen shipping method after going through the shipping process
+                            enum:
+                            - ankorstore
+                            - custom
+                            - null
+                          shippingOverview:
+                            title: Order Resource -> Shipping Overview
+                            description: Contains all information related to either shipping method (`ankorstore` or `custom`). This field is ONLY included when fetching a single order at a time.
+                            type: object
+                            properties:
+                              availableShippingMethods:
+                                type: array
+                                description: Available shipping methods to use. Custom is ship with your own carrier outside of Ankorstore.
+                                items:
+                                  enum:
+                                  - ankorstore
+                                  - custom
+                              shipToAddress:
+                                type: object
+                                description: The address the order needs to be shipped to
+                                required:
+                                - street
+                                - city
+                                - postalCode
+                                properties:
+                                  name:
+                                    type:
+                                    - 'null'
+                                    - string
+                                    description: The first and last name of the recipient
+                                  organisationName:
+                                    type:
+                                    - 'null'
+                                    - string
+                                    description: The organisational name of the recipient
+                                  street:
+                                    type:
+                                    - 'null'
+                                    - string
+                                  city:
+                                    type:
+                                    - 'null'
+                                    - string
+                                  postalCode:
+                                    type:
+                                    - 'null'
+                                    - string
+                                  countryCode:
+                                    type:
+                                    - 'null'
+                                    - string
+                              expectedShippingDates:
+                                type: object
+                                description: The minimum and maximum expected shipping dates
+                                required:
+                                - minimum
+                                - maximum
+                                properties:
+                                  minimum:
+                                    type: string
+                                    format: datetime
+                                  maximum:
+                                    type: string
+                                    format: datetime
+                                  updatedMaximum:
+                                    type:
+                                    - 'null'
+                                    - string
+                                    format: datetime
+                              provider:
+                                type:
+                                - 'null'
+                                - string
+                                description: The company providing the shipping service
+                                enum:
+                                - ups
+                                - tnt
+                                - gls
+                                - dpd
+                                - dhl
+                                - dhl_express
+                                - colissimo
+                                - chronopost
+                                - null
+                              tracking:
+                                type:
+                                - 'null'
+                                - object
+                                description: Tracking details of the order
+                                properties:
+                                  number:
+                                    type: string
+                                  link:
+                                    type: string
+                                    format: url
+                                    description: A URL to view the tracking status
+                              latestQuote:
+                                description: 'The quote is the price of the parcel(s) shipping.
+
+                                  If this object is null then no quote has been generated.'
+                                type:
+                                - 'null'
+                                - object
+                                properties:
+                                  id:
+                                    type: string
+                                    description: Id of the last quote generated. Every time a ship call is done, a new calculation is made based on parcels dimensions and weight sent
+                                  provider:
+                                    type: string
+                                    enum:
+                                    - custom
+                                    - ups
+                                    description: 'Provider responsible for the calculation. If custom, the calculation is done by Ankorstore and refunded.
+
+                                      If any other, the calculation is done by the provider and the shipping price is covered by Ankorstore (most of the case, see shippingCostsOverview section).'
+                                  rateProvider:
+                                    type: string
+                                    description: The provider of the rate for `rateAmount`.
+                                    enum:
+                                    - ups
+                                    - ankorstore
+                                  rateAmount:
+                                    type: object
+                                    description: Amount calculated for the parcels provided.
+                                    properties:
+                                      amount:
+                                        type: integer
+                                        description: Lowest denomination of the currency this amount belongs to.
+                                      currency:
+                                        type: string
+                                  shippingCostsOverview:
+                                    type: object
+                                    description: Overview of costs related to shipping. This object is displayed only if a shipping cost fee or a refund exists
+                                    properties:
+                                      amount:
+                                        type: integer
+                                        description: Lowest denomination of the currency this amount belongs to.
+                                      currency:
+                                        type: string
+                                      type:
+                                        type: string
+                                        enum:
+                                        - refund
+                                        - fee
+                                        description: 'Type of shipping costs:
+
+                                          If type = `refund` the amount will be refunded to the brand (added to brand net amount).
+
+                                          if type = `fee` the amount will be subtracted from brand net amount as a contribution to shipping costs.'
+                                required:
+                                - id
+                                - provider
+                              parcels:
+                                type: array
+                                uniqueItems: true
+                                items:
+                                  description: Shipping Label Parcel
+                                  type: object
+                                  properties:
+                                    length:
+                                      type: integer
+                                      maximum: 274
+                                    width:
+                                      type: integer
+                                      maximum: 274
+                                    height:
+                                      type: integer
+                                      maximum: 274
+                                    distanceUnit:
+                                      type: string
+                                      description: The unit of distance
+                                      enum:
+                                      - cm
+                                    weight:
+                                      type: integer
+                                      minimum: 1
+                                      maximum: 30000
+                                    massUnit:
+                                      type: string
+                                      description: The unit of mass
+                                      enum:
+                                      - g
+                                    trackedPackage:
+                                      type:
+                                      - 'null'
+                                      - object
+                                      description: The tracking per parcel
+                                      properties:
+                                        labelUrl:
+                                          description: The URL to download the shipping label
+                                          type:
+                                          - 'null'
+                                          - string
+                                          format: url
+                                        eta:
+                                          type:
+                                          - 'null'
+                                          - string
+                                          format: datetime
+                                        trackingNumber:
+                                          type: string
+                                        trackingLink:
+                                          type: string
+                                        currentStatus:
+                                          type: object
+                                          properties: &id008
+                                            status:
+                                              type: string
+                                              description: The current status of the order/parcel
+                                              enum:
+                                              - UNKNOWN
+                                              - PRE_TRANSIT
+                                              - DELIVERED
+                                              - RETURNED
+                                              - FAILURE
+                                            statusDetails:
+                                              description: Human readable version of status
+                                              type:
+                                              - string
+                                              - 'null'
+                                            updatedAt:
+                                              type: string
+                                              description: Last time the status was updated
+                                              format: datetime
+                                            location:
+                                              type: object
+                                              description: Last known location
+                                              properties:
+                                                city:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                                state:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                                zip:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                                country:
+                                                  type:
+                                                  - 'null'
+                                                  - string
+                                      required:
+                                      - labelUrl
+                                      - eta
+                                      - trackingLink
+                                      - currentStatus
+                                  required:
+                                  - length
+                                  - width
+                                  - height
+                                  - distanceUnit
+                                  - weight
+                                  - massUnit
+                                  - trackedPackage
+                              transaction:
+                                type:
+                                - 'null'
+                                - object
+                                properties:
+                                  pickup:
+                                    description: The scheduled pickup, requires an API call to be made after the shipping labels have been generated.
+                                    type:
+                                    - 'null'
+                                    - object
+                                    required:
+                                    - pickupDate
+                                    - closeTime
+                                    - readyTime
+                                    - externalReferenceId
+                                    properties:
+                                      pickupDate:
+                                        type: string
+                                        format: datetime
+                                        description: The date of the pickup
+                                      readyTime:
+                                        type: string
+                                        description: 'Opening time of pickup Eg: 10:00:00'
+                                      closeTime:
+                                        type: string
+                                        description: 'Close time (pickup required to happen before this time) Eg: 13:00:00'
+                                      externalReferenceId:
+                                        type: string
+                                        description: The reference number for this pickup
+                                  tracking:
+                                    description: The tracking details for the overall shipment
+                                    type: object
+                                    properties:
+                                      eta:
+                                        type:
+                                        - 'null'
+                                        - string
+                                        format: datetime
+                                        description: The estimated time of arrival for the order
+                                      trackingNumber:
+                                        type: string
+                                        description: The tracking number of the order
+                                      trackingLink:
+                                        type: string
+                                        format: url
+                                        description: The tracking link for the order
+                                      currentStatus:
+                                        type: object
+                                        properties: *id008
+                                required:
+                                - pickup
+                                - tracking
+                            required:
+                            - availableShippingMethods
+                            - shipToAddress
+                            - expectedShippingDates
+                          brandRejectReason:
+                            type:
+                            - 'null'
+                            - string
+                            description: The reason the brand has given for rejecting the order
+                          retailerRejectReason:
+                            type:
+                            - 'null'
+                            - string
+                            description: The reason the retailer rejected the reception of the order
+                          retailerCancellationRequestReason:
+                            type:
+                            - 'null'
+                            - string
+                            description: The reason the retailer has given for a cancellation request
+                          billingName:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address name
+                          billingOrganisationName:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address organisation name
+                          billingStreet:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address street name
+                          billingPostalCode:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address postal code
+                          billingCity:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address city
+                          billingCountryCode:
+                            type:
+                            - 'null'
+                            - string
+                            description: The billing address country code - ISO format
+                          submittedAt:
+                            type: string
+                            format: datetime
+                            description: The timestamp of when the order was submitted (order is placed)
+                          shippedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: datetime
+                            description: The timestamp of when the order was shipped
+                          brandPaidAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: datetime
+                            description: The timestamp of when the brand was paid
+                          createdAt:
+                            type: string
+                            format: datetime
+                            description: (deprecated) The timestamp of when the order was created (before retailer payment)
+                          updatedAt:
+                            type: string
+                            format: datetime
+                            description: The timestamp of when the order was updated (does not include other resources)
+                      relationships:
+                        type: object
+                        properties:
+                          retailer:
+                            description: Related Retailer Resource
+                            type: object
+                            properties:
+                              data:
+                                allOf:
+                                - description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                  type: object
+                                  required: &id009
+                                  - id
+                                  - type
+                                  properties: &id010
+                                    id:
+                                      type: string
+                                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      format: uuid
+                                    type:
+                                      type: string
+                                      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    meta:
+                                      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                      type: object
+                                      additionalProperties: true
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    type:
+                                      const: retailers
+                          billingItems:
+                            description: Related Billing Item Resources
+                            type: object
+                            properties:
+                              data:
+                                type: array
+                                uniqueItems: true
+                                items:
+                                  allOf:
+                                  - description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id009
+                                    properties: *id010
+                                    additionalProperties: false
+                                  - type: object
+                                    properties:
+                                      type:
+                                        const: billing-items
+                          orderItems:
+                            description: Related Order Item Resources
+                            type: object
+                            properties:
+                              data:
+                                type: array
+                                uniqueItems: true
+                                items:
+                                  allOf:
+                                  - description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id009
+                                    properties: *id010
+                                    additionalProperties: false
+                                  - type: object
+                                    properties:
+                                      type:
+                                        const: order-items
+                          orderItems-productOption:
+                            description: 'Schema: Order Item -> Product Option Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id009
+                                properties: *id010
+                                additionalProperties: false
+                          orderItems-productOption-product:
+                            description: 'Schema: Order Item -> Product Option Resource -> Product'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id009
+                                properties: *id010
+                                additionalProperties: false
+                          orderItems-productVariant:
+                            description: 'Schema: Order Item -> Product Variant Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id009
+                                properties: *id010
+                                additionalProperties: false
+                          orderItems-productVariant-product:
+                            description: 'Schema: Order Item -> Product Variant Resource -> Product'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required: *id009
+                                properties: *id010
+                                additionalProperties: false
+                    required:
+                    - type
+                    - id
+                  included:
+                    description: To reduce the number of HTTP requests, servers **MAY** allow responses that include related resources along with the requested primary resources. Such responses are called `compound documents`.
+                    type: array
+                    uniqueItems: true
+                    items:
+                      anyOf:
+                      - title: Retailer Resource
+                        type: object
+                        additionalProperties: false
+                        example:
+                          type: retailers
+                          id: 092b63ce-c5b9-1eca-b05f-0242ac170007
+                          attributes:
+                            companyName: null
+                            storeName: TEST RETAILER
+                            storeUrl: null
+                            email: retailer@example.com
+                            firstName: John
+                            lastName: Smith
+                            taxNumber: '12345678'
+                            vatNumber: FR123456789
+                            eoriNumber: null
+                            phoneNumberE164: '+3345656456456'
+                            businessIdentifier: '3454353455'
+                            createdAt: '2020-06-19T11:59:30.000000Z'
+                            updatedAt: '2020-06-21T15:27:39.000000Z'
+                        properties:
+                          type:
+                            type: string
+                            default: retailers
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              companyName:
+                                type:
+                                - string
+                                - 'null'
+                                description: The registered company of the retailer
+                              storeName:
+                                type: string
+                                description: The name of the store
+                              storeUrl:
+                                type:
+                                - string
+                                - 'null'
+                                format: url
+                                description: The store's website
+                              email:
+                                type: string
+                                format: email
+                                description: Contact email for the retailer
+                              firstName:
+                                type: string
+                                description: Retailer's first name
+                              lastName:
+                                type: string
+                                description: Retailer's last name
+                              taxNumber:
+                                type: string
+                                description: Retailer's tax number
+                              vatNumber:
+                                type: string
+                                description: Retailer's VAT number
+                              eoriNumber:
+                                type:
+                                - string
+                                - 'null'
+                                description: Retailer's EORI number
+                              phoneNumberE164:
+                                type: string
+                                description: Retailer's phone number (E164 format)
+                              businessIdentifier:
+                                type: string
+                                description: The tax field to use - tax or vat number. If the retailer is a sole trader, this field will instead be their sole trading number
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the retailer was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the retailer was updated
+                          relationships:
+                            type: object
+                            properties:
+                              orders:
+                                description: The order's belonging to a retailer. See [Order Resource](https://ankorstore.github.io/api-docs/#tag/Order/operation/list-orders)
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: &id011
+                                      description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                      type: object
+                                      required: *id009
+                                      properties: *id010
+                                      additionalProperties: false
+                                    uniqueItems: true
+                        required:
+                        - type
+                        - id
+                        - attributes
+                      - title: Order Item Resource
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: order-items
+                          id: 62b263a8-00e1-1ecb-98d2-0242ac170007
+                          attributes:
+                            brandCurrency: EUR
+                            quantity: 1
+                            multipliedQuantity: 12
+                            vatRate: 5.5
+                            brandAmount: 3996
+                            brandAmountVat: 220
+                            brandAmountWithVat: 4216
+                            brandUnitPrice: 333
+                            createdAt: '2022-02-02T19:43:14.000000Z'
+                            updatedAt: '2022-02-02T19:43:14.000000Z'
+                          relationships:
+                            productOption:
+                              data:
+                                type: productOption
+                                id: '114135'
+                        properties:
+                          type:
+                            type: string
+                            default: order-items
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              brandCurrency:
+                                type: string
+                                description: The currency of the amounts for the brand
+                              quantity:
+                                type: integer
+                                description: The ordered quantity of the product
+                              multipliedQuantity:
+                                type: integer
+                                description: Some products are sold in fixed quantities, e.g a case of 6 wine bottles. If the quantity was 2, the multiplied quantity of wine bottles would be 12 (6 x 2). This "unitMultiplier" can be found on the product.
+                              vatRate:
+                                type: number
+                                format: float
+                                description: The VAT percentage rate of the order item (0-100)
+                              brandAmount:
+                                description: The amount due to the brand for this item
+                                type: integer
+                              brandAmountVat:
+                                description: The VAT amount due to the brand for this item
+                                type: integer
+                              brandAmountWithVat:
+                                description: The amount + VAT due to the brand for this item
+                                type: integer
+                              brandUnitPrice:
+                                description: The cost of a single unit of this item
+                                type: integer
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp this order item was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp this order item was updated
+                          relationships:
+                            type: object
+                            properties:
+                              productOptions:
+                                description: 'Reference: Product Option Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: *id011
+                                    uniqueItems: true
+                          meta:
+                            description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                            type: object
+                            additionalProperties: true
+                        required:
+                        - type
+                        - id
+                      - title: Billing Item Resource
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: billing-items
+                          id: f1dd6498-c5f8-1eca-a6b7-0242ac170007
+                          attributes:
+                            type: brand_platform_fees
+                            currency: EUR
+                            vatRate: 20
+                            currencyRate: 1
+                            amount: -1259
+                            amountVat: -252
+                            amountWithVat: -1511
+                            createdAt: '2022-02-02T19:42:32.000000Z'
+                            updatedAt: '2022-02-02T20:15:06.000000Z'
+                        properties:
+                          type:
+                            type: string
+                            default: billing-items
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              type:
+                                description: 'The `brand_platform_fees` is a commission for using our platform. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_new_customer_fees` is a commission on the first Order between brand and retailer. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_payment_fees` is a commission to guarantee Payment for brand. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_fast_payment` is a commission for using our fast payment feature. It will be a negative amount which reduces the total amount paid to the brand.
+
+
+                                  The `brand_flat_shipping_fees` is the shipping cost collected from the retailer when the order is below brand Franco. It is positive and adds to the total amount paid.
+
+
+                                  The `brand_shipping_fees` is a shipping cost. This type reduces the amount paid to the brand (but will be a positive value).
+
+
+                                  The `brand_shipping_fees_refund` is a refund from Ankorstore to brand for shipping. This type is positive and adds to the total amount paid.
+
+
+                                  The `brand_shipping_fees_discount` is a referral shipping offer. This type is positive and adds to the total amount paid.
+
+
+                                  There still might also be legacy types which are not listed here but they will be removed in the nearest future.
+
+                                  '
+                                type: string
+                                enum:
+                                - brand_platform_fees
+                                - brand_new_customer_fees
+                                - brand_payment_fees
+                                - brand_fast_payment
+                                - brand_flat_shipping_fees
+                                - brand_shipping_fees
+                                - brand_shipping_fees_refund
+                                - brand_shipping_fees_discount
+                              currency:
+                                type: string
+                                description: The currency of the billing item
+                              vatRate:
+                                type: number
+                                format: float
+                                description: The VAT percentage rate of the billing item, (from 0 - 100).
+                              currencyRate:
+                                type: number
+                                format: float
+                                description: If the currency is not in EUR, this is the conversion rate used
+                              amount:
+                                description: The amount for the billing item
+                                type: integer
+                              amountVat:
+                                description: The VAT amount for the billing item
+                                type: integer
+                              amountWithVat:
+                                description: The amount including VAT for the billing item
+                                type: integer
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the billing item was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the billing item was updated
+                        required:
+                        - type
+                        - id
+                      - title: Product Option Resource
+                        description: A unique option for a product
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: product-options
+                          id: 7ec06d5c-023e-1ecb-a477-0242ac170007
+                          attributes:
+                            name: Test Product Option
+                            sku: '051100'
+                            ian: '3770005999506'
+                            outOfStock: false
+                            createdAt: '2020-08-27T14:29:15.000000Z'
+                            updatedAt: '2021-10-04T12:03:31.000000Z'
+                            archivedAt: null
+                          relationships:
+                            product:
+                              data:
+                                type: products
+                                id: 7f4665f6-023e-1ecb-a4b2-0242ac170007
+                        properties:
+                          type:
+                            type: string
+                            default: product-options
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the option
+                              sku:
+                                type: string
+                                description: The SKU of the option
+                              ian:
+                                type:
+                                - 'null'
+                                - string
+                                description: The IAN (EAN) of the option, can be null
+                              outOfStock:
+                                type: boolean
+                                description: Whether the product is in stock or not
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this option was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this option was updated
+                              archivedAt:
+                                type:
+                                - 'null'
+                                - string
+                                description: Timestamp of when this option was archived
+                          relationships:
+                            type: object
+                            properties:
+                              product:
+                                description: 'Reference: Product Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id009
+                                    properties: *id010
+                                    additionalProperties: false
+                        required:
+                        - type
+                        - id
+                      - title: Product Variant Resource
+                        description: Variant details for a given product. Unique products will have one single variant.
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: product-variants
+                          id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                          attributes:
+                            name: Test Product Variant
+                            sku: Product-Variant-001
+                            ian: '1924859325863'
+                            createdAt: '2020-08-27T14:29:15.000000Z'
+                            updatedAt: '2021-10-04T12:03:31.000000Z'
+                            archivedAt: null
+                            retailPrice: 800
+                            wholesalePrice: 500
+                            originalWholesalePrice: 500
+                            availableQuantity: 125
+                            reservedQuantity: 25
+                            stockQuantity: 150
+                            isAlwaysInStock: false
+                            inventoryPolicy: deny
+                            fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                            availableAt: '2028-01-01T00:00:00.000000Z'
+                            images:
+                            - order: 1
+                              url: https://example.com/image1.jpg
+                            - order: 2
+                              url: https://example.com/image2.jpg
+                          relationships:
+                            product:
+                              data:
+                                type: products
+                                id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                        properties:
+                          type:
+                            type: string
+                            default: product-variants
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the product variant
+                              sku:
+                                type: string
+                                description: The SKU of the product variant
+                              ian:
+                                type:
+                                - 'null'
+                                - string
+                                description: The IAN (EAN) of the product variant, can be null
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this product variant was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this product variant was updated
+                              archivedAt:
+                                type:
+                                - 'null'
+                                - string
+                                description: Timestamp of when this product variant was archived
+                              retailPrice:
+                                description: The suggested retail price of the product
+                                type: integer
+                              wholesalePrice:
+                                description: The wholesale price after the discount rate is applied
+                                type: integer
+                              originalWholesalePrice:
+                                description: The original wholesale price set by the brand
+                                type: integer
+                              availableQuantity:
+                                type:
+                                - 'null'
+                                - integer
+                                description: Number of units that are available to order
+                              reservedQuantity:
+                                type: integer
+                                description: Number of units in stock that are reserved
+                              stockQuantity:
+                                type:
+                                - 'null'
+                                - integer
+                                description: Total number of units in stock (available + reserved)
+                              isAlwaysInStock:
+                                type: boolean
+                                description: True if the product is always in stock, false otherwise
+                              inventoryPolicy:
+                                type: string
+                                description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                                  available stock reaches zero; `continue` allows the variant to accept
+
+                                  orders even when available stock is zero or negative. `continue`
+
+                                  requires `isAlwaysInStock=false`.
+
+                                  '
+                                enum:
+                                - deny
+                                - continue
+                                default: deny
+                              fulfillableId:
+                                type:
+                                - 'null'
+                                - string
+                                format: uuid
+                                description: Resource ID used for interacting with the fulfillment service
+                              availableAt:
+                                type: string
+                                nullable: true
+                                format: date
+                                description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                              images:
+                                type: array
+                                description: List of variant images ordered by display priority
+                                items:
+                                  type: object
+                                  properties:
+                                    order:
+                                      type: integer
+                                      description: Display order of the image (lower is higher priority)
+                                    url:
+                                      type: string
+                                      description: URL of the variant image
+                          relationships:
+                            type: object
+                            properties:
+                              product:
+                                description: 'Reference: Product Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id009
+                                    properties: *id010
+                                    additionalProperties: false
+                        required:
+                        - type
+                        - id
+                      - title: Product Resource
+                        description: The resource object for Product
+                        type: object
+                        additionalProperties: false
+                        properties:
+                          type:
+                            type: string
+                            default: products
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the product
+                              description:
+                                type: string
+                                description: The description of the product
+                              language:
+                                type: string
+                                description: The language of the title and description
+                              dimensions:
+                                type: string
+                                description: The human readable dimensions of the product
+                              netWeight:
+                                type: string
+                                description: The weight of the product itself
+                              capacity:
+                                type: string
+                                description: eg. Capacity in weight eg 100g
+                              position:
+                                type: number
+                                description: The position of the product in the brands catalog, lower the higher it is
+                              unitMultiplier:
+                                type: integer
+                                description: How many products are shipped together, ie a case of 6 wine bottles. Presented options then would be 6, 12, 18 etc.
+                              vatRate:
+                                type: number
+                                format: float
+                                description: The VAT rate of the product
+                              discountRate:
+                                description: The percentage discount if a brand is offering one (0 - 1)
+                                type: number
+                                format: float
+                              productTypeId:
+                                description: 'Product Type ID
+
+                                  <div class="warning"> <b>Deprecation Notice</b><br/> <p>This attribute is deprecated and will be removed in a future release.</p> <p> We strongly encourage all users to update their integrations accordingly to ensure continued compatibility. If you have any questions or need assistance, please contact support. </p> </div>
+
+                                  '
+                                type: number
+                                format: integer
+                              active:
+                                type: boolean
+                                description: Whether the product is active or not
+                              outOfStock:
+                                type: boolean
+                                description: Whether the product is out of stock or not
+                              archived:
+                                type: boolean
+                                description: Whether the product is archived or not
+                              retailPrice:
+                                description: The suggested retail price of the product
+                                type: integer
+                              wholesalePrice:
+                                description: The wholesale price after the discount rate is applied
+                                type: integer
+                              originalWholesalePrice:
+                                description: The original wholesale price set by the brand
+                                type: integer
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the product was created
+                              indexedAt:
+                                type:
+                                - 'null'
+                                - string
+                                format: datetime
+                                description: The timestamp when the product was indexed
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: The timestamp when the product was updated
+                              images:
+                                type: array
+                                description: List of product images ordered by display priority
+                                items:
+                                  type: object
+                                  properties:
+                                    order:
+                                      type: integer
+                                      description: Display order of the image (lower is higher priority)
+                                    url:
+                                      type: string
+                                      description: URL of the product image
+                              tags:
+                                type: array
+                                description: List of tags associated with the product
+                                items:
+                                  type: string
+                          relationships:
+                            type: object
+                            properties:
+                              productOption:
+                                description: 'Reference: Product Option Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: *id011
+                                    uniqueItems: true
+                              productVariant:
+                                description: 'Reference: Product Variant Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                    type: array
+                                    items: *id011
+                                    uniqueItems: true
+                        required:
+                        - type
+                        - id
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id012
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+              examples:
+                example:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    data:
+                      type: order
+                      id: 1ecb023e-7ec0-6d5c-a477-0242ac170007
+                      attributes:
+                        status: rejected
+                        reference: 3434273911
+                        brandCurrency: EUR
+                        brandNetAmount: 10229
+                        brandTotalAmount: 10940
+                        brandTotalAmountVat: 602
+                        brandTotalAmountWithVat: 11542
+                        brandRejectReason: Products not in stock.
+                        retailerRejectReason: null
+                        retailerCancellationRequestReason: null
+                        billingName: Charles Attan
+                        billingOrganisationName: Jumbo
+                        billingStreet: Kortricklaan 101
+                        billingPostalCode: 8121 GW
+                        billingCity: Arnhem
+                        billingCountryCode: NL
+                        submittedAt: '2022-03-17T13:19:33+00:00'
+                        shippedAt: null
+                        brandPaidAt: null
+                        createdAt: '2022-02-01T14:37:10+00:00'
+                        updatedAt: '2022-03-31T15:10:07+00:00'
+                        shippingMethod: null
+                        shippingOverview:
+                          availableShippingMethods:
+                          - custom
+                          - ankorstore
+                          shipToAddress:
+                            name: John Smith
+                            organisationName: Test
+                            street: Test Street
+                            city: Commentry
+                            postalCode: '03633'
+                            countryCode: FR
+                          expectedShippingDates:
+                            minimum: '2022-03-22T00:00:00+00:00'
+                            maximum: '2022-03-24T23:59:59+00:00'
+                            updatedMaximum: '2022-03-30T23:59:59+00:00'
+                          provider: null
+                          tracking: null
+                          latestQuote: null
+                          parcels: []
+                          transaction: null
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id013
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id012
+                    additionalProperties: false
+                required: &id014
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '409':
+          description: Conflict
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              examples:
+                State update failed:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    errors:
+                    - code: ORDER_ACTION_REJECT_FAILED
+                      detail: Order cannot be rejected from this state
+                      status: '409'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id013
+                required: *id014
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The order.reject reason is required.
+                  source:
+                    pointer: order.rejectReason
+                  status: '422'
+                  title: Unprocessable Content
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              description: Reject payload
+              type: object
+              properties:
+                order:
+                  type: object
+                  required:
+                  - rejectType
+                  properties:
+                    rejectReason:
+                      type: string
+                      description: A detailed description of the reason for the order rejection. Required if reject type "OTHER" is used, optional for the rest of the predefined reject types
+                      minLength: 1
+                      maxLength: 1000
+                      writeOnly: true
+                    rejectType:
+                      type: string
+                      description: One of the available reject reasons. If this field is omitted from the payload it will default to OTHER to ensure backwards compatibility. Please note that this field will be mandatory in the future.
+                      enum:
+                      - BRAND_ALREADY_HAS_CUSTOMER_IN_THE_AREA
+                      - BRAND_CANNOT_DELIVER_TO_THE_AREA
+                      - BRAND_HAS_EXCLUSIVE_DISTRIBUTOR_IN_THE_REGION
+                      - BUYER_NOT_A_RETAILER
+                      - ORDER_ITEMS_PRICES_INCORRECT
+                      - PAYMENT_ISSUES_WITH_RETAILER
+                      - PREPARATION_TIME_TOO_HIGH
+                      - PRODUCT_OUT_OF_STOCK
+                      - PURCHASE_NOT_FOR_RESALE
+                      - RETAILER_AGREED_TO_DO_CHANGES_TO_ORDER
+                      - RETAILER_NOT_GOOD_FIT_FOR_BRAND
+                      - RETAILER_VAT_NUMBER_MISSING
+                      - OTHER
+                      writeOnly: true
+              required:
+              - order
+            examples:
+              predefined-reject-type:
+                value:
+                  order:
+                    rejectType: PRODUCT_OUT_OF_STOCK
+              custom-reject-reason:
+                value:
+                  order:
+                    rejectType: OTHER
+                    rejectReason: Unfortunately these days we cannot send the order due to lack of the necessary package materials
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

@@ -1,0 +1,3244 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Catalog API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Catalog
+  description: "ℹ️ This section describes the API endpoints that you can use to manage your catalog resources, such as products, product variants etc.\n\n## \U0001F4A1 Working with Products\n\nHere you will find information about the product resource and its sub-resources. If you need further information please refer to the API specification.\n\n### Including Product Variants\n\nWhen retrieving the individual product via the API, you may pass an `?include=productVariants` query parameter that will return associated product variants inside the `included` root level object.\n\n### Important Fields within Product Resource\n\nIf the field contains no data, it will be `null`.\n\n## \U0001F4A1 Stock Management\n\nThis API allows you to manage your product variants stock for the marketplace in both single- and bulk-operation mode.\nThere are 2 opposite options available for the stock update requests - set an explicit product quantity\nor mark the corresponding product as \"always in stock\".\n\n### Stock statuses\nStock for the marketplace can be in one of two states. It can be `available` to order on the marketplace, or `reserved` for an order that has been submitted, but not yet shipped.\nAdded together, these quantities make up the `onHand` state, which reflects the total quantity of the product variant \"on hand\" at your storage location(s).\n\n> ⚠️ **Unless specified otherwise, `stockQuantity` used in the following APIs refers to `onHand` quantity**\n\nSee also [Stock State](#tag/folderName_Stock-Concepts/Stock-state) for more general information about stock states used in the Stock Tracking  APIs.\n\n#### Example\n* 100 units of the product variant X are stock at your location (`onHand`).\n* 30 units of product variant X are `reserved` for Ankorstore orders that have not yet been shipped.\n* Then 70 units of product variant X are `available` to order on the marketplace.\n\nNow consider you produce 50 more units of product variant X, and sell 27 units on another marketplace. Your input for the stock update API would be:\n```\n// 100 + 50 - 27 = 133\n\"stockQuantity\": 123\n```\n\n### Set product variant stock explicit quantity\n\nTo set an explicit quantity for the particular product variant, you should specify the amount in the payload.\nIn case if the target product variant was previously marked as \"always in stock\", this option will be disabled and the stock\nwill be set to given value.\n\nExample of the payload to set a product variant stock to the given value (single-operation mode):\n\n`PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`\n```json\n{\n  \"data\": {\n    \"attributes\": {\n      \"stockQuantity\": 123\n    }\n  }\n}\n```\nMore details can be found in the endpoint specification\n\n### Set product variant as \"always in stock\"\n\nTo mark a particular product variant as \"always in stock\" and do not care about the stock amounts, you should include a\nflag `isAlwaysInStock` into the request payload. In case if the target product variant had explicit stock amount set previously,\nit will be reset.\n\nExample of the payload to set a product variant stock to the given value (single-operation mode):\n\n`PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`\n```json\n{\n  \"data\": {\n    \"attributes\": {\n      \"isAlwaysInStock\": true\n    }\n  }\n}\n```\nMore details can be found in the endpoint specification\n\n### Update stocks of multiple product variants in single request (bulk-operation mode)\n\nThis API allows to update stocks of multiple product variants in single request. There is a specific endpoint which\naccepts up to 50 operations per request. Validation, business rules and payload of each operation is identical to the\nsingle-operation mode, described above.\n\nExample of the payload to update stocks of multiple product variants in single request:\n\n`POST /api/v1/operations`\n```json\n{\n  \"atomic:operations\": [\n    {\n      \"op\": \"update\",\n      \"data\": {\n        \"type\": \"productVariants\",\n        \"id\": \"1ed18988-3253-610e-8223-aa5cd9844001\",\n        \"attributes\": {\n          \"isAlwaysInStock\": true\n        }\n      }\n    },\n    {\n      \"op\": \"update\",\n      \"data\": {\n        \"type\": \"productVariants\",\n        \"id\": \"1ed18988-6651-610e-8223-aa5cd9844f96\",\n        \"attributes\": {\n          \"stockQuantity\": 123\n        }\n      }\n    }\n  ]\n}\n```\nMore details can be found in the endpoint specification\n"
+paths:
+  /api/v1/products:
+    get:
+      summary: List Products
+      description: Returns all products
+      operationId: list-products
+      tags:
+      - Catalog
+      parameters:
+      - name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: productVariant)'
+        allowEmptyValue: true
+        required: false
+        schema:
+          type: string
+          enum:
+          - productOption
+          - productVariant
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: page[limit]
+        in: query
+        description: limit the amount of results returned
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page[before]
+        in: query
+        description: show items before the provided ID (uuid format)
+        required: false
+        schema:
+          type: string
+      - name: page[after]
+        in: query
+        description: show items after the provided ID (uuid format)
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                title: Product Collection
+                required:
+                - data
+                properties:
+                  meta:
+                    type: object
+                    description: Meta with Pagination Details
+                    required:
+                    - page
+                    additionalProperties: true
+                    properties:
+                      page:
+                        description: Cursor pagination details
+                        type: object
+                        properties:
+                          from:
+                            type:
+                            - string
+                            - 'null'
+                          to:
+                            type:
+                            - string
+                            - 'null'
+                          hasMore:
+                            type: boolean
+                          perPage:
+                            type: integer
+                        required:
+                        - from
+                        - to
+                        - perPage
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id002
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  links:
+                    description: Pagination navigation links. If a link does not exist then you cannot paginate any further in that direction.
+                    type: object
+                    properties:
+                      first:
+                        type: string
+                        format: url
+                      next:
+                        type: string
+                        format: url
+                      prev:
+                        type: string
+                        format: url
+                  data:
+                    description: List of Product resource objects
+                    type: array
+                    uniqueItems: true
+                    items:
+                      title: Product Resource
+                      description: The resource object for Product
+                      type: object
+                      additionalProperties: false
+                      properties:
+                        type:
+                          type: string
+                          default: products
+                        id:
+                          type: string
+                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                          format: uuid
+                        attributes:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: The name of the product
+                            description:
+                              type: string
+                              description: The description of the product
+                            language:
+                              type: string
+                              description: The language of the title and description
+                            dimensions:
+                              type: string
+                              description: The human readable dimensions of the product
+                            netWeight:
+                              type: string
+                              description: The weight of the product itself
+                            capacity:
+                              type: string
+                              description: eg. Capacity in weight eg 100g
+                            position:
+                              type: number
+                              description: The position of the product in the brands catalog, lower the higher it is
+                            unitMultiplier:
+                              type: integer
+                              description: How many products are shipped together, ie a case of 6 wine bottles. Presented options then would be 6, 12, 18 etc.
+                            vatRate:
+                              type: number
+                              format: float
+                              description: The VAT rate of the product
+                            discountRate:
+                              description: The percentage discount if a brand is offering one (0 - 1)
+                              type: number
+                              format: float
+                            productTypeId:
+                              description: 'Product Type ID
+
+                                <div class="warning"> <b>Deprecation Notice</b><br/> <p>This attribute is deprecated and will be removed in a future release.</p> <p> We strongly encourage all users to update their integrations accordingly to ensure continued compatibility. If you have any questions or need assistance, please contact support. </p> </div>
+
+                                '
+                              type: number
+                              format: integer
+                            active:
+                              type: boolean
+                              description: Whether the product is active or not
+                            outOfStock:
+                              type: boolean
+                              description: Whether the product is out of stock or not
+                            archived:
+                              type: boolean
+                              description: Whether the product is archived or not
+                            retailPrice:
+                              description: The suggested retail price of the product
+                              type: integer
+                            wholesalePrice:
+                              description: The wholesale price after the discount rate is applied
+                              type: integer
+                            originalWholesalePrice:
+                              description: The original wholesale price set by the brand
+                              type: integer
+                            createdAt:
+                              type: string
+                              format: datetime
+                              description: The timestamp when the product was created
+                            indexedAt:
+                              type:
+                              - 'null'
+                              - string
+                              format: datetime
+                              description: The timestamp when the product was indexed
+                            updatedAt:
+                              type: string
+                              format: datetime
+                              description: The timestamp when the product was updated
+                            images:
+                              type: array
+                              description: List of product images ordered by display priority
+                              items:
+                                type: object
+                                properties:
+                                  order:
+                                    type: integer
+                                    description: Display order of the image (lower is higher priority)
+                                  url:
+                                    type: string
+                                    description: URL of the product image
+                            tags:
+                              type: array
+                              description: List of tags associated with the product
+                              items:
+                                type: string
+                        relationships:
+                          type: object
+                          properties:
+                            productOption:
+                              description: 'Reference: Product Option Resource'
+                              type: object
+                              properties:
+                                data:
+                                  description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                  type: array
+                                  items: &id001
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required:
+                                    - id
+                                    - type
+                                    properties:
+                                      id:
+                                        type: string
+                                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        format: uuid
+                                      type:
+                                        type: string
+                                        description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      meta:
+                                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                        type: object
+                                        additionalProperties: true
+                                    additionalProperties: false
+                                  uniqueItems: true
+                            productVariant:
+                              description: 'Reference: Product Variant Resource'
+                              type: object
+                              properties:
+                                data:
+                                  description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                  type: array
+                                  items: *id001
+                                  uniqueItems: true
+                      required:
+                      - type
+                      - id
+                additionalProperties: false
+              examples:
+                example:
+                  value:
+                    meta:
+                      page:
+                        from: 123e4567-e89b-12d3-a456-426614174000
+                        hasMore: true
+                        perPage: 2
+                        to: 1ecb023e-7ec0-6d5c-a477-0242ac170008
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      first: https://www.ankorstore.com/api/v1/orders?include=&page%5Blimit%5D=2
+                      next: https://www.ankorstore.com/api/v1/orders?include=&page%5Bafter%5D=797910&page%5Blimit%5D=2
+                      prev: https://www.ankorstore.com/api/v1/orders?include=&page%5Bbefore%5D=904234&page%5Blimit%5D=2
+                    data:
+                    - type: product
+                      id: 0c5e6540-0da9-1ecb-bf59-0242ac170007
+                      attributes:
+                        name: Example Product
+                        description: Example description of product
+                        language: fr
+                        dimensions: 5,5x5,5x6
+                        netWeight: 100G
+                        capacity: 100g
+                        position: 34
+                        unitMultiplier: 12
+                        vatRate: 5.5
+                        discountRate: 0
+                        active: true
+                        outOfStock: false
+                        archived: false
+                        retailPrice: 750
+                        wholesalePrice: 426
+                        originalWholesalePrice: 426
+                        createdAt: '2020-08-27T14:26:38.000000Z'
+                        indexedAt: '2022-02-10T03:26:11.000000Z'
+                        updatedAt: '2022-02-09T14:49:09.000000Z'
+                    - type: product
+                      id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                      attributes:
+                        name: Example Product 2
+                        description: Example description of product 2
+                        language: fr
+                        dimensions: 10,5x10,5x12
+                        netWeight: 250G
+                        capacity: 250g
+                        position: 20
+                        unitMultiplier: 12
+                        vatRate: 5.5
+                        discountRate: 0
+                        active: true
+                        outOfStock: false
+                        archived: false
+                        retailPrice: 900
+                        wholesalePrice: 700
+                        originalWholesalePrice: 700
+                        createdAt: '2020-09-27T14:26:38.000000Z'
+                        indexedAt: '2022-02-10T03:26:11.000000Z'
+                        updatedAt: '2022-02-09T14:49:09.000000Z'
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id003
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id002
+                    additionalProperties: false
+                required: &id004
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id003
+                required: *id004
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id003
+                required: *id004
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+  /api/v1/products/{product}:
+    get:
+      summary: Get Product
+      description: Retrieve a specific product
+      operationId: get-product
+      tags:
+      - Catalog
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: product
+        in: path
+        required: true
+        schema:
+          default: 079ba9ad-dcdb-4dda-ba0a-1174dad313c5
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      - name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: productVariant)'
+        allowEmptyValue: true
+        required: false
+        schema:
+          type: string
+          enum:
+          - productOption
+          - productVariant
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                title: Product Get
+                properties:
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id008
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                  data:
+                    title: Product Resource
+                    description: The resource object for Product
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      type:
+                        type: string
+                        default: products
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: The name of the product
+                          description:
+                            type: string
+                            description: The description of the product
+                          language:
+                            type: string
+                            description: The language of the title and description
+                          dimensions:
+                            type: string
+                            description: The human readable dimensions of the product
+                          netWeight:
+                            type: string
+                            description: The weight of the product itself
+                          capacity:
+                            type: string
+                            description: eg. Capacity in weight eg 100g
+                          position:
+                            type: number
+                            description: The position of the product in the brands catalog, lower the higher it is
+                          unitMultiplier:
+                            type: integer
+                            description: How many products are shipped together, ie a case of 6 wine bottles. Presented options then would be 6, 12, 18 etc.
+                          vatRate:
+                            type: number
+                            format: float
+                            description: The VAT rate of the product
+                          discountRate:
+                            description: The percentage discount if a brand is offering one (0 - 1)
+                            type: number
+                            format: float
+                          productTypeId:
+                            description: 'Product Type ID
+
+                              <div class="warning"> <b>Deprecation Notice</b><br/> <p>This attribute is deprecated and will be removed in a future release.</p> <p> We strongly encourage all users to update their integrations accordingly to ensure continued compatibility. If you have any questions or need assistance, please contact support. </p> </div>
+
+                              '
+                            type: number
+                            format: integer
+                          active:
+                            type: boolean
+                            description: Whether the product is active or not
+                          outOfStock:
+                            type: boolean
+                            description: Whether the product is out of stock or not
+                          archived:
+                            type: boolean
+                            description: Whether the product is archived or not
+                          retailPrice:
+                            description: The suggested retail price of the product
+                            type: integer
+                          wholesalePrice:
+                            description: The wholesale price after the discount rate is applied
+                            type: integer
+                          originalWholesalePrice:
+                            description: The original wholesale price set by the brand
+                            type: integer
+                          createdAt:
+                            type: string
+                            format: datetime
+                            description: The timestamp when the product was created
+                          indexedAt:
+                            type:
+                            - 'null'
+                            - string
+                            format: datetime
+                            description: The timestamp when the product was indexed
+                          updatedAt:
+                            type: string
+                            format: datetime
+                            description: The timestamp when the product was updated
+                          images:
+                            type: array
+                            description: List of product images ordered by display priority
+                            items:
+                              type: object
+                              properties:
+                                order:
+                                  type: integer
+                                  description: Display order of the image (lower is higher priority)
+                                url:
+                                  type: string
+                                  description: URL of the product image
+                          tags:
+                            type: array
+                            description: List of tags associated with the product
+                            items:
+                              type: string
+                      relationships:
+                        type: object
+                        properties:
+                          productOption:
+                            description: 'Reference: Product Option Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                type: array
+                                items: &id005
+                                  description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                  type: object
+                                  required: &id006
+                                  - id
+                                  - type
+                                  properties: &id007
+                                    id:
+                                      type: string
+                                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      format: uuid
+                                    type:
+                                      type: string
+                                      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    meta:
+                                      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                      type: object
+                                      additionalProperties: true
+                                  additionalProperties: false
+                                uniqueItems: true
+                          productVariant:
+                            description: 'Reference: Product Variant Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: An array of objects each containing `type` and `id` members for to-many relationships.
+                                type: array
+                                items: *id005
+                                uniqueItems: true
+                    required:
+                    - type
+                    - id
+                  included:
+                    description: To reduce the number of HTTP requests, servers **MAY** allow responses that include related resources along with the requested primary resources. Such responses are called `compound documents`.
+                    type:
+                    - array
+                    - 'null'
+                    uniqueItems: true
+                    items:
+                      anyOf:
+                      - title: Product Variant Resource
+                        description: Variant details for a given product. Unique products will have one single variant.
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: product-variants
+                          id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                          attributes:
+                            name: Test Product Variant
+                            sku: Product-Variant-001
+                            ian: '1924859325863'
+                            createdAt: '2020-08-27T14:29:15.000000Z'
+                            updatedAt: '2021-10-04T12:03:31.000000Z'
+                            archivedAt: null
+                            retailPrice: 800
+                            wholesalePrice: 500
+                            originalWholesalePrice: 500
+                            availableQuantity: 125
+                            reservedQuantity: 25
+                            stockQuantity: 150
+                            isAlwaysInStock: false
+                            inventoryPolicy: deny
+                            fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                            availableAt: '2028-01-01T00:00:00.000000Z'
+                            images:
+                            - order: 1
+                              url: https://example.com/image1.jpg
+                            - order: 2
+                              url: https://example.com/image2.jpg
+                          relationships:
+                            product:
+                              data:
+                                type: products
+                                id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                        properties:
+                          type:
+                            type: string
+                            default: product-variants
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the product variant
+                              sku:
+                                type: string
+                                description: The SKU of the product variant
+                              ian:
+                                type:
+                                - 'null'
+                                - string
+                                description: The IAN (EAN) of the product variant, can be null
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this product variant was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this product variant was updated
+                              archivedAt:
+                                type:
+                                - 'null'
+                                - string
+                                description: Timestamp of when this product variant was archived
+                              retailPrice:
+                                description: The suggested retail price of the product
+                                type: integer
+                              wholesalePrice:
+                                description: The wholesale price after the discount rate is applied
+                                type: integer
+                              originalWholesalePrice:
+                                description: The original wholesale price set by the brand
+                                type: integer
+                              availableQuantity:
+                                type:
+                                - 'null'
+                                - integer
+                                description: Number of units that are available to order
+                              reservedQuantity:
+                                type: integer
+                                description: Number of units in stock that are reserved
+                              stockQuantity:
+                                type:
+                                - 'null'
+                                - integer
+                                description: Total number of units in stock (available + reserved)
+                              isAlwaysInStock:
+                                type: boolean
+                                description: True if the product is always in stock, false otherwise
+                              inventoryPolicy:
+                                type: string
+                                description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                                  available stock reaches zero; `continue` allows the variant to accept
+
+                                  orders even when available stock is zero or negative. `continue`
+
+                                  requires `isAlwaysInStock=false`.
+
+                                  '
+                                enum:
+                                - deny
+                                - continue
+                                default: deny
+                              fulfillableId:
+                                type:
+                                - 'null'
+                                - string
+                                format: uuid
+                                description: Resource ID used for interacting with the fulfillment service
+                              availableAt:
+                                type: string
+                                nullable: true
+                                format: date
+                                description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                              images:
+                                type: array
+                                description: List of variant images ordered by display priority
+                                items:
+                                  type: object
+                                  properties:
+                                    order:
+                                      type: integer
+                                      description: Display order of the image (lower is higher priority)
+                                    url:
+                                      type: string
+                                      description: URL of the variant image
+                          relationships:
+                            type: object
+                            properties:
+                              product:
+                                description: 'Reference: Product Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id006
+                                    properties: *id007
+                                    additionalProperties: false
+                        required:
+                        - type
+                        - id
+                      - title: Product Option Resource
+                        description: A unique option for a product
+                        type: object
+                        additionalProperties: false
+                        examples:
+                        - type: product-options
+                          id: 7ec06d5c-023e-1ecb-a477-0242ac170007
+                          attributes:
+                            name: Test Product Option
+                            sku: '051100'
+                            ian: '3770005999506'
+                            outOfStock: false
+                            createdAt: '2020-08-27T14:29:15.000000Z'
+                            updatedAt: '2021-10-04T12:03:31.000000Z'
+                            archivedAt: null
+                          relationships:
+                            product:
+                              data:
+                                type: products
+                                id: 7f4665f6-023e-1ecb-a4b2-0242ac170007
+                        properties:
+                          type:
+                            type: string
+                            default: product-options
+                          id:
+                            type: string
+                            description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                            format: uuid
+                          attributes:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: The name of the option
+                              sku:
+                                type: string
+                                description: The SKU of the option
+                              ian:
+                                type:
+                                - 'null'
+                                - string
+                                description: The IAN (EAN) of the option, can be null
+                              outOfStock:
+                                type: boolean
+                                description: Whether the product is in stock or not
+                              createdAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this option was created
+                              updatedAt:
+                                type: string
+                                format: datetime
+                                description: Timestamp of when this option was updated
+                              archivedAt:
+                                type:
+                                - 'null'
+                                - string
+                                description: Timestamp of when this option was archived
+                          relationships:
+                            type: object
+                            properties:
+                              product:
+                                description: 'Reference: Product Resource'
+                                type: object
+                                properties:
+                                  data:
+                                    description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                    type: object
+                                    required: *id006
+                                    properties: *id007
+                                    additionalProperties: false
+                        required:
+                        - type
+                        - id
+                examples:
+                - jsonapi:
+                    $ref: ../../v1.yaml#/components/schemas/jsonapi
+                  data:
+                    type: products
+                    id: 0c5e6540-0da9-1ecb-bf59-0242ac170007
+                    attributes:
+                      name: Example Product
+                      description: Example description of product
+                      language: fr
+                      dimensions: 5,5x5,5x6
+                      netWeight: 100G
+                      capacity: 100g
+                      position: 34
+                      unitMultiplier: 12
+                      vatRate: 5.5
+                      discountRate: 0
+                      active: true
+                      outOfStock: false
+                      archived: false
+                      retailPrice: 750
+                      wholesalePrice: 426
+                      originalWholesalePrice: 426
+                      createdAt: '2020-08-27T14:26:38.000000Z'
+                      indexedAt: '2022-02-10T03:26:11.000000Z'
+                      updatedAt: '2022-02-09T14:49:09.000000Z'
+                  included:
+                  - type: product-variants
+                    id: 3571bdc1-fa01-44fa-9342-d99bd1c2befa
+                    attributes:
+                      name: Test Product Variant
+                      sku: Product-Variant-001
+                      ian: '1924859325863'
+                      createdAt: '2020-08-27T14:29:15.000000Z'
+                      updatedAt: '2021-10-04T12:03:31.000000Z'
+                      archivedAt: null
+                      retailPrice: 800
+                      wholesalePrice: 500
+                      originalWholesalePrice: 500
+                      availableQuantity: 125
+                      reservedQuantity: 25
+                      stockQuantity: 150
+                      isAlwaysInStock: false
+                      inventoryPolicy: deny
+                      fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                      availableAt: '2028-01-01T00:00:00.000000Z'
+                      images:
+                      - order: 1
+                        url: https://example.com/image1.jpg
+                      - order: 2
+                        url: https://example.com/image2.jpg
+                required:
+                - data
+              examples:
+                example:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    data:
+                      type: product
+                      id: 0c5e6540-0da9-1ecb-bf59-0242ac170007
+                      attributes:
+                        name: Example Product
+                        description: Example description of product
+                        language: fr
+                        dimensions: 5,5x5,5x6
+                        netWeight: 100G
+                        capacity: 100g
+                        position: 34
+                        unitMultiplier: 12
+                        vatRate: 5.5
+                        discountRate: 0
+                        productTypeId: 1
+                        active: true
+                        outOfStock: false
+                        archived: false
+                        retailPrice: 750
+                        wholesalePrice: 426
+                        originalWholesalePrice: 426
+                        createdAt: '2020-08-27T14:26:38.000000Z'
+                        indexedAt: '2022-02-10T03:26:11.000000Z'
+                        updatedAt: '2022-02-09T14:49:09.000000Z'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                        tags:
+                        - tags_organic
+                        - tags_handmade
+                        - tags_eco_friendly
+                    included:
+                    - type: productVariant
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                      relationships:
+                        product:
+                          data:
+                            type: product
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id009
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id008
+                    additionalProperties: false
+                required: &id010
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id009
+                required: *id010
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id009
+                required: *id010
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id009
+                required: *id010
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+  /api/v1/product-variants:
+    get:
+      summary: List Product Variants
+      description: Returns all product variants with their stock
+      operationId: list-product-variants-with-stock
+      tags:
+      - Catalog
+      parameters:
+      - name: Accept
+        description: application/vnd.api+json
+        in: header
+        schema:
+          type: string
+      - name: filter[id][]
+        description: Filter by ID(s)
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        required: false
+        example:
+        - 3571bdc1-fa01-44fa-9342-d99bd1c2befa
+        - 4271bdc1-fa01-44fa-9342-d99bd1c2befa
+      - name: filter[productId][]
+        description: Filter by product ID(s)
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+        required: false
+        example:
+        - 2291bdc1-bc01-44fa-9342-d95bd1c2befa
+        - 4271bdc1-fa11-54fa-9242-d99bd1c2befb
+      - name: filter[sku]
+        description: Filter by SKU(s)
+        in: query
+        schema:
+          type: string
+        required: false
+        example: MY-SKU12,MY-SKU34
+      - name: filter[ian]
+        description: Filter by IAN/EAN (exact match, comma-separated for multiple)
+        in: query
+        schema:
+          type: string
+        required: false
+        example: 1924859325863,1924859325867
+      - name: filter[skuOrName]
+        description: Filter by SKU or name
+        in: query
+        schema:
+          type: string
+        required: false
+      - name: filter[archived]
+        description: Filter by archived status (`archivedAt` attribute is nullable or not)
+        in: query
+        schema:
+          type: boolean
+        required: false
+      - schema:
+          type: string
+          enum:
+          - product
+        name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: product)'
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    description: List of Product Variant resource objects
+                    type: array
+                    uniqueItems: true
+                    items:
+                      title: Product Variant Resource
+                      description: Variant details for a given product. Unique products will have one single variant.
+                      type: object
+                      additionalProperties: false
+                      examples:
+                      - type: product-variants
+                        id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                        attributes:
+                          name: Test Product Variant
+                          sku: Product-Variant-001
+                          ian: '1924859325863'
+                          createdAt: '2020-08-27T14:29:15.000000Z'
+                          updatedAt: '2021-10-04T12:03:31.000000Z'
+                          archivedAt: null
+                          retailPrice: 800
+                          wholesalePrice: 500
+                          originalWholesalePrice: 500
+                          availableQuantity: 125
+                          reservedQuantity: 25
+                          stockQuantity: 150
+                          isAlwaysInStock: false
+                          inventoryPolicy: deny
+                          fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                          availableAt: '2028-01-01T00:00:00.000000Z'
+                          images:
+                          - order: 1
+                            url: https://example.com/image1.jpg
+                          - order: 2
+                            url: https://example.com/image2.jpg
+                        relationships:
+                          product:
+                            data:
+                              type: products
+                              id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                      properties:
+                        type:
+                          type: string
+                          default: product-variants
+                        id:
+                          type: string
+                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                          format: uuid
+                        attributes:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              description: The name of the product variant
+                            sku:
+                              type: string
+                              description: The SKU of the product variant
+                            ian:
+                              type:
+                              - 'null'
+                              - string
+                              description: The IAN (EAN) of the product variant, can be null
+                            createdAt:
+                              type: string
+                              format: datetime
+                              description: Timestamp of when this product variant was created
+                            updatedAt:
+                              type: string
+                              format: datetime
+                              description: Timestamp of when this product variant was updated
+                            archivedAt:
+                              type:
+                              - 'null'
+                              - string
+                              description: Timestamp of when this product variant was archived
+                            retailPrice:
+                              description: The suggested retail price of the product
+                              type: integer
+                            wholesalePrice:
+                              description: The wholesale price after the discount rate is applied
+                              type: integer
+                            originalWholesalePrice:
+                              description: The original wholesale price set by the brand
+                              type: integer
+                            availableQuantity:
+                              type:
+                              - 'null'
+                              - integer
+                              description: Number of units that are available to order
+                            reservedQuantity:
+                              type: integer
+                              description: Number of units in stock that are reserved
+                            stockQuantity:
+                              type:
+                              - 'null'
+                              - integer
+                              description: Total number of units in stock (available + reserved)
+                            isAlwaysInStock:
+                              type: boolean
+                              description: True if the product is always in stock, false otherwise
+                            inventoryPolicy:
+                              type: string
+                              description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                                available stock reaches zero; `continue` allows the variant to accept
+
+                                orders even when available stock is zero or negative. `continue`
+
+                                requires `isAlwaysInStock=false`.
+
+                                '
+                              enum:
+                              - deny
+                              - continue
+                              default: deny
+                            fulfillableId:
+                              type:
+                              - 'null'
+                              - string
+                              format: uuid
+                              description: Resource ID used for interacting with the fulfillment service
+                            availableAt:
+                              type: string
+                              nullable: true
+                              format: date
+                              description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                            images:
+                              type: array
+                              description: List of variant images ordered by display priority
+                              items:
+                                type: object
+                                properties:
+                                  order:
+                                    type: integer
+                                    description: Display order of the image (lower is higher priority)
+                                  url:
+                                    type: string
+                                    description: URL of the variant image
+                        relationships:
+                          type: object
+                          properties:
+                            product:
+                              description: 'Reference: Product Resource'
+                              type: object
+                              properties:
+                                data:
+                                  description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                  type: object
+                                  required:
+                                  - id
+                                  - type
+                                  properties:
+                                    id:
+                                      type: string
+                                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      format: uuid
+                                    type:
+                                      type: string
+                                      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    meta:
+                                      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                      type: object
+                                      additionalProperties: true
+                                  additionalProperties: false
+                      required:
+                      - type
+                      - id
+                  meta:
+                    type: object
+                    description: Meta with Pagination Details
+                    required:
+                    - page
+                    additionalProperties: true
+                    properties:
+                      page:
+                        description: Cursor pagination details
+                        type: object
+                        properties:
+                          from:
+                            type:
+                            - string
+                            - 'null'
+                          to:
+                            type:
+                            - string
+                            - 'null'
+                          hasMore:
+                            type: boolean
+                          perPage:
+                            type: integer
+                        required:
+                        - from
+                        - to
+                        - perPage
+                  links:
+                    description: Pagination navigation links. If a link does not exist then you cannot paginate any further in that direction.
+                    type: object
+                    properties:
+                      first:
+                        type: string
+                        format: url
+                      next:
+                        type: string
+                        format: url
+                      prev:
+                        type: string
+                        format: url
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id011
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                additionalProperties: false
+                title: Product Variant Collection
+              examples:
+                example:
+                  value:
+                    meta:
+                      page:
+                        from: 3571bdc1-fa01-44fa-9342-d99bd1c2befa
+                        hasMore: true
+                        perPage: 2
+                        to: 4271bdc1-fa01-44fa-9342-d99bd1c2befa
+                    jsonapi:
+                      version: '1.0'
+                    links:
+                      first: https://www.ankorstore.com/api/v1/product-variants?include=&page%5Blimit%5D=2
+                      next: https://www.ankorstore.com/api/v1/product-variants?include=&page%5Bafter%5D=4271bdc1-fa01-44fa-9342-d99bd1c2befa&page%5Blimit%5D=2
+                      prev: https://www.ankorstore.com/api/v1/product-variants?include=&page%5Bbefore%5D=3571bdc1-fa01-44fa-9342-d99bd1c2befa&page%5Blimit%5D=2
+                    data:
+                    - type: productVariant
+                      id: 3571bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                      relationships:
+                        product:
+                          data:
+                            type: product
+                            id: 4271bdc1-fa11-54fa-9242-d99bd1c2befb
+                    - type: productVariant
+                      id: 4271bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Another test Product Variant
+                        sku: Product-Variant-002
+                        ian: '1924859325867'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: continue
+                      relationships:
+                        product:
+                          data:
+                            type: product
+                            id: 2291bdc1-bc01-44fa-9342-d95bd1c2befa
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id012
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id011
+                    additionalProperties: false
+                required: &id013
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id012
+                required: *id013
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id012
+                required: *id013
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id012
+                required: *id013
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+  /api/v1/product-variants/{productVariant}:
+    get:
+      summary: Get Product Variant
+      description: Get product variant with stock
+      operationId: get-product-variant-with-stock
+      tags:
+      - Catalog
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: productVariant
+        in: path
+        required: true
+        schema:
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      - schema:
+          type: string
+          enum:
+          - product
+        name: include
+        in: query
+        description: 'A comma-separated list of resources to include (e.g: product)'
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Product Variant Resource
+                    description: Variant details for a given product. Unique products will have one single variant.
+                    type: object
+                    additionalProperties: false
+                    examples:
+                    - type: product-variants
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                        fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                        availableAt: '2028-01-01T00:00:00.000000Z'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                      relationships:
+                        product:
+                          data:
+                            type: products
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                    properties:
+                      type:
+                        type: string
+                        default: product-variants
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: The name of the product variant
+                          sku:
+                            type: string
+                            description: The SKU of the product variant
+                          ian:
+                            type:
+                            - 'null'
+                            - string
+                            description: The IAN (EAN) of the product variant, can be null
+                          createdAt:
+                            type: string
+                            format: datetime
+                            description: Timestamp of when this product variant was created
+                          updatedAt:
+                            type: string
+                            format: datetime
+                            description: Timestamp of when this product variant was updated
+                          archivedAt:
+                            type:
+                            - 'null'
+                            - string
+                            description: Timestamp of when this product variant was archived
+                          retailPrice:
+                            description: The suggested retail price of the product
+                            type: integer
+                          wholesalePrice:
+                            description: The wholesale price after the discount rate is applied
+                            type: integer
+                          originalWholesalePrice:
+                            description: The original wholesale price set by the brand
+                            type: integer
+                          availableQuantity:
+                            type:
+                            - 'null'
+                            - integer
+                            description: Number of units that are available to order
+                          reservedQuantity:
+                            type: integer
+                            description: Number of units in stock that are reserved
+                          stockQuantity:
+                            type:
+                            - 'null'
+                            - integer
+                            description: Total number of units in stock (available + reserved)
+                          isAlwaysInStock:
+                            type: boolean
+                            description: True if the product is always in stock, false otherwise
+                          inventoryPolicy:
+                            type: string
+                            description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                              available stock reaches zero; `continue` allows the variant to accept
+
+                              orders even when available stock is zero or negative. `continue`
+
+                              requires `isAlwaysInStock=false`.
+
+                              '
+                            enum:
+                            - deny
+                            - continue
+                            default: deny
+                          fulfillableId:
+                            type:
+                            - 'null'
+                            - string
+                            format: uuid
+                            description: Resource ID used for interacting with the fulfillment service
+                          availableAt:
+                            type: string
+                            nullable: true
+                            format: date
+                            description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                          images:
+                            type: array
+                            description: List of variant images ordered by display priority
+                            items:
+                              type: object
+                              properties:
+                                order:
+                                  type: integer
+                                  description: Display order of the image (lower is higher priority)
+                                url:
+                                  type: string
+                                  description: URL of the variant image
+                      relationships:
+                        type: object
+                        properties:
+                          product:
+                            description: 'Reference: Product Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
+                                additionalProperties: false
+                    required:
+                    - type
+                    - id
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id014
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+              examples:
+                example:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    data:
+                      type: productVariant
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                        fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                        availableAt: '2028-01-01'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                      relationships:
+                        product:
+                          data:
+                            type: product
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id015
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id014
+                    additionalProperties: false
+                required: &id016
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id015
+                required: *id016
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id015
+                required: *id016
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id015
+                required: *id016
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id015
+                required: *id016
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+  /api/v1/product-variants/{productVariant}/stock:
+    patch:
+      summary: Update Product Variant Stock
+      description: Update product variant stock
+      operationId: update-product-variant-stock
+      tags:
+      - Catalog
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: productVariant
+        in: path
+        required: true
+        schema:
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Product Variant Resource
+                    description: Variant details for a given product. Unique products will have one single variant.
+                    type: object
+                    additionalProperties: false
+                    examples:
+                    - type: product-variants
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                        fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                        availableAt: '2028-01-01T00:00:00.000000Z'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                      relationships:
+                        product:
+                          data:
+                            type: products
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                    properties:
+                      type:
+                        type: string
+                        default: product-variants
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: The name of the product variant
+                          sku:
+                            type: string
+                            description: The SKU of the product variant
+                          ian:
+                            type:
+                            - 'null'
+                            - string
+                            description: The IAN (EAN) of the product variant, can be null
+                          createdAt:
+                            type: string
+                            format: datetime
+                            description: Timestamp of when this product variant was created
+                          updatedAt:
+                            type: string
+                            format: datetime
+                            description: Timestamp of when this product variant was updated
+                          archivedAt:
+                            type:
+                            - 'null'
+                            - string
+                            description: Timestamp of when this product variant was archived
+                          retailPrice:
+                            description: The suggested retail price of the product
+                            type: integer
+                          wholesalePrice:
+                            description: The wholesale price after the discount rate is applied
+                            type: integer
+                          originalWholesalePrice:
+                            description: The original wholesale price set by the brand
+                            type: integer
+                          availableQuantity:
+                            type:
+                            - 'null'
+                            - integer
+                            description: Number of units that are available to order
+                          reservedQuantity:
+                            type: integer
+                            description: Number of units in stock that are reserved
+                          stockQuantity:
+                            type:
+                            - 'null'
+                            - integer
+                            description: Total number of units in stock (available + reserved)
+                          isAlwaysInStock:
+                            type: boolean
+                            description: True if the product is always in stock, false otherwise
+                          inventoryPolicy:
+                            type: string
+                            description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                              available stock reaches zero; `continue` allows the variant to accept
+
+                              orders even when available stock is zero or negative. `continue`
+
+                              requires `isAlwaysInStock=false`.
+
+                              '
+                            enum:
+                            - deny
+                            - continue
+                            default: deny
+                          fulfillableId:
+                            type:
+                            - 'null'
+                            - string
+                            format: uuid
+                            description: Resource ID used for interacting with the fulfillment service
+                          availableAt:
+                            type: string
+                            nullable: true
+                            format: date
+                            description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                          images:
+                            type: array
+                            description: List of variant images ordered by display priority
+                            items:
+                              type: object
+                              properties:
+                                order:
+                                  type: integer
+                                  description: Display order of the image (lower is higher priority)
+                                url:
+                                  type: string
+                                  description: URL of the variant image
+                      relationships:
+                        type: object
+                        properties:
+                          product:
+                            description: 'Reference: Product Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
+                                additionalProperties: false
+                    required:
+                    - type
+                    - id
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id017
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+              examples:
+                example:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    data:
+                      type: productVariant
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                        fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                        availableAt: '2028-01-01'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                      relationships:
+                        product:
+                          data:
+                            type: product
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id018
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id017
+                    additionalProperties: false
+                required: &id019
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id018
+                required: *id019
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                data:
+                  anyOf:
+                  - title: ProductVariantStockUpdateSetStockQuantity
+                    type: object
+                    description: A request schema to update product variant stock value by setting explicit stock quantity.
+                    properties:
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      type:
+                        type: string
+                        default: product-variants
+                      attributes:
+                        type: object
+                        required:
+                        - stockQuantity
+                        properties:
+                          stockQuantity:
+                            description: Total number of units in stock (available + reserved)
+                            type: integer
+                            minimum: 0
+                            example: 100
+                          inventoryPolicy:
+                            type: string
+                            enum:
+                            - deny
+                            - continue
+                            default: deny
+                            description: 'Sell-when-out-of-stock policy. `continue` lets the variant
+
+                              accept orders even when available stock reaches zero or
+
+                              goes negative; only valid alongside a tracked stock update
+
+                              (this schema). Omit to preserve the variant''s current
+
+                              policy.
+
+                              '
+                    required:
+                    - id
+                    - type
+                    - attributes
+                    examples:
+                    - type: product-variants
+                      id: 1e7b432b-50d4-4495-b032-6cbbc5f6f023
+                      attributes:
+                        stockQuantity: 100
+                        inventoryPolicy: continue
+                  - title: ProductVariantStockUpdateSetIsAlwaysInStockRequest
+                    type: object
+                    examples:
+                    - type: product-variants
+                      id: ec5d2b52-4911-4eff-9846-71787f9f02df
+                      attributes:
+                        isAlwaysInStock: true
+                    properties:
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      type:
+                        type: string
+                        default: product-variants
+                      attributes:
+                        type: object
+                        required:
+                        - isAlwaysInStock
+                        properties:
+                          isAlwaysInStock:
+                            type: boolean
+                            description: Whether the current product variant is always in stock
+                          inventoryPolicy:
+                            type: string
+                            enum:
+                            - deny
+                            default: deny
+                            description: 'Sell-when-out-of-stock policy. Only `deny` is accepted in
+
+                              combination with `isAlwaysInStock=true`; an always-in-stock
+
+                              variant cannot opt into `continue` because continue-selling
+
+                              requires tracked stock. Use the `stockQuantity` form of this
+
+                              endpoint to set `continue`.
+
+                              '
+                    required:
+                    - id
+                    - type
+                    - attributes
+                    description: A request schema to update product variant stock value by setting option "always in stock" to true. It will also reset any possibly previously existed explicit stock quantities.
+              required:
+              - data
+            examples:
+              example:
+                value:
+                  data:
+                    type: product-variants
+                    id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                    attributes:
+                      isAlwaysInStock: false
+                      stockQuantity: 20
+  /api/v1/product-variants/{productVariant}/prices:
+    patch:
+      summary: Update wholesale and retail prices of a product variant
+      description: Update wholesale and retail prices of a product variant
+      operationId: update-product-variant-prices
+      tags:
+      - Catalog
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: productVariant
+        in: path
+        required: true
+        schema:
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      responses:
+        '200':
+          description: '[OK](https://jsonapi.org/format/#fetching-resources-responses-200)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    title: Product Variant Resource
+                    description: Variant details for a given product. Unique products will have one single variant.
+                    type: object
+                    additionalProperties: false
+                    examples:
+                    - type: product-variants
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                        fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                        availableAt: '2028-01-01T00:00:00.000000Z'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                      relationships:
+                        product:
+                          data:
+                            type: products
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+                    properties:
+                      type:
+                        type: string
+                        default: product-variants
+                      id:
+                        type: string
+                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                        format: uuid
+                      attributes:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: The name of the product variant
+                          sku:
+                            type: string
+                            description: The SKU of the product variant
+                          ian:
+                            type:
+                            - 'null'
+                            - string
+                            description: The IAN (EAN) of the product variant, can be null
+                          createdAt:
+                            type: string
+                            format: datetime
+                            description: Timestamp of when this product variant was created
+                          updatedAt:
+                            type: string
+                            format: datetime
+                            description: Timestamp of when this product variant was updated
+                          archivedAt:
+                            type:
+                            - 'null'
+                            - string
+                            description: Timestamp of when this product variant was archived
+                          retailPrice:
+                            description: The suggested retail price of the product
+                            type: integer
+                          wholesalePrice:
+                            description: The wholesale price after the discount rate is applied
+                            type: integer
+                          originalWholesalePrice:
+                            description: The original wholesale price set by the brand
+                            type: integer
+                          availableQuantity:
+                            type:
+                            - 'null'
+                            - integer
+                            description: Number of units that are available to order
+                          reservedQuantity:
+                            type: integer
+                            description: Number of units in stock that are reserved
+                          stockQuantity:
+                            type:
+                            - 'null'
+                            - integer
+                            description: Total number of units in stock (available + reserved)
+                          isAlwaysInStock:
+                            type: boolean
+                            description: True if the product is always in stock, false otherwise
+                          inventoryPolicy:
+                            type: string
+                            description: 'Sell-when-out-of-stock policy. `deny` (default) rejects orders once
+
+                              available stock reaches zero; `continue` allows the variant to accept
+
+                              orders even when available stock is zero or negative. `continue`
+
+                              requires `isAlwaysInStock=false`.
+
+                              '
+                            enum:
+                            - deny
+                            - continue
+                            default: deny
+                          fulfillableId:
+                            type:
+                            - 'null'
+                            - string
+                            format: uuid
+                            description: Resource ID used for interacting with the fulfillment service
+                          availableAt:
+                            type: string
+                            nullable: true
+                            format: date
+                            description: Shipping date(in future) of a preorder product e.g. 2028-12-01
+                          images:
+                            type: array
+                            description: List of variant images ordered by display priority
+                            items:
+                              type: object
+                              properties:
+                                order:
+                                  type: integer
+                                  description: Display order of the image (lower is higher priority)
+                                url:
+                                  type: string
+                                  description: URL of the variant image
+                      relationships:
+                        type: object
+                        properties:
+                          product:
+                            description: 'Reference: Product Resource'
+                            type: object
+                            properties:
+                              data:
+                                description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                type: object
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
+                                additionalProperties: false
+                    required:
+                    - type
+                    - id
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id020
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+              examples:
+                example:
+                  value:
+                    jsonapi:
+                      version: '1.0'
+                    data:
+                      type: productVariant
+                      id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        name: Test Product Variant
+                        sku: Product-Variant-001
+                        ian: '1924859325863'
+                        createdAt: '2020-08-27T14:29:15.000000Z'
+                        updatedAt: '2021-10-04T12:03:31.000000Z'
+                        archivedAt: null
+                        retailPrice: 800
+                        wholesalePrice: 500
+                        originalWholesalePrice: 500
+                        availableQuantity: 125
+                        reservedQuantity: 25
+                        stockQuantity: 150
+                        isAlwaysInStock: false
+                        inventoryPolicy: deny
+                        fulfillableId: 8f066352-67cb-1efa-bddb-9e3047198b2e
+                        availableAt: '2028-01-01'
+                        images:
+                        - order: 1
+                          url: https://example.com/image1.jpg
+                        - order: 2
+                          url: https://example.com/image2.jpg
+                      relationships:
+                        product:
+                          data:
+                            type: product
+                            id: c8466a3c-4fb8-4474-a86f-20f10d14314f
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id021
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id020
+                    additionalProperties: false
+                required: &id022
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id021
+                required: *id022
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id021
+                required: *id022
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id021
+                required: *id022
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id021
+                required: *id022
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              required:
+              - data
+              properties:
+                data:
+                  type: object
+                  required:
+                  - type
+                  - id
+                  - attributes
+                  properties:
+                    id:
+                      type: string
+                      description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                      format: uuid
+                    type:
+                      type: string
+                      default: product-variants
+                    attributes:
+                      type: object
+                      required:
+                      - wholesalePrice
+                      - retailPrice
+                      properties:
+                        wholesalePrice:
+                          type: number
+                          format: int
+                          description: New wholesale price
+                        retailPrice:
+                          type: number
+                          format: int
+                          description: New retail price
+            examples:
+              example:
+                value:
+                  data:
+                    type: product-variants
+                    id: 2171bdc1-fa01-44fa-9342-d99bd1c2befa
+                    attributes:
+                      wholesalePrice: 100
+                      retailPrice: 200
+  /api/v1/product-variants/{productVariant}/declare-fulfillment-item:
+    post:
+      summary: Declare product variant as fulfillment item
+      operationId: product-variants-declare-fulfillment-item
+      tags:
+      - Catalog
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      - name: productVariant
+        in: path
+        required: true
+        schema:
+          type: string
+          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    barcode:
+                      type: string
+                      pattern: ^\d{13,14}$
+                    unitsPerBatch:
+                      type: integer
+                    unitCostMargin:
+                      description: Margin (as a percentage) between the cost price and wholesale price. Used for insurance purposes
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 100
+                    classificationCode:
+                      type:
+                      - string
+                      - 'null'
+                    expiryTracked:
+                      type: boolean
+                    shelfLife:
+                      type:
+                      - integer
+                      - 'null'
+                    lotTracked:
+                      type: boolean
+                    isFragile:
+                      type: boolean
+                    isOrganic:
+                      type: boolean
+                    needRepack:
+                      type: boolean
+                    needRelabel:
+                      type: boolean
+                    alcoholCode:
+                      description: Code for alcohol classification, as used in the warehouse
+                      type: integer
+                      minimum: 1
+                      maximum: 11
+                    alcoholPercentage:
+                      description: Percentage of alcohol in the item
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 100
+                    volumeOfLiquidPerPack:
+                      description: Volume of liquid per pack in liter
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 100
+                    icpeCode:
+                      description: Installation Classified for the Protection of the Environment, as used in the warehouse
+                      type: integer
+                      minimum: 1000
+                      maximum: 4999
+                  required:
+                  - barcode
+                  - unitCost
+      responses:
+        '200':
+          description: Fulfillment item already exists for this product variant
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: 'null'
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id023
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+        '201':
+          description: Fulfillment item successfully created
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: 'null'
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id023
+                    additionalProperties: false
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id024
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id023
+                    additionalProperties: false
+                required: &id025
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id024
+                required: *id025
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/product-variant-prices:
+    get:
+      summary: Get prices for product variants
+      description: 'Returns retailer-specific wholesale prices for a batch of product variants.
+
+        Prices are computed with all applicable discounts applied (AKS+, segment,
+
+        business-event discounts), so `wholesale_price` reflects the actual price
+
+        the authenticated retailer would pay.
+
+
+        Both the original (pre-discount) and the effective (post-discount) wholesale
+
+        prices are returned so callers can display strikethrough pricing when a
+
+        discount applies.
+
+
+        Variants not found or not priceable for the authenticated retailer are
+
+        silently omitted from the response.
+
+        '
+      operationId: get-product-variant-prices
+      tags:
+      - Catalog
+      parameters:
+      - name: filter[id][]
+        description: 'One or more product variant UUIDs to price. Repeat the parameter for
+
+          each UUID. Minimum 1, maximum 50 per request.
+
+          '
+        in: query
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          maxItems: 50
+        example:
+        - 3571bdc1-fa01-44fa-9342-d99bd1c2befa
+        - 4271bdc1-fa01-44fa-9342-d99bd1c2befa
+      responses:
+        '200':
+          description: OK
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - type
+                      - id
+                      - attributes
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - product-variant-prices
+                          description: JSON:API resource type.
+                        id:
+                          type: string
+                          format: uuid
+                          description: The product variant UUID.
+                        attributes:
+                          type: object
+                          required:
+                          - original_wholesale_price
+                          - wholesale_price
+                          - discount_rate
+                          properties:
+                            original_wholesale_price:
+                              type: object
+                              description: Wholesale price before any retailer-specific discount.
+                              required:
+                              - amount
+                              - currency
+                              properties:
+                                amount:
+                                  type: integer
+                                  description: Amount in the currency's minor unit (e.g. cents for EUR).
+                                  example: 2000
+                                currency:
+                                  type: string
+                                  description: ISO-4217 currency code.
+                                  example: EUR
+                            wholesale_price:
+                              type: object
+                              description: Effective wholesale price after all applicable discounts.
+                              required:
+                              - amount
+                              - currency
+                              properties:
+                                amount:
+                                  type: integer
+                                  description: Amount in the currency's minor unit (e.g. cents for EUR).
+                                  example: 1800
+                                currency:
+                                  type: string
+                                  description: ISO-4217 currency code.
+                                  example: EUR
+                            discount_rate:
+                              type: integer
+                              description: Highest discount percentage applied as a whole number (e.g. 10 means 10% off). 0 when no discount applies.
+                              example: 10
+              examples:
+                example:
+                  value:
+                    data:
+                    - type: product-variant-prices
+                      id: 3571bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        original_wholesale_price:
+                          amount: 2000
+                          currency: EUR
+                        wholesale_price:
+                          amount: 1800
+                          currency: EUR
+                        discount_rate: 10
+                    - type: product-variant-prices
+                      id: 4271bdc1-fa01-44fa-9342-d99bd1c2befa
+                      attributes:
+                        original_wholesale_price:
+                          amount: 1500
+                          currency: EUR
+                        wholesale_price:
+                          amount: 1500
+                          currency: EUR
+                        discount_rate: 0
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id026
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id027
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unauthorized
+                  status: '401'
+        '403':
+          description: '[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id026
+                required: *id027
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Forbidden
+                  status: '403'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id026
+                required: *id027
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id026
+                required: *id027
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id026
+                required: *id027
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

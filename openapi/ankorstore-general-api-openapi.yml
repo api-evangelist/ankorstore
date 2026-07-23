@@ -1,0 +1,605 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications General API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: General
+  description: 'ℹ️ This section contains general-purpose endpoints that are transversal to the system. These endpoints provide
+
+    reference data useful across different integration scenarios.
+
+
+    ## 💡 Currency Rates
+
+
+    The currency rates endpoint returns the latest exchange rates used by the Ankorstore platform.
+
+
+    > ⚠️ This endpoint is **public** and does **not** require authentication.
+
+
+    ```
+
+    [GET] /api/v1/currencies/rates/latest
+
+    ```
+
+
+    Each rate entry contains:
+
+    - `fromCurrency` - The source currency code (e.g., `"USD"`)
+
+    - `toCurrency` - The target currency code (e.g., `"EUR"`)
+
+    - `rate` - The exchange rate as a decimal number
+
+    - `date` - The date of the rate
+
+
+    This is useful when your integration needs to display prices in multiple currencies or reconcile amounts across
+
+    different currency zones.
+
+    '
+paths:
+  /api/v1/currencies/rates/latest:
+    get:
+      summary: List of latest currency rates
+      operationId: get-currencies-rates-latest
+      description: Returns a list of the latest currency rates. This endpoint is public and does not require authentication.
+      tags:
+      - General
+      parameters:
+      - name: Accept
+        in: header
+        description: application/vnd.api+json
+        schema:
+          type: string
+          default: application/vnd.api+json
+      responses:
+        '200':
+          description: Set of currency exchange rates
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      properties:
+                        type:
+                          type: string
+                          default: currency-rates
+                        id:
+                          type: string
+                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                          format: uuid
+                        attributes:
+                          type: object
+                          properties:
+                            fromCurrency:
+                              type: string
+                              pattern: ^[A-Z]{3}$
+                            toCurrency:
+                              type: string
+                              pattern: ^[A-Z]{3}$
+                            date:
+                              type: string
+                              format: date
+                            rate:
+                              type: number
+                      required:
+                      - type
+                      - id
+                      - attributes
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: &id001
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - data
+                - jsonapi
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id002
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties: *id001
+                    additionalProperties: false
+                required: &id003
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id002
+                required: *id003
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/email-verifications:
+    post:
+      summary: Request Email Verification Code
+      operationId: create-email-verification
+      tags:
+      - General
+      description: 'Sends a verification code to the provided email address.
+
+        Returns a verification token that must be used when verifying the code.
+
+        '
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - data
+              properties:
+                data:
+                  type: object
+                  required:
+                  - type
+                  - attributes
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - email-verifications
+                      example: email-verifications
+                    attributes:
+                      type: object
+                      required:
+                      - email
+                      properties:
+                        email:
+                          type: string
+                          format: email
+                          description: The email address to verify
+                          example: user@example.com
+      responses:
+        '201':
+          description: Verification code sent successfully
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: email-verifications
+                      id:
+                        type: string
+                        format: uuid
+                        description: The verification token to use when verifying the code
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                      attributes:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                          expiresInMinutes:
+                            type: integer
+                            description: Number of minutes until the verification code expires
+                            example: 10
+                          verifiedAt:
+                            type: string
+                            format: date-time
+                            nullable: true
+                            description: Timestamp when the email was verified (null if not yet verified)
+                            example: null
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id004
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id005
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id004
+                required: *id005
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id004
+                required: *id005
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id004
+                required: *id005
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+  /api/v1/email-verifications/{email_verification}:
+    patch:
+      summary: Verify Email Code
+      operationId: verify-email-code
+      tags:
+      - General
+      description: 'Verifies the code sent to the email address.
+
+        The verification token from the initial request must be provided as the resource ID.
+
+        '
+      parameters:
+      - name: email_verification
+        in: path
+        required: true
+        description: The verification token received from the create email verification request
+        schema:
+          type: string
+          format: uuid
+        example: 550e8400-e29b-41d4-a716-446655440000
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - data
+              properties:
+                data:
+                  type: object
+                  required:
+                  - type
+                  - id
+                  - attributes
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - email-verifications
+                      example: email-verifications
+                    id:
+                      type: string
+                      format: uuid
+                      description: The verification token
+                      example: 550e8400-e29b-41d4-a716-446655440000
+                    attributes:
+                      type: object
+                      required:
+                      - code
+                      properties:
+                        code:
+                          type: string
+                          pattern: ^\d{6}$
+                          description: The 6-digit verification code sent to the email
+                          example: '123456'
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: email-verifications
+                      id:
+                        type: string
+                        format: uuid
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                      attributes:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                            example: user@example.com
+                          expiresInMinutes:
+                            type: integer
+                            example: 10
+                          verifiedAt:
+                            type: string
+                            format: date-time
+                            description: Timestamp when the email was verified
+                            example: '2024-01-15T10:30:00Z'
+        '404':
+          description: '[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: &id006
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required: &id007
+                - errors
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not found
+                  status: '404'
+        '406':
+          description: Not Acceptable
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Not Acceptable
+                  status: '406'
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Unsupported Media Type
+                  status: '415'
+        '422':
+          description: 'Unprocessable Entity : Data provided are invalid'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: string
+                errors:
+                - detail: The field is required.
+                  source:
+                    pointer: data.attributes.field
+                  status: '422'
+                  title: Unprocessable Content
+        '500':
+          description: '[Server Error](https://jsonapi.org/format/#errors)'
+          content:
+            application/vnd.api+json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties: *id006
+                required: *id007
+              example:
+                jsonapi:
+                  version: '1.0'
+                errors:
+                - detail: Server Error
+                  status: '500'
+components:
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie

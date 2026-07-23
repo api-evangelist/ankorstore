@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  version: 1.2.2-oas3.1
+  title: Ankorstore Stock Tracking and Logistics Applications Locations API
+  summary: API specification for the Ankorstore Stock Tracking and Logistics system
+  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  contact:
+    name: Ankorstore
+    url: https://www.ankorstore.com
+    email: api@ankorstore.com
+  license:
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+    name: CC0 1.0 Universal
+servers:
+- url: http://www.ankorlocal.com:8000
+  description: Local Development Server
+- url: https://www.preprod.ankorstore.com
+  description: Staging Environment
+- url: https://www.ankorstore.com
+  description: Prod Environment
+tags:
+- name: Locations
+paths:
+  /api/astral/v1/stock/locations:
+    get:
+      tags:
+      - Locations
+      summary: List locations
+      description: Return the list of available locations
+      operationId: list-locations
+      parameters:
+      - $ref: '#/components/parameters/acceptInHeader'
+      - $ref: '#/components/parameters/xAksBrandUuidHeader'
+      - $ref: '#/components/parameters/xAksRetailerUuidHeader'
+      - $ref: '#/components/parameters/locationTypeFilter'
+      - $ref: '#/components/parameters/externalIdFilter'
+      - $ref: '#/components/parameters/pageLimit'
+      - $ref: '#/components/parameters/pageBefore'
+      - $ref: '#/components/parameters/pageAfter'
+      responses:
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+        '200':
+          $ref: '#/components/responses/LocationCollectionResponse'
+components:
+  schemas:
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+    meta:
+      type: object
+      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+    paginationMeta:
+      type: object
+      description: Meta with Pagination Details
+      additionalProperties: true
+      properties:
+        page:
+          $ref: '#/components/schemas/paginationPage'
+      required:
+      - page
+    id:
+      type: string
+      format: uuid
+      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
+    ErrorMeta:
+      type: object
+      properties:
+        stack:
+          type: array
+          items:
+            type: string
+    Location:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/LocationType'
+        externalId:
+          description: Identifier of the external entity that this location refers to (brandUuid, warehouseUuid, etc)
+          type: string
+          format: uuid
+      required:
+      - type
+      - externalId
+    Error:
+      type: object
+      required:
+      - status
+      - title
+      properties:
+        status:
+          type: integer
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+        title:
+          type: string
+        detail:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+    paginationPage:
+      description: Cursor pagination details
+      type: object
+      properties:
+        from:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        to:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        hasMore:
+          type: boolean
+        perPage:
+          type: integer
+      required:
+      - from
+      - to
+      - hasMore
+      - perPage
+    LocationResource:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/Location'
+      required:
+      - type
+      - id
+      - attributes
+    paginationLinks:
+      description: Pagination links
+      type: object
+      properties:
+        first:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[limit]=15
+          nullable: true
+        prev:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15
+          nullable: true
+        next:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15
+          nullable: true
+      required:
+      - first
+      - next
+      - prev
+    LocationType:
+      type: string
+      enum:
+      - warehouse
+      - brand
+      - retailer
+  parameters:
+    xAksBrandUuidHeader:
+      name: X-Aks-Brand-Uuid
+      in: header
+      description: Brand entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
+    externalIdFilter:
+      name: filter[externalId]
+      in: query
+      description: An external identifier to match on
+      required: false
+      schema:
+        type: string
+        format: uuid
+    locationTypeFilter:
+      name: filter[locationTypes][]
+      in: query
+      description: A set of location types to check quantities at
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/LocationType'
+    pageBefore:
+      name: page[before]
+      in: query
+      description: show items before the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
+    pageLimit:
+      name: page[limit]
+      in: query
+      description: limit the amount of results returned
+      required: false
+      schema:
+        type: integer
+        format: int
+        default: 10
+    xAksRetailerUuidHeader:
+      name: X-Aks-Retailer-Uuid
+      in: header
+      description: Retailer entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
+    pageAfter:
+      name: page[after]
+      in: query
+      description: show items after the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
+  responses:
+    LocationCollectionResponse:
+      description: Set of locations
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationResource'
+              jsonapi:
+                $ref: '#/components/schemas/jsonapi'
+              meta:
+                $ref: '#/components/schemas/paginationMeta'
+              links:
+                $ref: '#/components/schemas/paginationLinks'
+            required:
+            - data
+            - jsonapi
+    ErrorResponse:
+      description: Example response
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+              jsonapi:
+                $ref: '#/components/schemas/jsonapi'
+            required:
+            - errors
+  securitySchemes:
+    CookieKey:
+      type: apiKey
+      name: ankorstore_session
+      in: cookie
