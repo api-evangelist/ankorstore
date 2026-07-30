@@ -1,25 +1,3161 @@
 aid: ankorstore
 name: Ankorstore
-description: 'Ankorstore is a company surfaced as a portfolio company of index-ventures and added to the
-  API Evangelist network as a stub for enrichment. Sector: retail. This profile is a lead awaiting the
-  enrichment pipeline.'
+description: >-
+  Ankorstore is a European B2B wholesale marketplace that connects independent brands with independent
+  retailers across Europe. Its public developer platform lets brands and their technical partners
+  programmatically manage their presence on the marketplace: sync product catalogs and stock, update
+  prices, process and transition orders, request shipping quotes and schedule pickups, manage Ankorstore
+  Fulfillment Center replenishments, run OrderPay flows for a brand's own customers, and subscribe to
+  real-time webhook notifications. The API is built on the JSON:API specification, secured with OAuth2
+  client credentials, and ships alongside the ASTRAL stock-tracking/logistics API and a fulfillment
+  media service, with a public sandbox environment and a downloadable mock server for testing.
 url: https://raw.githubusercontent.com/api-evangelist/ankorstore/refs/heads/main/apis.yml
 x-type: company
 x-source: index-ventures-portfolio
-x-tier: stub
-x-tier-reason: portfolio-lead
+x-tier: enriched
+x-tier-reason: public-openapi-found
+accessModel:
+  pricing: unknown
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Self-serve signup
+  confidence: medium
+  source:
+  - authentication
+  generated: '2026-07-22'
+  method: derived
 specificationVersion: '0.20'
 created: '2026-07-17'
 modified: '2026-07-17'
+image: https://cdn.ankorstore.com/images/logo/logo-black.svg
 tags:
 - Company
 - Retail
-apis: []
+- Wholesale
+- Marketplace
+- E-commerce
+- Ordering
+- Fulfillment
+- Catalog
+- Webhooks
+- JSON:API
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+- FN: Ankorstore Support
+  email: api@ankorstore.com
+apis:
+- aid: ankorstore:ankorstore-applications-api
+  name: Ankorstore Applications API
+  description: The Applications API from Ankorstore — 1 operation(s) for applications.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Applications
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-applications-api-openapi.yml
+- aid: ankorstore:ankorstore-brands-api
+  name: Ankorstore Brands API
+  description: The Brands API from Ankorstore — 8 operation(s) for brands.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Brands
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-brands-api-openapi.yml
+- aid: ankorstore:ankorstore-catalog-api
+  name: Ankorstore Catalog API
+  description: >-
+    ℹ️ This section describes the API endpoints that you can use to manage your catalog resources, such
+    as products, product variants etc.
+
+
+    ## 💡 Working with Products
+
+
+    Here you will find information about the product resource and its sub-resources. If you need further
+    information please refer to the API specification.
+
+
+    ### Including Product Variants
+
+
+    When retrieving the individual product via the API, you may pass an `?include=productVariants` query
+    parameter that will return associated product variants inside the `included` root level object.
+
+
+    ### Important Fields within Product Resource
+
+
+    If the field contains no data, it will be `null`.
+
+
+    ## 💡 Stock Management
+
+
+    This API allows you to manage your product variants stock for the marketplace in both single- and
+    bulk-operation mode.
+
+    There are 2 opposite options available for the stock update requests - set an explicit product quantity
+
+    or mark the corresponding product as "always in stock".
+
+
+    ### Stock statuses
+
+    Stock for the marketplace can be in one of two states. It can be `available` to order on the marketplace,
+    or `reserved` for an order that has been submitted, but not yet shipped.
+
+    Added together, these quantities make up the `onHand` state, which reflects the total quantity of
+    the product variant "on hand" at your storage location(s).
+
+
+    > ⚠️ **Unless specified otherwise, `stockQuantity` used in the following APIs refers to `onHand` quantity**
+
+
+    See also [Stock State](#tag/folderName_Stock-Concepts/Stock-state) for more general information about
+    stock states used in the Stock Tracking  APIs.
+
+
+    #### Example
+
+    * 100 units of the product variant X are stock at your location (`onHand`).
+
+    * 30 units of product variant X are `reserved` for Ankorstore orders that have not yet been shipped.
+
+    * Then 70 units of product variant X are `available` to order on the marketplace.
+
+
+    Now consider you produce 50 more units of product variant X, and sell 27 units on another marketplace.
+    Your input for the stock update API would be:
+
+    ```
+
+    // 100 + 50 - 27 = 133
+
+    "stockQuantity": 123
+
+    ```
+
+
+    ### Set product variant stock explicit quantity
+
+
+    To set an explicit quantity for the particular product variant, you should specify the amount in the
+    payload.
+
+    In case if the target product variant was previously marked as "always in stock", this option will
+    be disabled and the stock
+
+    will be set to given value.
+
+
+    Example of the payload to set a product variant stock to the given value (single-operation mode):
+
+
+    `PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`
+
+    ```json
+
+    {
+      "data": {
+        "attributes": {
+          "stockQuantity": 123
+        }
+      }
+    }
+
+    ```
+
+    More details can be found in the endpoint specification
+
+
+    ### Set product variant as "always in stock"
+
+
+    To mark a particular product variant as "always in stock" and do not care about the stock amounts,
+    you should include a
+
+    flag `isAlwaysInStock` into the request payload. In case if the target product variant had explicit
+    stock amount set previously,
+
+    it will be reset.
+
+
+    Example of the payload to set a product variant stock to the given value (single-operation mode):
+
+
+    `PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`
+
+    ```json
+
+    {
+      "data": {
+        "attributes": {
+          "isAlwaysInStock": true
+        }
+      }
+    }
+
+    ```
+
+    More details can be found in the endpoint specification
+
+
+    ### Update stocks of multiple product variants in single request (bulk-operation mode)
+
+
+    This API allows to update stocks of multiple product variants in single request. There is a specific
+    endpoint which
+
+    accepts up to 50 operations per request. Validation, business rules and payload of each operation
+    is identical to the
+
+    single-operation mode, described above.
+
+
+    Example of the payload to update stocks of multiple product variants in single request:
+
+
+    `POST /api/v1/operations`
+
+    ```json
+
+    {
+      "atomic:operations": [
+        {
+          "op": "update",
+          "data": {
+            "type": "productVariants",
+            "id": "1ed18988-3253-610e-8223-aa5cd9844001",
+            "attributes": {
+              "isAlwaysInStock": true
+            }
+          }
+        },
+        {
+          "op": "update",
+          "data": {
+            "type": "productVariants",
+            "id": "1ed18988-6651-610e-8223-aa5cd9844f96",
+            "attributes": {
+              "stockQuantity": 123
+            }
+          }
+        }
+      ]
+    }
+
+    ```
+
+    More details can be found in the endpoint specification
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Catalog
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-catalog-api-openapi.yml
+- aid: ankorstore:ankorstore-catalog-exchange-api
+  name: Ankorstore Catalog Exchange API
+  description: The Catalog Exchange API from Ankorstore — 3 operation(s) for catalog exchange.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Catalog Exchange
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-catalog-exchange-api-openapi.yml
+- aid: ankorstore:ankorstore-catalog-integrations-api
+  name: Ankorstore Catalog Integrations API
+  description: >-
+    ## 👋 Getting Started
+
+
+    The catalogue integration process relies on the concept of operations. An operation is a batch of
+    records
+
+    representing the products to create, update or delete. The completion state of an operation depends
+
+    on the execution result for every record it contains. It means an operation might fail without necessarily
+
+    stopping or marking the whole operation as failed (this particular state is defined as “Partially
+    failed”).
+
+
+    - Operations can be of type `import`, `update` or `delete`.
+
+    - Only one open operation (not yet started) is allowed at a time.
+
+    - Only one operation can be performed (`started`) at a time.
+      - Any subsequent operation will be queued with status `pending` until previous one has finished
+    processing.
+      - If no previous operation is being processed, operation will start processing right away.
+
+    ### Operation Statuses
+
+
+    The `status` attribute represents the current state of the operation, below is a table that describes
+    each state:
+
+
+    | Status             | Description                                                                                                                                                                              |
+
+    |--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+    | `created`          | The operation was created and not yet started. At this stage, the operation
+    is considered open and products can still be added to the batch.                                             |
+
+    | `skipped`          | The operation is empty and was skipped (No action required). When an operation
+    is skipped, an empty report is generated and the callback URL is called to notify operation is completed.
+    |
+
+    | `started`          | The operation started and is processing.                                                                                                                                                 |
+
+    | `pending`          | Operation is waiting for its turn on the processing queue. The operation could
+    not be started because another one was being processed.                                                                                                                               |
+
+    | `succeeded`        | All products were successfully processed.                                                                                                                                                |
+
+    | `failed`           | All products failed to be processed.                                                                                                                                                     |
+
+    | `partially_failed` | Not all products were successfully processed.                                                                                                                                            |
+
+
+    ## 💡 Operation workflow
+
+
+    The complete workflow for an operation occurs in 3 stages: operation creation, operation processing
+    and reporting.
+
+    The following diagram illustrates these stages and how they are chained.
+
+
+    <pre class="mermaid">
+
+    %%{init: {"flowchart": {"curve":"basis", "htmlLabels":false, "diagramPadding":24 } } }%%
+
+    graph LR
+
+
+    created("Operation Created")
+
+    start("Start Processing")
+
+    started("Processing\nStarted")
+
+    succeeded(Succeeded):::success
+
+    skipped("Processing Skipped"):::success
+
+    pending("Operation pending")
+
+    failed(Failed):::failure
+
+    partial(Partially Failed):::warning
+
+    report("Report\nGenerated")
+
+    notified(Callback Sent)
+
+
+    subgraph creating[Creating Operation]
+
+    created -- Add Products --> created
+
+    end
+
+
+    created -- Start Operation --> Start{?}
+
+    Start -->|"Another Operation execution in progress"| pending
+
+    Start --->|"No other Operation in progress"| start --> E{?}
+
+    E -->|"Batch.size > 0"| processing
+
+    E --->|"Batch is empty"| skipped
+
+
+    subgraph processing[Processing Operation]
+
+    direction LR
+
+    started --> succeeded
+
+    started --> partial
+
+    started --> failed
+
+    end
+
+
+    succeeded --> operationCompletedActions
+
+    partial --> operationCompletedActions
+
+    failed --> operationCompletedActions
+
+
+    subgraph reporting[Reporting]
+
+    report -- Notify --> notified
+
+    end
+
+
+    subgraph triggerNext[Trigger next pending Operation]
+
+    end
+
+
+    subgraph operationCompletedActions[Post-Complete Operation Actions]
+
+    reporting
+
+    triggerNext
+
+    end
+
+
+    pending -- Wait for previous Operation to finish execution --> start
+
+
+    skipped -- Generate empty report --> operationCompletedActions
+
+
+    classDef default stroke:#4b475f,stroke-width:1px,fill:#ffffff,color:#4b475f
+
+    classDef success stroke:#1aae9f,stroke-width:1px,fill:#cfeeeb,color:#293845
+
+    classDef failure stroke:#d3455b,stroke-width:1px,fill:#f6d8dd,color:#293845
+
+    classDef warning stroke:#f7c325,stroke-width:1px,fill:#fdf2d1,color:#293845
+
+    linkStyle default stroke:#788896,stroke-width:1px,fill:transparent
+
+    </pre>
+
+
+    ### Creating an Operation
+
+
+    The full flow of creating a complete operation consists in two steps:
+
+
+    #### 1. Create a new operation
+
+
+    Send a `POST` request to `/api/v1/catalog/integrations/operations`
+
+
+    Example request:
+
+    ```json
+
+    {
+        "data": {
+            "type": "catalog-integration-operation",
+            "attributes": {
+                "source": "shopify",
+                "callbackUrl": "https://callback.url/called/after/processing",
+                "operationType": "import"
+            }
+        }
+    }
+
+    ```
+
+
+    - At this point the new operation has been created and waiting to receive products data
+
+    - Operation ID will be returned in the response payload
+
+
+    #### 2. Add product data to operation
+
+
+    Send a `POST` request to `/api/v1/catalog/integrations/operations/{operationId}/products`
+
+
+    Products can be added only to operations with status `created`.
+
+
+    If operation has been started already (having any of `started`, `pending`, `skipped`, `succeeded`,
+    `partially_failed`, `failed`, `cancelled` status),
+
+    the request will fail with a `403 Forbidden` status code.
+
+
+    Example request:
+
+    ```json
+
+    {
+        "products": [
+            {
+                "id": "B006GWO5WK",
+                "type": "catalog-integration-product",
+                "attributes": {
+                    "external_id": "B006GWO5WK",
+                    "name": "Example product"
+                    // ...
+                }
+            }
+        ]
+    }
+
+    ```
+
+
+    You can perform as many requests as needed to append product data during this stage.
+
+
+    ### Operation Processing
+
+
+    In order to start processing the operation, you have to send a `PATCH` request
+
+    to `/api/v1/catalog/integrations/operations/{operationId}` with the expected operation status (i.e.
+    “started”).
+
+
+    If there is any other operation being executed at that time, the operation will be enqueued to be
+    processed
+
+    with the status `pending` and will be started as soon as it gets a free slot in the queue. Otherwise,
+    the
+
+    operation will be started right away.
+
+
+    Example request:
+
+    ```json
+
+    {
+        "data": {
+            "id": "90567710-de47-49e4-8536-aab80c1a469c",
+            "type": "catalog-integration-operation",
+            "attributes": {
+                "status": "started"
+            }
+        }
+    }
+
+    ```
+
+
+    ### Execution Report
+
+
+    When an operation completes, an execution report is generated.
+
+    It provides the execution results (success or failure) for every product of the operation.
+
+
+    You can access this report by reading from the following endpoint.
+
+
+    ```http
+
+    GET /api/v1/catalog/integrations/operations/{operationId}/results
+
+    ```
+
+
+    ## 💡 Event Callbacks
+
+
+    Callbacks enable you to get notified when events occur in the operation process. For example, you
+    can
+
+    configure a callback to notify you when the operation is completed. The notification is sent via
+
+    an HTTP request to the URL you specify in the operation settings.
+
+
+    Callbacks can be used to trigger automated actions in your integration.
+
+
+    ### Supported events
+
+
+    You can find here below the complete list of all the topics `{{resource}}.{{event}}` you can monitor:
+
+
+    | Topic                                     | Trigger                                                                                                                                                        |
+
+    |-------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+    | `catalog-integration-operation.completed` | An operation reaches a completed state such as **Success**,
+    **Failed**, or **Partially Failed**                                                                |
+
+    | `catalog-integration-operation.cancelled` | An operation was cancelled. This event is triggered
+    when an operation processing is **Skipped** (i.e. the operation batch is empty and no action is required).
+    |
+
+
+    ### Event schema
+
+
+    A callback event is represented as a JSON object and has the following properties:
+
+
+    - `event` — the name of the event that occurred (e.g. “completed”)
+
+    - `topic` — the event category represented as a unique identifier of the event type.
+      The topic is defined as a concatenation of the resource and event names `{$.data.type}.{$.event}`,
+      e.g. “catalog-integration-operation.completed”. You might use this topic as a partition key to distribute
+      the callback events you receive to separate queues or pools of workers to process the callbacks
+    asynchronously.
+    - `occurredAt` — the date and time when the event occurred
+
+    - `data` — the JSON:API resource describing the state of the entity which triggered the callback
+
+
+    A callback event is delivered as a `POST` request to your endpoint. The following payload represents
+    the notification
+
+    request that is triggered when an operation successfully completes:
+
+
+    ```json
+
+    {
+        "event": "completed",
+        "topic": "catalog-integration-operation.completed",
+        "occurredAt": "2024-03-21T13:42:54+00:00",
+        "data": {
+            "id": "90567710-de47-49e4-8536-aab80c1a469c",
+            "type": "catalog-integration-operation",
+            "attributes": {
+                // ...
+                "status": "succeeded",
+                "createdAt": "2024-03-21T13:13:03+00:00",
+                "startedAt": "2024-03-21T13:19:32+00:00",
+                "completedAt": "2024-03-21T13:42:54+00:00"
+                // ...
+            }
+        }
+    }
+
+    ```
+
+
+    ### Handling callbacks
+
+
+    The endpoint listening for callbacks has **3 seconds** to respond with a `2xx` (usually `200`)
+
+    response code, acknowledging a successful delivery. If the request times out or gets a response
+
+    with a status code other than `2xx`, it is considered failed.
+
+
+    <div class="warning">
+
+
+    #### Handling webhook failures
+
+
+    If a callback fails (whatever the reason) no further calls to the related endpoint are made.
+
+    </div>
+
+
+    ### Testing callback
+
+
+    A number of websites, such as https://webhook.site and https://requestbin.com, provide free URLs that
+
+    can be used to test callbacks. Simply create a URL on one of these sites, then configure your webhook
+
+    to use it. These sites allow you to see the details of the request sent to them by the callback service.
+
+
+    In addition, the Ngrok service (https://ngrok.com) allows you to tunnel callback requests to a non-publicly
+
+    accessible server, enabling you to test your callback-handling code before making it public.
+
+
+    ### Operations and Drafts behaviour
+
+
+    | Type     | Behaviour                                                                                                                                                                  |
+
+    |----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+    | `import` | When executing an import operation existing drafts will be cleaned and new ones will
+    be created if any of the products attached to the operation has any validation issue. |
+
+    | `update` | Will not have any impact on existing drafts.                                                                                                                               |
+
+    | `delete` | Will not have any impact on existing drafts.                                                                                                                               |
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Catalog Integrations
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-catalog-integrations-api-openapi.yml
+- aid: ankorstore:ankorstore-deprecated-api
+  name: Ankorstore Deprecated API
+  description: >-
+    ℹ️ Here you can find the endpoints which are currently deprecated and will be removed in the future
+    versions of the API.
+
+    We strongly encourage you to migrate away from these endpoints in order to prevent any future problems
+    with API.
+
+
+    ## ❄️ Shipping an Order
+
+
+    | ⚡ This documentation is deprecated |
+
+    |------------------------------------|
+
+    ### Schedule a Pickup
+
+
+    If the brand is not taking the parcels to the local drop-off point for the carrier the brand can schedule
+    a pickup for this order. A pickup can only be scheduled on a working day (monday to friday). For full
+    information please refer to the API documentation.
+
+
+    <div class="info">
+
+
+    #### Pickup is not accepted
+
+
+    For now, Ankorstore does not know in advance which date/time configuration is available, if the requested
+    pickup is denied please try a different date or time frame.
+
+
+    </div>
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Deprecated
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-deprecated-api-openapi.yml
+- aid: ankorstore:ankorstore-fulfillment-api
+  name: Ankorstore Fulfillment API
+  description: >-
+    ℹ️ Here you can find the information and endpoint specification related to fulfillment of the orders.
+
+
+    ## 💡 About Fulfillment
+
+
+    _Fulfillment_ is the process of preparing and shipping orders to customers via Ankorstore Fulfillment
+    Centers.
+
+    Brands that use fulfillment send their inventory to a warehouse in advance, and when orders come in,
+    the warehouse
+
+    picks, packs, and ships on the brand's behalf.
+
+
+    ### What does "fulfillable" mean?
+
+
+    The concept of a "fulfillable" is _that which is required to prepare and ship a product (variant)_.
+
+    While a Fulfillment Centre deals exclusively with items, which represents a single item that an employee
+    can pick up and prepare for shipping.
+
+    A fulfillable is simply a set of one or more items, that together represent a product as ordered.
+
+
+    Use the [List Fulfillables](#tag/Fulfillment/operation/fulfillment-list-fulfillable) endpoint to check
+    stock
+
+    availability for specific product variants before creating orders. For more detailed stock information
+    —
+
+    including quantities by location, status, and lot — use the
+
+    [Stock State endpoint](/api/astral/v1/stock/state) from the Ankorstore Stock Tracking and Logistics
+    API (ASTRAL).
+
+
+    ### Fulfillments
+
+
+    When a _Master Order_ has fulfillment requested, one or more _Fulfillments_ are created. Multiple
+    fulfillments
+
+    can be associated with a single master order (many-to-one). You can retrieve their details and track
+    progress
+
+    through the following statuses:
+
+
+    | Status | Description |
+
+    | --- | --- |
+
+    | `requested` | Fulfillment has been requested for the order |
+
+    | `created` | Fulfillment has been created in the warehouse system |
+
+    | `scheduled` | Fulfillment is scheduled for picking |
+
+    | `released` | Fulfillment has been released for picking |
+
+    | `shipped` | Fulfillment has been shipped from the warehouse |
+
+    | `cancelled` | Fulfillment has been cancelled |
+
+    | `cancellation_requested` | A cancellation has been requested but not yet processed |
+
+
+    Pass `?include=statusUpdates` when retrieving a fulfillment to see the full history of status transitions.
+
+
+    ### Lots
+
+
+    If your products are lot-tracked or expiry-tracked, the [List Lots](#tag/Fulfillment/operation/fulfillment-list-lots)
+
+    endpoint shows the current lot inventory in the warehouse, including lot numbers, available quantities,
+    and
+
+    expiry/sell-by dates. You can filter and sort by available quantity, sell-by date range, and product
+    name.
+
+
+    ### Fulfillment Costs
+
+
+    Use the [Get Fulfillment Costs](#tag/Fulfillment/operation/fulfillment-costs-get-specifications) endpoint
+    to estimate
+
+    fulfillment costs before committing to an order. Provide the destination country, parcel dimensions,
+    and picking
+
+    quantity to receive a cost breakdown by category (shipping, pick fees by quantity tier).
+
+
+    > ⚠️ The cost estimation does **not** include packing consumables. The actual invoiced amount may
+    differ.
+
+
+    ## Replenishments
+
+
+    Replenishments are required to send inventory to the warehouse. They follow a specific workflow:
+
+
+    ### Replenishment Workflow
+
+
+    <pre class="mermaid">
+
+    stateDiagram-v2
+        direction LR
+        [*] --> created
+        created --> confirmed : Brand confirms
+        confirmed --> sent : Sent to warehouse
+        sent --> delivered : Arrives at warehouse
+        delivered --> received : Items put into stock
+        received --> [*]
+    </pre>
+
+
+    * **Created**: When a replenishment is initially created, it will be at status `created` and is considered
+    a draft. In this state, it can be edited via PATCH requests or deleted.
+
+    * **Confirmed**: Once editing is complete, the status should be updated to `confirmed` as part of
+    a PATCH request. At this point, the replenishment information will be sent to the warehouse (asynchronously).
+
+    * **Sent**: Once the replenishment information is sent to the warehouse, the status changes to `sent`.
+    The replenishment will remain in this status while waiting for delivery.
+
+    * **Delivered**: When the replenishment physically arrives at the warehouse, its status will be automatically
+    updated to `delivered`.
+
+    * **Received**: Once the items are put into stock at the warehouse, the status will be updated to
+    `received`. At this stage, receipts are added with the received stock quantities and lots.
+
+
+    ### Creating a Replenishment
+
+
+    Each replenishment requires a carrier name, shipment type, and a list of items with their fulfillment
+    item IDs
+
+    and quantities:
+
+
+    ```json5
+
+    // POST /api/v1/fulfillment/replenishments
+
+    {
+      "fulfillmentBrandId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "warehouseId": "98765432-abcd-ef01-2345-678901234567",
+      "shippingCarrierName": "DHL",
+      "shipmentType": "PARCEL",            // "LTL", "FTL", or "PARCEL"
+      "items": [
+        {
+          "fulfillmentItemId": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+          "quantity": 100
+        }
+      ]
+    }
+
+    ```
+
+
+    After creating a replenishment, update its status to `confirmed` via PATCH when you are ready to notify
+    the warehouse.
+
+
+    ### How Fulfillment Connects to Orders
+
+
+    The diagram below shows how fulfillment fits into the order lifecycle:
+
+
+    <pre class="mermaid">
+
+    graph LR
+        A[Master Order] --> D[Fulfillment 1]
+        A --> E[Fulfillment 2]
+        F[Replenishment] --> G[Warehouse Stock]
+        G --> D
+        G --> E
+    </pre>
+
+
+    1. Brands send inventory to the warehouse via _Replenishments_
+
+    2. When fulfillment is requested for a _Master Order_, one or more _Fulfillments_ are created
+
+    3. The warehouse picks items from stock and ships each fulfillment
+
+    4. Use the fulfillment endpoints to track both your inventory and fulfillment status
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Fulfillment
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-fulfillment-api-openapi.yml
+- aid: ankorstore:ankorstore-general-api
+  name: Ankorstore General API
+  description: >-
+    ℹ️ This section contains general-purpose endpoints that are transversal to the system. These endpoints
+    provide
+
+    reference data useful across different integration scenarios.
+
+
+    ## 💡 Currency Rates
+
+
+    The currency rates endpoint returns the latest exchange rates used by the Ankorstore platform.
+
+
+    > ⚠️ This endpoint is **public** and does **not** require authentication.
+
+
+    ```
+
+    [GET] /api/v1/currencies/rates/latest
+
+    ```
+
+
+    Each rate entry contains:
+
+    - `fromCurrency` - The source currency code (e.g., `"USD"`)
+
+    - `toCurrency` - The target currency code (e.g., `"EUR"`)
+
+    - `rate` - The exchange rate as a decimal number
+
+    - `date` - The date of the rate
+
+
+    This is useful when your integration needs to display prices in multiple currencies or reconcile amounts
+    across
+
+    different currency zones.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - General
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-general-api-openapi.yml
+- aid: ankorstore:ankorstore-integration-api
+  name: Ankorstore Integration API
+  description: The Integration API from Ankorstore — 1 operation(s) for integration.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Integration
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-integration-api-openapi.yml
+- aid: ankorstore:ankorstore-locations-api
+  name: Ankorstore Locations API
+  description: The Locations API from Ankorstore — 1 operation(s) for locations.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Locations
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-locations-api-openapi.yml
+- aid: ankorstore:ankorstore-media-api
+  name: Ankorstore Media API
+  description: Operations for documents linked to fulfillment requests
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Media
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-media-api-openapi.yml
+- aid: ankorstore:ankorstore-movements-api
+  name: Ankorstore Movements API
+  description: The Movements API from Ankorstore — 2 operation(s) for movements.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Movements
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-movements-api-openapi.yml
+- aid: ankorstore:ankorstore-ordering-api
+  name: Ankorstore Ordering API
+  description: >-
+    ℹ️ This section of API allows to manage different types of orders in the system. Depending on the
+    order type, there are
+
+    different endpoints available to manage them. Before starting to work with the API, it is recommended
+    to read the
+
+    documentation to better understand the differences between the order types, their workflow and lifecycle.
+
+
+    ## 💡 General conceptions
+
+
+    - _Internal Order_ - A regular type of order created via Ankorstore platform. It may have different
+    types of shipping
+      and payment.
+      The client of such an order is always an existing retailer entity, available in Ankorstore.
+    - _External Order_ - A special type of order created by a brand for an external customer, which might
+    not exist in
+      Ankorstore. This type of order does not expect retailer as a reference to the Ankorstore entity,
+    but rather allows brand
+      to provide a custom client details, such as address, contact information etc. The orders of this
+    type in the
+      current version of the platform are fulfilled by the Fulfillment Centers only and do not support
+    any other type of shipping.
+    - _Master Order_ - Not a separate type of order, but rather a wrapper over other order types.
+      It allows to have a single reference to the order, regardless of its type. A _Master Order_ usually
+    has a one-to-one
+      relationship with either _Internal Order_ or _External Order_ so either of these order can be accessed
+    via the _Master
+      Order_ reference.
+
+    ## 💡 Working with Master Orders
+
+
+    ### Access different types of orders via Master Order
+
+
+    As mentioned above, the _Master Order_ is a wrapper over other order types.
+
+    It allows to have a single reference to the underlying order, regardless of its type.
+
+    The available _Master Order_ endpoints allow to fetch a list of available _Master Orders_
+
+    and also get a single _Master Order_ by its ID and, following JSON:API specification, including the
+
+    underlying orders as relations. This approach allows to deal with different order types in a unified
+    way
+
+    (e.g. listing, pagination). However, it is still possible to access the underlying _Internal Orders_
+    directly,
+
+    in order to keep the backward compatibility.
+
+
+    <pre class="mermaid">
+
+    graph LR
+        A[Master Order] --> B[Internal Order]
+        A --> C[External Order]
+    </pre>
+
+
+    _Master Order_ as a standalone resource might not bring much value, but the _Master Order_ endpoints
+    allow
+
+    to include a corresponding wrapped orders as relations, which per se contain a useful payload.
+
+
+    ### Includes
+
+
+    The _Master Order_ has a one-to-one relationship with either _Internal Order_ or _External Order_.
+    Hence,
+
+    passing query parameter `?include=internalOrder`, `?include=externalOrder` or by combining different
+    includes,
+
+    (separated by comma e.g. `?include=internalOrder,externalOrder`) you will receive wrapped order as
+    a relation.
+
+
+    For example, let's say you have only 2 orders, one of them is _Internal Order_, another is _External
+    Order_.
+
+    If you don't include any relation into request to the [List Master Orders](#tag/Ordering/operation/list-master-orders),
+
+
+    ```
+
+    [GET] /api/v1/master-orders
+
+    ```
+
+
+    the response will contain only a list of identifiers without any wrapped orders:
+
+
+    ```json5
+
+    {
+      //...
+      "data": [
+        {
+            "type": "master-orders",
+            "id": "a470c8d6-1bda-4612-b0bd-3ea2a81a9e89",
+        },
+        {
+            "type": "master-orders",
+            "id": "0ca13de1-8e4b-4e67-a147-185cc5f6f57f",
+        },
+        //...
+      ],
+      //...
+    }
+
+    ```
+
+
+    But with the inclusion of the wrapped order relations to the same endpoint
+
+
+    ```
+
+    [GET] /api/v1/master-orders?include=internalOrder,externalOrder
+
+    ```
+
+
+    the result will contain included information about the actual orders:
+
+    ```json5
+
+    {
+      //...
+      "data": [
+        {
+          "type": "master-orders",
+          "id": "a470c8d6-1bda-4612-b0bd-3ea2a81a9e89",
+          "relationships": {
+            "internalOrder": {
+              "data": {
+                "type": "internal-orders",
+                "id": "a470c8d6-1bda-4612-b0bd-3ea2a81a9e89"
+              }
+            },
+          }
+        },
+        {
+          "type": "master-orders",
+          "id": "0ca13de1-8e4b-4e67-a147-185cc5f6f57f",
+          "relationships": {
+            "externalOrder": {
+              "data": {
+                "type": "external-orders",
+                "id": "0ca13de1-8e4b-4e67-a147-185cc5f6f57f"
+              }
+            }
+          }
+        },
+        //...
+      ],
+      "included": [
+        {
+          "type": "internal-orders",
+          "id": "a470c8d6-1bda-4612-b0bd-3ea2a81a9e89",
+          "attributes": {
+            // Internal order attributes here
+          }
+        },
+        {
+          "type": "master-orders",
+          "id": "0ca13de1-8e4b-4e67-a147-185cc5f6f57f",
+          "attributes": {
+            // External order attributes here
+          }
+        },
+        //...
+      ]
+      //...
+    }
+
+    ```
+
+
+    To learn more about JSON:API include mechanism, please refer to the [official docs](https://jsonapi.org/format/#fetching-includes).
+
+
+    ## 💡 Working with Internal Orders
+
+
+    Despite the fact that the _Internal Orders_ can be accessed via the _Master Order_ endpoints, it is
+    still possible to
+
+    access them directly, in order to keep the backward compatibility. Moreover, some actions (e.g. transiting
+    an _Internal
+
+    Order_ to the next state) are only available via the direct _Internal Order_ endpoints.
+
+
+    ### Includes
+
+
+    For every endpoint that returns the _Internal Order_ resource you may pass an `?include=` query parameter
+
+    that will return extra information inside the `included` root level object.
+
+    The supported resources to include are `retailer`, `billingItems`, `orderItems`, `orderItems.productVariant`
+
+    and `orderItems.productVariant.product`.
+
+    Please note that, if you include `orderItems.productVariant` you do not need to specify `orderItems`
+    separately.
+
+    It will be automatically included. As an example, to include all data possible you would
+
+    do `?include=retailer,billingItems,orderItems.productVariant.product`
+
+
+    <div class="warning">
+
+
+    #### Product options usage is deprecated
+
+
+    Please note, that we have fully completed migrating our system to the new product model with product
+    options
+
+    replaced by product variants. It means, the usage of product options is deprecated and will be removed
+    in the future
+
+    versions of the API.
+
+
+    Please, consider updating your API clients in favor of using `orderItems.productVariant` instead of
+    `orderItems.productOption`
+
+    to avoid any issues in the future. For the time being, the API still supports both approaches, but
+    we strongly encourage
+
+    you to not rely on the deprecated resources anymore because we cannot fully guarantee their stability
+    due to some technical limitations.
+
+
+    </div>
+
+
+    ### Important Fields within Internal Order resource
+
+
+    If the field contains no data, it will be `null`. The only exception currently to this is `shippingOverview`
+    which can
+
+    be viewed below. The fields listed below are not all the fields, please see the API specification
+    for all of them.
+
+
+    ### Status `status`
+
+
+    The status field is the current state of the order, below is a table that describes each step:
+
+
+    | Status                      | Description                                                                                                                                                                                                                               |
+
+    |-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+    | `ankor_confirmed`           | The order has been confirmed by Ankorstore and now a decision can
+    be made whether to accept or reject this order.                                                                                                                         |
+
+    | `rejected`                  | The order has been rejected, Ankorstore needs to approve this rejection.
+    If it does, the status will moved to `cancelled`.                                                                                                                |
+
+    | `brand_confirmed`           | The order has been accepted. it now needs to be shipped to the retailer.                                                                                                                                                                  |
+
+    | `shipping_labels_generated` | The order has been shipped with Ankorstore and the labels have been
+    generated - these are now available in the order resource data within `shippingOverview`.                                                                             |
+
+    | `fulfillment_requested`     | The brand has chosen to fulfill the order, or the order was automatically
+    fulfilled. The order will remain in this state until it has been fulfilled by the fulfillment provider.                                                         |
+
+    | `shipped`                   | The order has either been picked up by an Ankorstore carrier (e.g
+    UPS) or the brand has chosen to ship with their own carrier.                                                                                                            |
+
+    | `received`                  | The retailer has received the package, if shipped with Ankorstore
+    this is automatic from the carrier otherwise for custom shipping the retailer has to manually acknowledge
+    this.                                                         |
+
+    | `reception_refused`         | The retailer has refused the reception of the package - if Ankorstore
+    approves the reason the order will move to cancelled. The status can also move to `received` if the
+    retailers issues have been resolved by the brand or Ankorstore. |
+
+    | `invoiced`                  | The final invoice has been issued for this order.                                                                                                                                                                                         |
+
+    | `brand_paid`                | The brand has been paid in full for this order.                                                                                                                                                                                           |
+
+    | `cancelled`                 | The order is cancelled.                                                                                                                                                                                                                   |
+
+
+    <pre class="mermaid">
+
+    flowchart LR
+        ankor_confirmed -- accept order -->brand_confirmed
+        ankor_confirmed -- reject order -->rejected-->cancelled
+        brand_confirmed -- shipping method: custom -->shipped
+        brand_confirmed -- shipping method: ankorstore -->shipping_labels_generated
+        brand_confirmed -- shipping method: fulfillment -->fulfillment_requested
+        shipping_labels_generated-->shipped
+        fulfillment_requested-->shipped
+        shipped-->reception_refused-->cancelled
+        shipped-->received-->invoiced-->brand_paid
+        reception_refused-->received
+    </pre>
+
+
+    <div class="warning">
+
+
+    #### Not to be confused: Status vs Shipping Flow
+
+
+    The above diagram shows what status the order will be in **based** on the actions performed in the
+    API. The most
+
+    confusing may be the shipping flow. To reach the `shipped` or `shipping_labels_generated` status,
+    a shipping quote must
+
+    always be generated and then confirmed. Please see [shipping an order](#tag/Order/Shipping-an-Order)
+    for further
+
+    details.
+
+
+    </div>
+
+
+    ### Shipping Method `shippingMethod`
+
+
+    What shipment method has been chosen for this order. Either `ankorstore` for using Ankorstore's shipping
+    service,
+
+    `custom` for using the brand's own carrier or `fulfillment` if the order is shipped from a fulfillment
+    centre
+
+    This field is `null` when no choice has yet been made.
+
+
+    ### Shipping Overview `shippingOverview`
+
+
+    <div class="warning">
+
+
+    #### Field Availability
+
+
+    The object `shippingOverview` is only available when retrieving a single order. This data is not available
+    when
+
+    retrieving a list of orders.
+
+
+    </div>
+
+
+    ### Submitted At `submittedAt`
+
+
+    This is the date the retailer submitted their whole order.
+
+
+    ### Shipped At `shippedAt`
+
+
+    This is when the brand shipped the order.
+
+
+    ### Brand Paid At `brandPaidAt`
+
+
+    This is when Ankorstore pays the brand, if it is `null` then payment is still pending.
+
+
+    ### Interacting with Internal Orders
+
+
+    When a brand receives a new order, it arrives in the `ankor_confirmed` status. The brand can then
+    perform certain
+
+    transitions using a single endpoint:
+
+
+    `POST /api/v1/orders/{id}/-actions/transition`
+
+
+    This endpoint will accept different payloads depending on what transition is provided. This page will
+    detail each
+
+    transition that may be performed and when.
+
+
+    All the implementation details and fields can be found in the endpoint documentation.
+
+
+    <div class="danger">
+
+
+    #### No going back!
+
+
+    Once an order is accepted or rejected it cannot be reversed. If this was a mistake the brand can contact
+    Ankorstore
+
+    through the normal channels to revert the order to `ankor_confirmed`.
+
+
+    </div>
+
+
+    If an order is rejected you need to provide a detailed reject reason. Otherwise, after the order is
+    accepted the brand
+
+    then needs to ship it.
+
+    Please see [shipping](#tag/Shipping) for further details.
+
+
+    ### Accepting an Internal Order
+
+
+    Can be performed when the order is in `ankor_confirmed`.
+
+
+    In order to accept an order without any item modifications a simple payload detailing the transition
+    will suffice:
+
+
+    ```json
+
+    {
+      "data": {
+        "type": "brand-validates"
+      }
+    }
+
+    ```
+
+
+    The order will move from `ankor_confirmed` to `brand_confirmed`.
+
+
+    ### Accepting an Internal Order with modifications
+
+
+    Can be performed when the order is in `ankor_confirmed`.
+
+
+    Sometimes you may wish to modify the order before accepting it if for example you do not have the
+    items in stock or
+
+    further communication has taken place with the retailer.
+
+
+    The order items can **only be modified at this stage**. The rules of the payload are as follows:
+
+
+    - To leave an item's quantity as is, do not include it in the payload below
+
+    - To update an item's quantity, include it in the payload below with the new quantity (cannot be above
+    the current
+      quantity)
+    - To remove an item entirely, set the item's quantity to 0.
+
+
+    You cannot remove all items, please reject the order in this scenario.
+
+
+    ```json
+
+    {
+      "data": {
+        "type": "brand-validates",
+        "attributes": {
+          "orderItems": [
+            {
+              "id": "a470c8d6-1bda-4612-b0bd-3ea2a81a9e89",
+              "type": "order-items",
+              "attributes": {
+                "quantity": 12
+              }
+            },
+            {
+              "id": "0ca13de1-8e4b-4e67-a147-185cc5f6f57f",
+              "type": "order-items",
+              "attributes": {
+                "quantity": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+
+    ```
+
+
+    The order will move from `ankor_confirmed` to `brand_confirmed`.
+
+
+    ### Rejecting an Internal Order
+
+
+    Can be performed when the order is in `ankor_confirmed`.
+
+
+    To reject an order you must provide a reason listed below for the `rejectType` field.
+
+
+    - `BRAND_ALREADY_HAS_CUSTOMER_IN_THE_AREA` - Brand already has a customer in the area
+
+    - `BRAND_CANNOT_DELIVER_TO_THE_AREA` - Brand cannot make a delivery to the target area
+
+    - `BRAND_HAS_EXCLUSIVE_DISTRIBUTOR_IN_THE_REGION` - The brand already has an exclusive distributor
+    in the target region
+
+    - `BUYER_NOT_A_RETAILER` - The buyer does not seem to be a retailer
+
+    - `ORDER_ITEMS_PRICES_INCORRECT` - The prices of items in this order were incorrect
+
+    - `PAYMENT_ISSUES_WITH_RETAILER` - Brand had payment issues in the past with this retailer
+
+    - `PREPARATION_TIME_TOO_HIGH` - The time needed for the order preparation is excessively high
+
+    - `PRODUCT_OUT_OF_STOCK` - Order cannot be processed because one or multiple ordered products are
+    not in the stock
+
+    - `PURCHASE_NOT_FOR_RESALE` - This purchase does not seem to be for resale
+
+    - `RETAILER_AGREED_TO_DO_CHANGES_TO_ORDER` - The retailer agreed so that they can do changes to the
+    order
+
+    - `RETAILER_NOT_GOOD_FIT_FOR_BRAND` - The retailer who made an order does not fit the brand's criteria
+
+    - `RETAILER_VAT_NUMBER_MISSING` - The retailer VAT number is missing
+
+
+
+    - `OTHER` - If no reason above is suitable you can use value, but you **MUST** provide a `rejectReason`
+    which accepts a
+      plain text string of 1000 characters.
+
+    ### Example rejection
+
+
+    ```json
+
+    {
+      "data": {
+        "type": "brand-rejects",
+        "attributes": {
+          "rejectType": "ORDER_ITEMS_PRICES_INCORRECT"
+        }
+      }
+    }
+
+    ```
+
+
+    ### Example rejection with OTHER
+
+
+    ```json
+
+    {
+      "data": {
+        "type": "brand-rejects",
+        "attributes": {
+          "rejectType": "OTHER",
+          "rejectReason": "a different reason"
+        }
+      }
+    }
+
+    ```
+
+
+    The order will move from `ankor_confirmed` to `cancelled`.
+
+
+    ### Resetting an Internal Order's generated shipping labels
+
+
+    Can be performed when the order is in `shipping_labels_generated`.
+
+
+    To reject an order you must provide a reason listed below for the `resetType` field.
+
+
+    - `BRAND_NEED_MORE_LABELS_TO_SHIP` - Brand needs more shipping labels to ship
+
+    - `BRAND_PUT_WRONG_WEIGHT_DIMENSIONS` - Brand put wrong parcel weight and/or dimensions
+
+    - `BRAND_SHIPS_WITH_DIFFERENT_CARRIER` - Brand wants to ship with a different carrier
+
+    - `PROBLEM_DURING_SHIPPING_LABEL_GENERATION` - There was a problem during the shipping labels generation
+
+    - `RETAILER_ASKED_DELIVERY_ADDRESS_CHANGE` - The retailer asked for a delivery address change
+
+    - `SHIPPING_ADDRESS_MISMATCHES_PICKUP_ADDRESS` - The shipping address mismatches the pickup address
+
+
+
+    - `OTHER` - If no reason above is suitable you can use this value, but you **MUST** provide a `reason`
+    which accepts a
+      plain text string of 300 characters maximum.
+
+    #### Example reset shipping labels
+
+
+    ```json
+
+    {
+      "data": {
+        "type": "brand-resets-shipping-labels-generation",
+        "attributes": {
+          "resetType": "BRAND_PUT_WRONG_WEIGHT_DIMENSIONS"
+        }
+      }
+    }
+
+    ```
+
+
+    #### Example reset shipping labels with OTHER
+
+
+    ```json
+
+    {
+      "data": {
+        "type": "brand-resets-shipping-labels-generation",
+        "attributes": {
+          "rejectType": "OTHER",
+          "reason": "a different reason"
+        }
+      }
+    }
+
+    ```
+
+
+    The order will move from `shipping_labels_generated` to `brand_confirmed`.
+
+
+    ### Requesting fulfillment by Ankorstore Logistics for an Internal Order
+
+
+    Can be performed when the order is in `brand_confirmed`.
+
+
+    Ankorstore Logistics will fulfill the order and ship it to the retailer.
+
+    The order will move from `brand_confirmed` to `fulfillment_requested`.
+
+
+    Must be preceded by a [fulfillability check](#tag/Ordering/operation/internal-order-is-fulfillable),
+    since it requires
+
+    the brand to be enrolled with Ankorstore logistics, and sufficient stock to be available in an Ankorstore
+    warehouse.
+
+
+    Validation errors can include:
+
+    - `not_a_fulfillment_brand` - The brand is not enrolled with Ankorstore Logistics
+
+    - `unavailable_items` - One or more items are not available in the warehouse. The response will include
+    a list of the
+      unavailable items, which map to` productVariant.fulfillableId`
+    - `already_being_fulfilled` - The order is already being fulfilled
+
+    - `not_available_for_international_orders` - Fulfillment is currently not available for orders crossing
+    a customs border
+
+    - `missing_hs_code_for_international_order` - One or more products are missing a Harmonized System
+    code (HS code), required for customs clearance on non-EU destinations
+
+    - `stock_is_being_transferred` - The stock is currently being transferred between warehouses
+
+
+    ### Available operations on Internal Orders
+
+
+    - [List Internal Orders](#tag/Ordering/operation/list-internal-orders)
+
+    - [Retrieve a single Internal Order](#tag/Ordering/operation/get-internal-order)
+
+    - [Transition an Internal Order](#tag/Ordering/operation/transition-internal-order) - accept, reject
+    order etc.
+
+    - [List shipping quotes](#tag/Shipping/operation/list-order-shipping-quotes) - get a list of shipping
+    quotes for a given order
+
+    - [Confirm shipping quote](#tag/Shipping/operation/confirm-order-shipping-quote) - confirm the shipping
+    quote and move the order into its shipping phase
+
+    - [Schedule pickup for order](#tag/Shipping/operation/ship-internal-order-schedule-pickup) - schedule
+    a pickup for the  order (if shipped with Ankorstore)
+
+    - [Ship order with custom](#tag/Shipping/operation/ship-internal-order-custom) - generate a quote
+    for shipping with your own carrier
+
+    - [Check fulfillability](#tag/Ordering/operation/internal-order-is-fulfillable) - check whether an
+    order is fulfillable by Ankorstore Logistics
+
+
+    You can also find some details about shipping in the dedicated [Shipping](#tag/Shipping) section,
+
+
+    ## 💡 Working with External Orders
+
+
+    The information about _External Orders_ can be only listed and retrieved as a relation of _Master
+    Order_ endpoints.
+
+    However, some _External Order_-specific operations are also available, see the section below.
+
+
+    ### How to create External Order?
+
+
+    The creation of _External Order_ is as easy as just sending one request to the API.
+
+    The process of creation is asynchronous, because it involves some 3rd party services, such as Fulfillment
+    Center
+
+    operators, who needs to confirm the possibility of fulfillment (availability of the stock, etc.).
+
+
+    For better understanding, you can treat the creation of _External Order_ an "intent to create an order
+    with particular items for
+
+    particular client". So after submission, the intent is either accepted or rejected by API, depending
+    on the different
+
+    factors (such as availability of the stock, etc.). More on this below.
+
+
+    #### Preparing for External Order creation
+
+
+    Usually, before sending the actual `Create External Order` request, you need collect some information
+    in order to make the request valid.
+
+
+    The request payload is described in details in the [endpoint specification](#tag/Ordering/operation/ordering-create-non-ankorstore-fulfillment-order)
+
+    but here we will take a general look at the necessary pieces of the information required for the request:
+
+
+    1. **Valid set of fulfillables.** The endpoint accepts the list of [fulfillable items](#tag/Fulfillment/About-Fulfillment).
+       The identifiers should be valid and the quantities should be evenly divisible by the batch size.
+    Otherwise, the
+       request might be rejected by the API.
+    2. **Valid shipping address.** This is one of the most important parts of the order, please make sure
+    the address is
+       completely valid, the provided postal code and phone number match the specified country etc. Otherwise,
+    any mistake
+       in the address fields could be only fixed with the help of the Ankorstore Support team.
+    3. **Generate unique identifier (UUID) for the order.** Despite this field is optional, considering
+    the asynchronous
+       nature of the process, it is highly recommended to provide it. This will allow you to immediately
+    get the information
+       about the order, check its status etc. Omitting this field will result in the generation of the
+    identifier by API
+       and will only make sense if you don't want to check the result immediately ("fire-and-forget").
+
+    The last 2 steps can be done independently, but the first step is a bit more complicated, because
+    it requires the knowledge
+
+    about the available products and their identifiers. This information can be obtained via the [Catalog
+    API](#tag/Products)
+
+    and [Fulfillment API](#tag/Fulfillment).
+
+
+    ### A practical example
+
+
+    <div class="info">
+
+
+    The assumption here is that you already authenticated and able to access the API.
+
+    If not, please follow the [Authentication](#tag/Authentication) section first.
+
+
+    </div>
+
+
+    Here is an example of the real use-case for the External Order creation.
+
+    Let's say, you'd like to create an order for the following client:
+
+
+    | Field        | Value                                     |
+
+    |--------------|-------------------------------------------|
+
+    | Client name  | John Doe                                  |
+
+    | Company name | ACME                                      |
+
+    | Phone        | +33 612345678                             |
+
+    | Email        | john@acme.com                             |
+
+    | Address      | 123, Rue de Foo Bar, Paris, 75001, France |
+
+
+    with the following content:
+
+
+    | Product SKU | Quantity |
+
+    |-------------|----------|
+
+    | AB-1234     | 12       |
+
+    | CD-00-XY    | 5        |
+
+
+    In this scenario, you should take the following steps:
+
+
+    #### [1] Find the fulfillable identifiers for the given products
+
+
+    This can be achieved by sending a request to the [List Product Variants](#tag/Catalog/operation/list-product-variants-with-stock)
+
+
+    ```
+
+    [GET] /api/v1/product-variants?filter[sku]=AB-1234,CD-00-XY
+
+    ```
+
+
+    and finding the fulfillable identifiers for the desired products.
+
+
+    As a result of this step, you should have the following information:
+
+
+    | Product SKU | Quantity | Fulfillable ID                       |
+
+    |-------------|----------|--------------------------------------|
+
+    | AB-1234     | 12       | 1ac37dbf-f25d-4c0c-bcc8-ad8af946b541 |
+
+    | CD-00-XY    | 5        | e5e91243-d11a-47a3-9308-22af70da5bc4 |
+
+
+    #### [2] Find the information about the available stocks for the products
+
+
+    This information can be retrieved by sending a request to [List Fulfillable Endpoint](#tag/Fulfillment/operation/fulfillment-list-fulfillable).
+
+    With the fulfillable identifiers from the previous step, you can send the following request:
+
+
+    ```
+
+    [GET] /api/v1/fulfillment/fulfillable?fulfillableIds[]=1ac37dbf-f25d-4c0c-bcc8-ad8af946b541&=fulfillableIds[]=e5e91243-d11a-47a3-9308-22af70da5bc4
+
+    ```
+
+
+    and get quantity information for the given fulfillables from the response.
+
+
+    For each requested fulfillable item, the response of this endpoint contains 2 properties:
+
+
+    - `unitQuantity` - the total available quantity of the product, in minimal atomic units (e.g. bottles)
+
+    - `batchQuantity` - the total available quantity of the batches (packs) of the product (e.g. boxes
+    of bottles)
+
+
+    Having these 2 properties, you should check 2 things, before move on:
+
+
+    1. The planned quantity for the corresponding product in the order should not exceed `unitQuantity`
+    from the response.
+       If the requested quantity is greater than the `unitQuantity`, the request will be rejected.
+    2. The requested quantity of the product should be evenly divisible by the "batchSize", which can
+    be calculated
+       by dividing returned `unitQuantity` by the `batchQuantity`. This is required because the Fulfillment
+    Center can only
+       fulfill products by the whole batches (packs). Violating this rule will result in the rejection
+    of the request.
+
+    After these simply calculations, you should end up with the following information:
+
+
+    | Product SKU | Quantity | Fulfillable ID                       | Batch Size |
+
+    |-------------|----------|--------------------------------------|------------|
+
+    | AB-1234     | 12       | 1ac37dbf-f25d-4c0c-bcc8-ad8af946b541 | 3          |
+
+    | CD-00-XY    | 5        | e5e91243-d11a-47a3-9308-22af70da5bc4 | 5          |
+
+
+    as you can see here, the quantities are evenly divisible by the batch sizes, which means the products
+    information is
+
+    ready to go. For instance, the products from our example will be fulfilled by 4 packs of `AB-1234`
+    and 1 pack of `CD-00-XY`.
+
+
+    #### [3] Validate the shipping address
+
+
+    The next step is to validate the shipping address. As it was mentioned before, the address properties
+    should
+
+    correspond to each other and be valid.
+
+
+    So the user information in this example looks valid and the only thing left is to distribute the address
+    fields
+
+    to the corresponding properties:
+
+    ```json5
+
+    {
+        "country": "FR", // ISO 3166-1 alpha-2 country code
+        "postalCode": "75001", // Valid postal code for France
+        "city": "Paris",
+        "street": "123, Rue de Foo Bar", // 60 characters max, otherwise will not fit the place on the
+    printed label
+        "company": "ACME",
+        "firstName": "John",
+        "lastName": "Doe",
+        "phone": "+33 612345678", // Valid phone number for France
+        "email": "john@acme.com"
+    }
+
+
+    ```
+
+
+    #### [4] Generate unique identifier for the order
+
+
+    The next step is to generate UUID (preferably [UUIDv6](https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#name-uuid-version-6))
+    for the order being created.
+
+    You can use any library of your choice to generate it, the only requirement is that it should follow
+    the specification.
+
+
+    #### [5] Send the request to the API
+
+
+    At this point, you are ready to send the request to the API. What is left to do is to prepare API
+    request payload by putting
+
+    together all the information collected in the previous steps. For the exact payload structure, please
+    refer to the
+
+    [endpoint specification](#tag/Ordering/operation/ordering-create-non-ankorstore-fulfillment-order).
+
+
+    The successful acceptance of the request does not mean 100% guarantee that the order will be fulfilled
+    by Fulfillment
+
+    Centre. The validation on the Fulfillment Centre side is usually taking some time, so you should check
+    the status of
+
+    the order by sending request to the [Get Master Order](#tag/Ordering/operation/get-master-order) endpoint,
+    using the
+
+    generated UUID as an identifier and including the `externalOrder` relation. The status of the included
+    _External Order_
+
+    will indicate the actual status of the order.
+
+
+    ## ⚠️ Deprecation notice
+
+
+    <div class="warning">
+
+
+    Some of the endpoints and documents from this section are deprecated and will be removed in the future.
+
+    You can temporarily still find them [here](#tag/Deprecated).
+
+
+    </div>
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Ordering
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-ordering-api-openapi.yml
+- aid: ankorstore:ankorstore-orderpay-api
+  name: Ankorstore OrderPay API
+  description: >-
+    ℹ️ This section describes the API endpoints for managing _OrderPay_ orders and customers. OrderPay
+    allows brands
+
+    to create and manage orders for their own customers, handle payments, and track order lifecycle —
+    all through the
+
+    Ankorstore platform.
+
+
+    ## 💡 General Concepts
+
+
+    - _OrderPay Order_ - An order created by a brand on behalf of one of its customers. Unlike _Internal
+    Orders_ (placed
+      by retailers on the Ankorstore marketplace), OrderPay orders are initiated by the brand itself.
+    This enables brands
+      to sell to customers outside the marketplace while still leveraging Ankorstore's payment processing,
+    invoicing, and
+      optionally, fulfillment services.
+    - _OrderPay Customer_ - A customer entity managed by the brand. Each customer has billing and shipping
+    addresses,
+      contact details, and associated payment methods. Customers must be created before orders can be
+    placed for them.
+    - _Custom Items_ - Additional charges on an order beyond product line items, such as shipping fees,
+    excise duties,
+      or eco-taxes.
+
+    ## 💡 Working with Customers
+
+
+    Before creating an order, you need to register the customer. Use the customer endpoints to create
+    and manage your
+
+    customer base.
+
+
+    ### Creating a Customer
+
+
+    A customer requires at minimum: store name, email, first/last name, phone number, and both billing
+    and shipping
+
+    addresses.
+
+
+    ```json5
+
+    // POST /api/v1/order-pay/order-pay-customer
+
+    {
+      "data": {
+        "type": "order-pay-customer",
+        "attributes": {
+          "storeName": "La Boutique Verte",
+          "email": "contact@laboutiqueverte.fr",
+          "firstName": "Marie",
+          "lastName": "Dupont",
+          "company": {
+            "phoneNumber": "+33612345678",
+            "vatNumber": "FR12345678901",
+            "vatExemption": false
+          },
+          "billingAddress": {
+            "street": "12 Rue de la Paix",
+            "postalCode": "75002",
+            "city": "Paris",
+            "countryCode": "FR"
+          },
+          "shippingAddress": {
+            "street": "12 Rue de la Paix",
+            "postalCode": "75002",
+            "city": "Paris",
+            "countryCode": "FR"
+          }
+        }
+      }
+    }
+
+    ```
+
+
+    ### Listing and Filtering Customers
+
+
+    You can retrieve your customers with optional filters:
+
+
+    ```
+
+    [GET] /api/v1/order-pay/order-pay-customer?filter[storeName]=boutique&sort=storeName
+
+    ```
+
+
+    The response uses page-based pagination with `page[number]` and `page[size]` parameters.
+
+
+    ### Including Payment Methods
+
+
+    When retrieving a single customer, pass `?include=paymentMethods` to see the customer's stored payment
+    methods.
+
+
+    ## 💡 Working with Orders
+
+
+    ### Order Lifecycle
+
+
+    An OrderPay order goes through the following statuses:
+
+
+    <pre class="mermaid">
+
+    stateDiagram-v2
+        [*] --> created
+        created --> brand_confirmed : Brand confirms
+        created --> cancelled : Brand cancels
+        brand_confirmed --> payment_confirmed : Payment processed
+        brand_confirmed --> cancelled : Brand cancels
+        payment_confirmed --> waiting_shipping
+        waiting_shipping --> shipped
+        shipped --> received
+        received --> invoiced
+        invoiced --> brand_paid
+        brand_paid --> [*]
+        cancelled --> [*]
+    </pre>
+
+
+    | Status | Description |
+
+    | --- | --- |
+
+    | `created` | Order has been created but not yet confirmed by the brand |
+
+    | `brand_confirmed` | Brand has confirmed the order, payment will be processed |
+
+    | `payment_confirmed` | Payment has been successfully processed |
+
+    | `waiting_shipping` | Order is awaiting shipment |
+
+    | `shipped` | Order has been shipped |
+
+    | `received` | Customer has received the order |
+
+    | `invoiced` | Invoice has been generated |
+
+    | `brand_paid` | Brand has been paid for the order |
+
+    | `cancelled` | Order has been cancelled |
+
+
+    ### Creating an Order
+
+
+    To create an order you need the customer UUID and at least one product line item. Each item requires
+    a
+
+    `productVariantUuid`, a `quantity` (in packs), and pricing in the brand's currency.
+
+
+    > ⚠️ The `quantity` field represents the number of **packs**, not individual units. For example, if
+    a product variant is
+
+    > sold in packs of 6, a quantity of 2 means 12 individual units.
+
+
+    ```json5
+
+    // POST /api/v1/order-pay/order-pay-orders
+
+    {
+      "data": {
+        "type": "order-pay-orders",
+        "attributes": {
+          "customerUuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "customReference": "SHOP-12345",  // Your reference, shown on customer invoice
+          "items": [
+            {
+              "productVariantUuid": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+              "quantity": 2,
+              "amounts": {
+                "brandUnitPrice": 1500,       // 15.00 EUR in cents
+                "discountRate": 10            // 10% discount
+              }
+            }
+          ],
+          "customItems": [
+            {
+              "type": "shippingFees",
+              "amount": 800                   // 8.00 EUR in cents, excl. VAT
+            }
+          ],
+          "shippingMethod": "custom"          // "custom" or "fulfillment"
+        }
+      }
+    }
+
+    ```
+
+
+    ### Shipping Methods
+
+
+    | Method | Description |
+
+    | --- | --- |
+
+    | `custom` | You ship the order using your own carrier |
+
+    | `fulfillment` | The order is fulfilled via AnkorLogistics Fulfillment Centre |
+
+
+    When using `fulfillment`, you can optionally provide delivery instructions:
+
+
+    - `deliverySchedule` - Customer opening times with day-of-week and time slots
+
+    - `packingInstruction` - Services like `PALLETISE`, `CUSTOM_BUILD`, or `DOCS`
+
+    - `deliveryAppointment` - Whether an appointment is required for delivery
+
+
+    ### Custom Items
+
+
+    Use `customItems` to add charges beyond product line items:
+
+
+    | Type | Description |
+
+    | --- | --- |
+
+    | `shippingFees` | Shipping charges |
+
+    | `exciseDuties` | Excise duties (e.g., on alcohol) |
+
+    | `ecoTax` | Environmental taxes |
+
+
+    > ⚠️ The `amounts.shippingFeesAmount` field is **deprecated**. Use `customItems` with type `shippingFees`
+    instead.
+
+
+    ### Custom Reference
+
+
+    Use the `customReference` field to link orders back to your own system (e.g., a Shopify order ID).
+    This reference
+
+    appears on the customer's invoice and can be up to 64 characters.
+
+
+    ### Confirming and Cancelling Orders
+
+
+    After creating an order, you can:
+
+
+    - **Confirm** it via `POST /api/v1/order-pay/order-pay-orders/{id}/-actions/confirm` — this triggers
+    payment processing
+
+    - **Cancel** it via `POST /api/v1/order-pay/order-pay-orders/{id}/-actions/cancel` — with an optional
+    reason
+
+
+    ### Including Payment Details
+
+
+    When retrieving an order, pass `?include=payment` or `?include=payment.transactions` to see payment
+    status and
+
+    transaction details.
+
+
+    ## 💡 Amounts and Currencies
+
+
+    All monetary amounts are represented as **integers in the lowest denomination** of the currency (e.g.,
+    cents for EUR).
+
+    Every order response includes both brand-currency and customer-currency amounts, with formatted string
+    equivalents
+
+    for display purposes.
+
+
+    For example, a line item response includes fields like:
+
+    - `brandUnitPrice`: `1500` (integer, cents)
+
+    - `brandUnitPriceFormatted`: `"15.00 EUR"` (string, for display)
+
+    - `customerUnitPrice`: `1320` (integer, cents in customer currency)
+
+    - `customerUnitPriceFormatted`: `"13.20 GBP"` (string, for display)
+
+
+    VAT is calculated automatically based on the customer's address and product configuration.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - OrderPay
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-orderpay-api-openapi.yml
+- aid: ankorstore:ankorstore-shipping-api
+  name: Ankorstore Shipping API
+  description: >-
+    ℹ️ Here your can find endpoints related to different types of shipping, available on the platform.
+
+
+    <div class="warning">
+
+
+    Please note, that shipping information described here is only available for _Internal Orders_.
+
+    For more details check the [Orders](#tag/Ordering/General-conceptions) section.
+
+
+    </div>
+
+
+    ## 💡 How to ship an Internal Order?
+
+
+    For shipping an internal order, Ankorstore provides two methods:
+
+    - `Ankorstore Label` method : For this method, the shipping will be handled by Ankorstore carrier
+    partners. The cost of shipping will be charged to the brand.
+
+    - `Brand Label` method : For this method, the shipping will be handled by the brand itself and Ankorstore
+    will provide a refund.
+
+
+    To retrieve the shipping quotes, the brand must call the following endpoint:
+
+    - Get quote list : `/v1/orders/:orderId/shipping-quotes`
+
+
+    In the list of quotes, the `Ankorstore Label` method can be found by the carrier name `ankorstore`
+    :
+
+    ```json
+
+    {
+        "data": [
+            {
+                "quoteUuid": "1efcd179-5753-6ee0-91a4-72a6c4e49e6a",
+                "carrierCode": "ankorstore",
+                "serviceCode": "",
+                "serviceCommercialName": "",
+                "collectionMethod": [],
+                "shippingCost": {
+                    // Amount refunded to the brand if the quote is selected
+                    "amount": 1006,
+                    "currency": "EUR"
+                },
+                "timeInTransit": null
+            }
+        ]
+    }
+
+    ```
+
+    Other methods have a different `carrierCode`:
+
+    ```json
+
+    {
+        "data": [
+            {
+                "quoteUuid": "1edd47df-b91a-68b0-b517-52e73cd28d4f",
+                "carrierCode": "ups",
+                "serviceCode": "11",
+                "serviceCommercialName": "UPS Standard",
+                "collectionMethod": [
+                    "pickup",
+                    "drop-off"
+                ],
+                "shippingCost": {
+                    // Amount subtracted from total amount if the quote is selected
+                    "amount": 807,
+                    "currency": "EUR"
+                },
+                "timeInTransit": {
+                    "estimatedDeliveryDate": "2025-01-10",
+                    "pickupDate": "2025-01-08",
+                    "businessDaysInTransit": 2
+                }
+            }
+        ]
+    }
+
+    ```
+
+
+    Once the quote is generated, the brand must confirm the selected one by calling :
+
+    - Confirm shipping : `/v1/shipping-quotes/:quoteId/confirm`
+
+
+    <div class="info">
+
+
+    To find out more about Ankorstore's shipping options, please [visit our FAQs.](https://ankorstoresas.my.site.com/faq/s/article/what-shipping-options-are-available-with-ankorstore?language=en_US)
+
+
+    </div>
+
+
+    The brand can list many quotes before they decide to **confirm** the quote. An example flow:
+
+
+    <pre class="mermaid">
+
+    flowchart LR
+        A[Start] --> B[Get shipping quote list: <br> orders/:orderId/shipping-quotes]
+        B --> B.1{ankorstore carrier quote selected ?}
+        B.1 -- NO --> B.YES[The brand will get the quote amount as a refund for the shipping]
+        B.1 -- YES --> B.NO[The brand will be charged for the shipping by the quote amount]
+        B.YES --> D[I Confirm the quote: <br> shipping-quotes/:quoteId/confirm]
+        B.NO --> D
+    </pre>
+
+
+    <div class="warning">
+
+
+    #### Parcels
+
+
+    On either shipping method, if the brand has previously generated a quote and is now generating a new
+    one
+
+    the full list of parcels must be provided. The quote endpoint **cannot** be called with an empty parcel
+    list
+
+    to re-use the old parcel data.
+
+
+    </div>
+
+
+    <div class="danger">
+
+
+    #### Confirming a quote
+
+
+    To confirm a quote, the ID must be provided when calling the `/v1/shipping-quotes/:quoteId/confirm`
+    endpoint.
+
+
+    </div>
+
+
+    All information regarding shipping and tracking is stored within the `shippingOverview` object. This
+    includes the `latestQuote` generated and the `shippingCostsOverview`.
+
+
+    ## 💡 Shipping Costs
+
+
+    In the endpoint for listing quotes `v1/orders/:orderId/shipping-quotes`, the shipping cost of the
+    selected
+
+    quote will be the **fee** subtracted from total amount for carriers (`ups`, `dhl_express`, etc) and
+    a **refund** amount
+
+    for `ankorstore` carrier (amount refunded to the brand):
+
+    ```json
+
+    {
+        "data": [
+            {
+                "quoteUuid": "1edd47df-b91a-68b0-b517-52e73cd28d4f",
+                "carrierCode": "ups",
+                "serviceCode": "11",
+                "serviceCommercialName": "UPS Standard",
+                "collectionMethod": [
+                    "pickup",
+                    "drop-off"
+                ],
+                "shippingCost": {
+                    // Amount subtracted from total amount if the quote is selected
+                    "amount": 807,
+                    "currency": "EUR"
+                }
+            },
+            {
+                "quoteUuid": "1efcd179-5753-6ee0-91a4-72a6c4e49e6a",
+                "carrierCode": "ankorstore",
+                "serviceCode": "",
+                "serviceCommercialName": "",
+                "collectionMethod": [],
+                "shippingCost": {
+                    // Amount refunded to the brand if the quote is selected
+                    "amount": 1006,
+                    "currency": "EUR"
+                }
+            }
+        ]
+    }
+
+    ```
+
+
+    <div class="info">
+
+
+    #### Want more information about shipping contribution?
+
+
+    To find out more about Ankorstore's contribution to your shipping costs, please [visit our FAQs.](https://knowledgecommunity.force.com/faq/s/article/shippingpolicy?language=en_US)
+
+
+    </div>
+
+
+    ### Shipping with Brand Label
+
+
+    The quote action will return an amount that will be refunded back to the brand based on the shipping
+    grid refund matrix.
+
+
+    The confirm action is synchronous, meaning when the action is called the order resource will have
+    its status
+
+    changed to `shipped` upon returning a response. It is up to brand to provide tracking details for
+    the retailer when calling this action.
+
+
+    <pre class="mermaid">
+
+    sequenceDiagram
+      participant O as Order
+      participant SWC as Ship : orders/:orderId/shipping-quotes
+      participant SC as Confirm : shipping-quotes/:quoteId/confirm
+      participant SH as Shipped
+
+      O->>SWC: List quotes
+      SWC-->>O: Quote OK
+      O->>SC: Confirm 'ankorstore' carrier quote
+      SC->>SH: Status
+      SC-->>O: OK
+    </pre>
+
+
+    <div class="info">
+
+
+    In the `orders/:orderId/shipping-quotes` endpoint response, the quote uuid generated is the following:
+
+
+    ```json
+     {
+        "quoteUuid": "1efcd179-56c1-6432-98e7-72a6c4e49e6a",
+        "carrierCode": "ankorstore",
+         ...
+       }
+     }
+    ```
+
+
+    </div>
+
+
+    ### Shipping with Ankorstore Label (carrier name like ups, dhl_express, etc)
+
+
+    When calling the `confirm` action for the order's Ankorstore shipping quote, the returned order resource's
+    status
+
+    will still be `brand_confirmed`. A job in the background will generate the shipping labels for the
+    order.
+
+    It is this background processing that moves the status to `shipping_labels_generated`.
+
+
+    <div class="info">
+
+
+    #### How will I know when the labels have been generated?
+
+
+    Right now, the order must be polled periodically. Checking every minute would be suitable to detect
+    the status change
+
+    and then pull the label PDF data within the shippingOverview of an order resource.
+
+
+    </div>
+
+
+    <pre class="mermaid">
+
+    sequenceDiagram
+      participant O as Order
+      participant SWA as Ship with Ankorstore Label : <br> orders/:orderId/shipping-quotes
+      participant SC as Confirm shipping : <br> shipping-quotes/:quoteId/confirm
+      participant BG as Async Processing
+      participant C as Carrier
+      participant SH as Shipped
+
+      O->>SWA: Get shipping quote list
+      SWA-->>O: I accept one quote
+      O->>SC: I confirm the quote
+      SC-->>O: OK status=brand_confirmed
+      SC-->>BG: Dispatch generate labels job
+      Note over SC,BG: Async worker job
+      BG-->>O: Labels generated, status=shipping_labels_generated
+      Note over BG,O: (Async worker)
+      C-->>SH: Parcels scanned, status=shipped
+      Note over C,SH: (External service)
+    </pre>
+
+
+    At step 6 (shipping labels generated) the download URL's for each packages label will be available
+    within
+
+    the shippingOverview of an order resource. These labels are in PDF format and will also be visible
+    in order details page on Ankorstore.
+
+
+    In the `orders/:orderId/shipping-quotes` endpoint response, the quote uuid generated is the following:
+
+
+    ```json
+     {
+        "quoteUuid": "1efcd179-56c1-6432-98e7-72a6c4e49e6a",
+        "carrierCode": "ups",
+         ...
+       }
+     }
+    ```
+
+
+    ### Schedule a Pickup
+
+
+    If the brand is not taking the parcels to the local drop-off point for the carrier the brand can schedule
+    a pickup
+
+    for this order. A pickup can only be scheduled on a working day (monday to friday).
+
+    For full information please refer to the API documentation.
+
+
+    <div class="info">
+
+
+    #### Pickup is not accepted
+
+
+    For now, Ankorstore does not know in advance which date/time configuration is available,
+
+    if the requested pickup is denied please try a different date or time frame.
+
+
+    </div>
+
+
+    ## ⚠️ Deprecation notice
+
+
+    <div class="warning">
+
+
+    Some of the endpoints and documents from this section are deprecated and will be removed in the future.
+
+    You can temporarily still find them [here](#tag/Deprecated).
+
+
+    </div>
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Shipping
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-shipping-api-openapi.yml
+- aid: ankorstore:ankorstore-state-api
+  name: Ankorstore State API
+  description: The State API from Ankorstore — 1 operation(s) for state.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - State
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-state-api-openapi.yml
+- aid: ankorstore:ankorstore-stock-management-api
+  name: Ankorstore Stock Management API
+  description: The Stock Management API from Ankorstore — 1 operation(s) for stock management.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Stock Management
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-stock-management-api-openapi.yml
+- aid: ankorstore:ankorstore-testing-api
+  name: Ankorstore Testing API
+  description: "ℹ️ This section is dedicated to the testing API during development process. \nThe listed\
+    \ endpoints are **not available** on production environment.\n\n### Creating Test Orders\n\nWhen using\
+    \ the public sandbox, a subsection of the API will be available to create test orders.\n\nThis endpoint\
+    \ `/api/testing/orders/create` can be called to create a new test order with a new retailer,\nand\
+    \ a couple of new products.\n\nYou can also pass in options to specify the exact retailer or products\
+    \ themselves.\nTo find out more, you can view the [endpoint specification here](a45de155779ff-create-test-order-sandbox-only).\n\
+    \n### Finding the Retailer ID\n\nThere is an option to specify the `retailerId` to use the same retailer\
+    \ for every test order, to find this, \nlogin as that retailer you created and open up the developer\
+    \ tools. You will see it logged to the console."
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Testing
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-testing-api-openapi.yml
+- aid: ankorstore:ankorstore-user-api
+  name: Ankorstore User API
+  description: >-
+    ℹ️ This section describes the API endpoints for retrieving user and platform configuration.
+
+
+    ## 💡 User Configuration
+
+
+    The user configuration endpoints return locale and currency settings for the authenticated user. This
+    is useful
+
+    for adapting your integration to the user's preferences.
+
+
+    ### Current User
+
+
+    Retrieve the configuration for the currently authenticated user:
+
+
+    ```
+
+    [GET] /api/v1/me/config
+
+    ```
+
+
+    Returns:
+
+    - `currency` - The user's preferred currency (e.g., `"EUR"`, `"GBP"`)
+
+    - `country` - The user's country code (e.g., `"FR"`, `"DE"`)
+
+    - `browserId` - A browser-session identifier
+
+
+    ### Specific User
+
+
+    You can also retrieve configuration for a specific user by UUID:
+
+
+    ```
+
+    [GET] /api/v1/users/{id}/config
+
+    ```
+
+
+    ## 💡 Platform Configuration
+
+
+    The platform configuration endpoint returns global settings that apply to all users:
+
+
+    ```
+
+    [GET] /api/v1/platform/config
+
+    ```
+
+
+    Returns:
+
+    - `cdn` - The CDN base URL for loading assets (e.g., product images)
+
+    - `stripePublicKey` - The Stripe public key, needed if your integration handles payment flows client-side
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - User
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-user-api-openapi.yml
+- aid: ankorstore:ankorstore-users-api
+  name: Ankorstore Users API
+  description: The Users API from Ankorstore — 1 operation(s) for users.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Users
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-users-api-openapi.yml
+- aid: ankorstore:ankorstore-webhooks-api
+  name: Ankorstore Webhooks API
+  description: >-
+    ℹ️ This section describes the API endpoints which can be used for managing webhook subscriptions.
+
+
+    ## 💡 Overview
+
+    In order to be able to manage Webhook Subscriptions via API you should understand the relationship
+    model
+
+    around webhook notifications system. In general, a Webhook Subscription always contains a list of
+    chosen events
+
+    and always belongs to an application. More on this later.
+
+
+    ### Application
+
+    Application is a representation of a single private integration. Whenever you create a new set of
+    credentials for
+
+    accessing API in your account, under the hood you create an Application entity. Once created, the
+    entity allows you
+
+    to attach as many Webhook Subscriptions as needed. It means, there's no way to manage Webhook Subscriptions
+    outside of
+
+    Application context and this restriction is also reflected in the current API architecture.
+
+
+    ### Webhook Subscription
+
+    Webhook Subscription is an entity representing "an intent of receiving HTTP requests to the specified
+    URL whenever
+
+    one of the chosen Webhook Subscription Events is triggered on the platform". For every new URL you
+    should create a
+
+    separate Webhook Subscription.
+
+
+    ### Webhook Subscription Events
+
+    Webhook Subscription Event is a name of the corresponding event fired on certain conditions on the
+    platform. There are
+
+    a list of only valid and supported events which can be used in the Webhook Subscription management.
+    You can fetch this
+
+    list using a corresponding [endpoint](#tag/Webhooks/operation/get-available-webhook-events)
+
+
+    ## 💡 How to create a new webhook subscription?
+
+
+    ### 1. Find ApplicationID
+
+    As it was mentioned above, Webhook Subscription always belong to some application. Hence, you should
+    start from
+
+    finding out the ID of the target Application in order to link the new Webhook Subscription to it.
+    For this purpose
+
+    you should use [List Applications](#tag/Applications/operation/list-applications) endpoint. This endpoint
+    returns
+
+    a list of all available Applications in your account, so you could identify the needed one by `name`,
+    `developerEmail`
+
+    or `clientId` in the Application resource body:
+
+
+    `GET https://ankorstore.com/api/v1/applications`
+
+    ```json
+
+    {
+      "data": {
+        "id": "43efbfbd-bfbd-1eef-1e6a-6200efbfbdef",
+        "type": "application",
+        "attributes": {
+          "name": "My Application",
+          "developerEmail": "dev@acme.com",
+          "clientId": "k322k7frs87e8w7hri3jkke7ry7",
+          "clientSecret": null
+        }
+      }
+    }
+
+    ```
+
+    **NOTE**: The client secret in the response is always `null` due to security reasons. The actual client
+    secret
+
+    can be seen only via UI and only once - during the creation of the application.
+
+
+    ### 2. Find valid webhook events to subscribe to
+
+    Next step should be to find the valid names of the webhook events which you could use in the create
+    webhook request
+
+    payload:
+
+
+    `GET https://ankorstore.com/api/v1/webhook-subscriptions/events`
+
+    ```json
+
+    {
+      "data": [
+        {
+          "type": "webhook-subscriptions/events",
+          "id": "order.brand_created"
+        },
+        {
+          "type": "webhook-subscriptions/events",
+          "id": "order.brand_accepted"
+        }
+      ]
+    }
+
+    ```
+
+    You can find detailed description of each event in the [dedicated section](#tag/Webhook-Subscription)
+    of the docs.
+
+
+    ### 3. Create webhook subscription
+
+    Now you are all set for creating actual webhook subscription. The prerequisites for this step are:
+
+    - The Application ID from step 1 (`43efbfbd-bfbd-1eef-1e6a-6200efbfbdef` in this example)
+
+    - The chosen events from step 2 (e.g. `order.brand_created` and `order.brand_accepted`)
+
+    With this setup the final request should look like:
+
+
+    `POST https://ankorstore.com/api/v1/webhook-subscriptions`
+
+    ```json
+
+    {
+      "data": {
+        "type": "webhook-subscriptions",
+        "attributes": {
+          "url": "https://my-app.com/webhook-listener",
+          "events": [
+            "order.brand_created",
+            "order.brand_accepted"
+          ]
+        },
+        "relationships": {
+          "application": {
+            "data": {
+              "type": "applications",
+              "id": "43efbfbd-bfbd-1eef-1e6a-6200efbfbdef"
+            }
+          }
+        }
+      }
+    }
+
+    ```
+
+    After this request is succeeded, you will start receiving notification about chosen events on the
+    chosen URL.
+
+
+    ## 💡 How to manage existing Webhook Subscriptions?
+
+    For most of the operations with an existing Webhook Subscription you need to fetch its ID first. It
+    can be achieved by
+
+    using [List Applications](#tag/Applications/operation/list-applications) endpoint and explicit including
+
+    the Webhook Subscription resource into the response.
+
+
+    `GET /api/v1/applications?include=webhookSubscriptions`
+
+    ```json
+
+    {
+      "data": {
+        "id": "`43efbfbd-bfbd-1eef-1e6a-6200efbfbdef",
+        "type": "applications",
+        "attributes": {},
+        "relationships": {
+          "webhookSubscriptions": {
+            "data": [
+              {
+                "type": "webhook-subscriptions",
+                "id": "a863e15d-3d20-4af2-b92b-d9590a4a9606"
+              }
+            ]
+          }
+        }
+      },
+      "includes": [
+        {
+          "type": "webhook-subscriptions",
+          "id": "a863e15d-3d20-4af2-b92b-d9590a4a9606",
+          "attributes": {
+            "url": "https://my-app.com/webhook-listener",
+            "events": [
+              "order.brand_created",
+              "order.brand_accepted"
+            ],
+            "signingSecret": "LQxZs6kiSyNr45hjT32OsntYddzH4BvToLIQcgSL"
+          }
+        }
+      ]
+    }
+
+    ```
+
+
+    The data in this response gives you an idea about the current Webhook Subscription state and also
+    lets you update
+
+    or delete Webhook Subscriptions, whenever needed. For updating or deleting Webhook Subscription you
+    need to use the
+
+    Webhook Subscription ID received in the response (`a863e15d-3d20-4af2-b92b-d9590a4a9606` in this particular
+    case). Please
+
+    refer to the [Update webhook subscription](#tag/Webhooks/operation/update-application-webhook-subscription)
+
+    and [Delete webhook subscription](#tag/Webhooks/operation/delete-application-webhook-subscription)
+    endpoints
+
+    for detailed information.
+  humanURL: https://ankorstore.github.io/api-docs/
+  baseURL: https://www.ankorstore.com
+  tags:
+  - Webhooks
+  properties:
+  - type: OpenAPI
+    url: openapi/ankorstore-webhooks-api-openapi.yml
 common:
+- type: Documentation
+  url: https://ankorstore.github.io/api-docs/
+- type: APIReference
+  url: https://ankorstore.github.io/api-docs/
+- type: GettingStarted
+  url: https://ankorstore.github.io/api-docs/#section/Getting-Started
+- type: GitHubOrganization
+  url: https://github.com/ankorstore
+- type: SignUp
+  url: https://www.ankorstore.com/register
+- type: Support
+  url: mailto:api@ankorstore.com
+- type: Authentication
+  url: authentication/ankorstore-authentication.yml
+- type: Conventions
+  url: conventions/ankorstore-conventions.yml
+- type: Idempotency
+  url: conventions/ankorstore-conventions.yml
+- type: ErrorCatalog
+  url: errors/ankorstore-problem-types.yml
+- type: ErrorCodes
+  url: errors/ankorstore-error-codes.yml
+- type: Lifecycle
+  url: lifecycle/ankorstore-lifecycle.yml
+- type: Deprecation
+  url: lifecycle/ankorstore-lifecycle.yml
+- type: ChangeLog
+  url: changelog/ankorstore-changelog.yml
+- type: RateLimits
+  url: conventions/ankorstore-conventions.yml
+- type: Sandbox
+  url: sandbox/ankorstore-sandbox.yml
+- type: Webhooks
+  url: asyncapi/ankorstore-webhooks.yml
+- type: DataModel
+  url: data-model/ankorstore-data-model.yml
+- type: Conformance
+  url: conformance/ankorstore-conformance.yml
+- type: MCPServer
+  url: mcp/ankorstore-mcp.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Packages
+  url: packages/ankorstore-packages.yml
+- type: LLMsTxt
+  url: llms/ankorstore-llms.txt
+- type: DomainSecurity
+  url: security/ankorstore-domain-security.yml
 - type: Website
   url: https://www.ankorstore.com
