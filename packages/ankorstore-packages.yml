@@ -1,0 +1,17 @@
+generated: '2026-07-17'
+method: searched
+source: https://github.com/ankorstore
+notes: >-
+  Ankorstore publishes no first-party client SDK for its Public API on npm/PyPI/Packagist/etc. The one
+  first-party published, consumer-facing artifact is the API mock server Docker image (for local
+  integration testing). Internal building blocks in the GitHub org (yokai Go framework, cursor-pagination
+  Laravel library) are not API-consumer SDKs and are excluded. No SDKs pointer is emitted because there
+  is no official client library.
+packages:
+- language: docker
+  registry: ghcr
+  name: ankorstore/api-mock-server
+  url: https://github.com/ankorstore/api-docs
+  install: docker run --rm -t -p 1080:1080 ghcr.io/ankorstore/api-mock-server:main
+  official: true
+  kind: mock-server

@@ -1,0 +1,68 @@
+generated: '2026-07-17'
+method: searched
+source: https://ankorstore.github.io/api-docs/#section/Webhook-Subscription
+spec_type: Webhooks
+notes: >-
+  Ankorstore documents a webhook event surface but publishes no AsyncAPI document, so this captures the
+  webhook catalog (type Webhooks). Events, payload shape, signature scheme and retry policy are taken
+  verbatim from the published Webhook Subscription section. Subscriptions are managed via the UI
+  (Integrations > Private Apps) or via the API (webhook-subscriptions operations).
+management:
+  api_operations:
+  - add-application-webhook-subscription
+  - update-application-webhook-subscription
+  - delete-application-webhook-subscription
+  - get-available-webhook-events
+  ui: Ankorstore account > Integrations > Private Apps
+payload:
+  format: >-
+    Same JSON:API resource object as the corresponding API resource (e.g. OrderResource for order.*),
+    plus a meta.event object.
+  meta_event_fields: [id, applicationId, type, timestamp]
+signature:
+  header: signature
+  algorithm: HMAC-SHA256 (hex)
+  computation: hash_hmac('sha256', rawPayload, subscriptionSecret)
+  secret: per-subscription secret (NOT the API client secret)
+  verification: use constant-time comparison (timingSafeEqual / hmac.compare_digest)
+delivery:
+  transport: HTTPS POST to subscriber URL
+  retries: up to 5 attempts with exponential backoff on non-2xx responses
+  idempotency: subscriber endpoints should be idempotent
+events:
+- type: order.brand_created
+  description: A new order is created for the brand.
+- type: order.brand_accepted
+  description: Brand accepts the order.
+- type: order.brand_rejected
+  description: Brand rejects the order.
+- type: order.billing_address_updated
+  description: Billing address is updated.
+- type: order.shipping_address_updated
+  description: Shipping address is updated.
+- type: order.shipping_labels_generated
+  description: Shipping labels generated (when shipping with Ankorstore).
+- type: order.shipped
+  description: Order shipped (custom carrier or Ankorstore).
+- type: order.shipment_received
+  description: Retailer confirms reception of the order.
+- type: order.shipment_refused
+  description: Retailer refuses the order.
+- type: order.brand_paid
+  description: Ankorstore pays the brand for the order.
+- type: order.cancelled
+  description: Order is cancelled.
+- type: order.brand_accepted_reverted
+  description: Reverted brand acceptance of the order.
+- type: order.shipping_labels_generated_reverted
+  description: Reverted shipping-label generation (when shipping with Ankorstore).
+- type: external_order.created
+  description: A new external order is created for the brand.
+- type: external_order.awaiting_fulfillment
+  description: External order is waiting for fulfillment.
+- type: external_order.cancelled
+  description: External order is cancelled.
+- type: external_order.shipped
+  description: External order shipped from the warehouse.
+- type: external_order.arrived
+  description: External order arrived and completed.

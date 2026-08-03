@@ -1,0 +1,12 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Ankorstore Fulfillment Service API
+  version: 1.0.0
+extends: openapi/ankorstore-fulfillment-openapi-original.yml
+actions:
+- target: $.info
+  update:
+    x-apievangelist-rating: 2
+    x-apievangelist-notes: >-
+      Small fulfillment media service (upload/list/delete PDF documents linked to a fulfillment master
+      order). JSON:API shapes; part of the broader Ankorstore fulfillment surface.

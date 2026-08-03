@@ -1,0 +1,86 @@
+generated: '2026-07-17'
+method: searched
+source: https://ankorstore.github.io/api-docs/
+notes: >-
+  Cross-cutting request/response semantics for the Ankorstore Public API, searched from the published
+  documentation (How to work with API, Authentication, Error Handling sections) and derived from the
+  OpenAPI. Ankorstore follows the JSON:API specification.
+authentication:
+  style: oauth2-client-credentials
+  token_endpoint: https://www.ankorstore.com/oauth/token
+  header: 'Authorization: Bearer {access_token}'
+  token_ttl_seconds: 3600
+  scope: '*'
+  ref: authentication/ankorstore-authentication.yml
+media_types:
+  request: application/vnd.api+json
+  response: application/vnd.api+json
+  accept_required: true
+  note: >-
+    Accept: application/vnd.api+json is required on every request except the /oauth/token exchange.
+    Content-Type: application/vnd.api+json is required when sending a JSON body.
+idempotency:
+  supported: true
+  mechanism: client-supplied-uuid
+  scope: POST create operations
+  detail: >-
+    POST requests are idempotent when the client supplies an entity UUID in the request body as
+    data.id. If a resource with that UUID already exists the API returns the existing resource rather
+    than creating a duplicate, making retries after a network failure safe. GET requests are always
+    safe to retry; value-setting PATCH requests (e.g. set stock to 42) are idempotent. There is no
+    dedicated Idempotency-Key header; the request-body UUID is the idempotency key.
+  retention: existing-resource-returned-on-conflict
+pagination:
+  style: cursor
+  request_params:
+  - page[limit]
+  - page[after]
+  - page[before]
+  response_meta: meta.page (from, to, hasMore, perPage)
+  response_links: links (first, next, prev)
+  note: Use the provided helper links rather than constructing cursor URLs manually.
+includes:
+  param: include
+  style: comma-separated, supports nested dot-paths (e.g. include=retailer,orderItems.productOption.product)
+  applies_to: all HTTP methods, not just GET
+filters:
+  param: 'filter[<field>]'
+  chaining: multiple filter[] params combine (AND)
+  example: 'filter[status]=ankor_confirmed&filter[retailer]={uuid}'
+versioning:
+  scheme: uri-path
+  current: v1
+  path_prefix: /api/v1
+  policy: >-
+    Additive changes (new optional fields, params, enum values, endpoints, webhook event types) can
+    ship within v1 without a new version; breaking changes are deprecated first, announced in the
+    changelog with a migration guide, and kept functional for a transition period before removal.
+  ref: lifecycle/ankorstore-lifecycle.yml
+error_envelope:
+  format: json:api
+  shape: 'top-level errors[] array of { status, title, detail, code, source.pointer, meta }'
+  multiple_errors: true
+  ref: errors/ankorstore-problem-types.yml
+rate_limits:
+  authenticated:
+    per_minute: 600
+    per_hour: 24000
+    per_day: 288000
+  unauthenticated:
+    per_minute: 120
+    per_hour: 4800
+    per_day: 57600
+  token_endpoint:
+    per_hour: 60
+    note: /oauth/token is limited to 60 requests per hour.
+  headers:
+  - X-RateLimit-Limit
+  - X-RateLimit-Remaining
+  - X-RateLimit-Reset
+  - Retry-After
+  on_exceed: 429 Too Many Requests
+retries:
+  strategy: exponential-backoff-with-jitter
+  max_attempts: 5
+  retryable: [401 (once, re-auth), 409 (conditional), 429, 500]
+  non_retryable: [400, 403, 404, 406, 415, 422]

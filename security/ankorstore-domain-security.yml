@@ -1,0 +1,28 @@
+generated: '2026-07-17'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: www.ankorstore.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Oct  7 12:47:10 2026 GMT
+  hsts: false
+- host: www.ankorlocal.com
+  https: false
+- host: www.preprod.ankorstore.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Oct  7 10:35:00 2026 GMT
+  hsts: null
+domains:
+- domain: ankorstore.com
+  dnssec: true
+  caa: []
+  spf: true
+  dmarc: true
+  dmarc_policy: quarantine
+- domain: ankorlocal.com
+  dnssec: true
+  caa: []
+  spf: false
+  dmarc: false

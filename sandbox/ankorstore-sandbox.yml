@@ -1,0 +1,41 @@
+generated: '2026-07-17'
+method: searched
+source: https://ankorstore.github.io/api-docs/#section/Testing-API
+notes: >-
+  Sandbox / test-data facts captured verbatim from the published Testing API section. Test values are
+  reproduced exactly as documented; none are invented.
+sandbox:
+  environment_url: https://www.public.ankorstore-sandbox.com
+  token_endpoint: https://www.public.ankorstore-sandbox.com/oauth/token
+  access: >-
+    Live Ankorstore brands can log in with existing credentials (or request an account via their Brand
+    Development Manager); brands not yet on Ankorstore must contact the Sales Team.
+mock_server:
+  image: ghcr.io/ankorstore/api-mock-server:main
+  docker_run: docker run --rm -t -p 1080:1080 ghcr.io/ankorstore/api-mock-server:main
+  repo_reference: ankorstore/api-mock-server
+test_data:
+  payment:
+    provider: stripe (test mode)
+    test_card:
+      number: '4242 4242 4242 4242'
+      expiry: '04/42'
+      cvv: '424'
+  test_orders: >-
+    Create any number of test retailer accounts on the sandbox to place test orders for your brand.
+  generate_data_endpoints: See the Testing tag (e.g. brand-create-test-order).
+limitations:
+  same_as_production:
+  - all API endpoints and response formats
+  - OAuth2 authentication flow
+  - webhook delivery (requires a public HTTPS endpoint)
+  - rate limiting (same limits as production)
+  - validation rules and business logic
+  differences:
+  - No real payments (Stripe test mode; use the 4242 test card)
+  - No real emails sent (inspect content via admin interface)
+  - Isolated data (sandbox and production databases are fully separate)
+  - Lower performance / resource allocation than production
+  data_reset: >-
+    Sandbox is shared by all integrators; delete your own test resources via DELETE endpoints, or
+    contact Ankorstore Support for a full brand data reset.

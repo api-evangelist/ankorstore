@@ -1,0 +1,83 @@
+generated: '2026-07-17'
+method: derived
+status: candidate
+source: openapi/ankorstore-main-openapi-original.yml
+notes: >-
+  No official hosted/remote Ankorstore MCP server was found (Ankorstore publishes a yokai-mcp-template
+  framework scaffold, but no MCP server for the Public API). This is a DERIVED candidate tool list,
+  one tool per marquee OpenAPI operationId, to seed an MCP server. Every source_operation id is verified
+  present in the spec. Not an authoritative provider claim.
+server:
+  name: ankorstore
+  transport: http
+  auth: oauth2-client-credentials
+tools:
+- name: get_me_config
+  description: Fetch the authenticated user configuration (connection check).
+  source_operation: openapi/ankorstore-main-openapi-original.yml#get-me-config
+- name: list_products
+  description: List the brand's catalog products.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#list-products
+- name: get_product
+  description: Retrieve a single product, optionally including product variants.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#get-product
+- name: update_product_variant_stock
+  description: Update stock for a single product variant.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#update-product-variant-stock
+- name: update_product_variant_prices
+  description: Update prices for a single product variant.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#update-product-variant-prices
+- name: post_catalog_integration_operations
+  description: Create batch product import/update/delete operations.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#post-catalog-integration-operations
+- name: list_master_orders
+  description: List master orders with pagination and includes.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#list-master-orders
+- name: get_master_order
+  description: Retrieve a single master order with includes.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#get-master-order
+- name: brand_accept_order
+  description: Accept an internal order.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#brand-accept-order
+- name: brand_reject_order
+  description: Reject an internal order with a rejectType reason.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#brand-reject-order
+- name: transition_internal_order
+  description: Transition an internal order through its lifecycle.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#transition-internal-order
+- name: list_order_shipping_quotes
+  description: List shipping quotes for an order.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#list-order-shipping-quotes
+- name: confirm_order_shipping_quote
+  description: Confirm a shipping quote and generate a label.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#confirm-order-shipping-quote
+- name: ship_internal_order_schedule_pickup
+  description: Schedule a carrier pickup for an Ankorstore Label shipment.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#ship-internal-order-schedule-pickup
+- name: fulfillment_create_replenishment
+  description: Declare incoming stock via a replenishment.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#fulfillment-create-replenishment
+- name: fulfillment_list_fulfillable
+  description: Check fulfillable stock availability.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#fulfillment-list-fulfillable
+- name: fulfillment_get_order
+  description: Track a fulfillment order (with status updates).
+  source_operation: openapi/ankorstore-main-openapi-original.yml#fulfillment-get-order
+- name: fulfillment_costs_get_specifications
+  description: Estimate fulfillment costs.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#fulfillment-costs-get-specifications
+- name: create_order_pay_order
+  description: Create an OrderPay order for a brand's own customer.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#create-order-pay-order
+- name: add_application_webhook_subscription
+  description: Subscribe an application to webhook events.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#add-application-webhook-subscription
+- name: get_available_webhook_events
+  description: List available webhook event types.
+  source_operation: openapi/ankorstore-main-openapi-original.yml#get-available-webhook-events
+- name: astral_list_state
+  description: Query current stock quantities by variant, location and status (ASTRAL).
+  source_operation: openapi/ankorstore-astral-openapi-original.yml#list-state
+- name: astral_list_locations
+  description: List available stock locations (ASTRAL).
+  source_operation: openapi/ankorstore-astral-openapi-original.yml#list-locations

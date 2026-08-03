@@ -1,0 +1,116 @@
+generated: '2026-07-17'
+method: derived
+source: openapi/ankorstore-main-openapi-original.yml
+notes: >-
+  Entity-relationship graph derived from the Ankorstore Public API OpenAPI resources, JSON:API include
+  paths, and documented relationships. Relationships are inferred from include= parameters and resource
+  references in the spec (e.g. master-orders?include=internalOrder,externalOrder;
+  orders?include=retailer,orderItems.productOption.product).
+entities:
+- name: product
+  key: uuid
+  notes: A brand's catalog product; has many product variants.
+- name: product-variant
+  key: uuid
+  notes: A sellable variant with stock and prices.
+- name: master-order
+  key: uuid
+  notes: Top-level order wrapper referencing internal and external orders.
+- name: internal-order
+  key: uuid
+- name: external-order
+  key: uuid
+- name: order-item
+  key: uuid
+- name: retailer
+  key: uuid
+- name: brand
+  key: uuid
+- name: shipping-quote
+  key: uuid
+- name: shipment
+  key: uuid
+- name: fulfillment-order
+  key: uuid
+- name: replenishment
+  key: uuid
+- name: lot
+  key: uuid
+- name: fulfillment-item
+  key: uuid
+- name: webhook-subscription
+  key: uuid
+- name: application
+  key: uuid
+- name: order-pay-customer
+  key: uuid
+- name: order-pay-order
+  key: uuid
+- name: stock-state
+  key: product-variant uuid
+  notes: ASTRAL resource.
+relationships:
+- from: product
+  type: has_many
+  to: product-variant
+  via: productVariants
+- from: product-variant
+  type: belongs_to
+  to: product
+  via: product
+- from: master-order
+  type: has_one
+  to: internal-order
+  via: internalOrder
+- from: master-order
+  type: has_one
+  to: external-order
+  via: externalOrder
+- from: master-order
+  type: has_many
+  to: fulfillment-order
+  via: fulfillmentOrders
+- from: internal-order
+  type: has_many
+  to: order-item
+  via: orderItems
+- from: internal-order
+  type: belongs_to
+  to: retailer
+  via: retailer
+- from: order-item
+  type: belongs_to
+  to: product-variant
+  via: productOption.product
+- from: order
+  type: has_many
+  to: shipping-quote
+  via: shipping-quotes
+- from: master-order
+  type: has_one
+  to: shipment
+  via: shipping.shipment
+- from: fulfillment-order
+  type: has_many
+  to: status-update
+  via: statusUpdates
+- from: replenishment
+  type: has_many
+  to: fulfillment-item
+  via: items
+- from: fulfillment-item
+  type: has_many
+  to: lot
+  via: lots
+- from: application
+  type: has_many
+  to: webhook-subscription
+  via: webhook-subscriptions
+- from: order-pay-order
+  type: belongs_to
+  to: order-pay-customer
+  via: customer
+- from: stock-state
+  type: belongs_to
+  to: product-variant
+  via: productVariant

@@ -1,0 +1,33 @@
+generated: '2026-07-17'
+method: searched
+source: https://ankorstore.github.io/api-docs/#section/Changelog
+notes: >-
+  Recent-window changelog captured verbatim from the published Changelog section of the Ankorstore
+  Public API documentation. The live docs are the source of truth.
+scheme: date-grouped (year / quarter or month)
+current_version: v1
+entries:
+- date: '2026-02'
+  category: Documentation improvements
+  breaking: false
+  highlights:
+  - Added Getting Started guide for first-time integrators
+  - Added Integration Scenarios page (catalog sync, order management, fulfillment, shipping)
+  - Added Error Handling guide with retry strategies and idempotency guidance
+  - Expanded Webhook Subscription with Node.js and Python signature verification examples
+  - Expanded Authentication with token refresh strategy and security best practices
+  - Expanded Testing API with sandbox limitations and mock server guidance
+  - Added API Versioning policy to How to work with API
+  - Expanded description pages for OrderPay, User, General, and Fulfillment API groups
+  - Added response examples to Master Orders and OrderPay endpoint specs
+- date: '2026-02'
+  category: API changes
+  breaking: false
+  highlights:
+  - Added available-apis overview describing all API groups including ASTRAL
+- date: '2025-Q4'
+  category: API changes
+  breaking: false
+  highlights:
+  - Upgraded Redocly documentation renderer
+  - Introduced Fulfillment endpoints for orders, lots, replenishments, and cost estimation

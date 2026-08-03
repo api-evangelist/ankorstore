@@ -1,0 +1,50 @@
+generated: '2026-07-17'
+method: searched
+source: openapi/ankorstore-main-openapi-original.yml
+searched: https://ankorstore.github.io/api-docs/#tag/Ordering
+notes: >-
+  Application-specific error/reason codes surfaced by the Ankorstore Public API. These appear either in
+  the JSON:API error object `code` field (action failures) or as the `rejectType` enum a brand supplies
+  when rejecting an internal order. Descriptions are taken verbatim from the published documentation.
+  This is the non-payment sibling of a decline-code registry; complements errors/ankorstore-problem-types.yml.
+envelope_field: errors[].code / data.attributes.rejectType
+action_failure_codes:
+- code: ORDER_ACTION_ACCEPT_FAILED
+  meaning: The accept action could not be applied to the order from its current state.
+  http_status: 409
+- code: ORDER_ACTION_REJECT_FAILED
+  meaning: The order cannot be rejected from its current state.
+  http_status: 409
+- code: ORDER_ACTION_TRANSITION_FAILED
+  meaning: The requested order status transition could not be applied.
+  http_status: 409
+order_reject_reasons:
+  field: rejectType
+  applies_when: order is in ankor_confirmed
+  codes:
+  - code: BRAND_ALREADY_HAS_CUSTOMER_IN_THE_AREA
+    meaning: Brand already has a customer in the area.
+  - code: BRAND_CANNOT_DELIVER_TO_THE_AREA
+    meaning: Brand cannot make a delivery to the target area.
+  - code: BRAND_HAS_EXCLUSIVE_DISTRIBUTOR_IN_THE_REGION
+    meaning: The brand already has an exclusive distributor in the target region.
+  - code: BUYER_NOT_A_RETAILER
+    meaning: The buyer does not seem to be a retailer.
+  - code: ORDER_ITEMS_PRICES_INCORRECT
+    meaning: The prices of items in this order were incorrect.
+  - code: PAYMENT_ISSUES_WITH_RETAILER
+    meaning: Brand had payment issues in the past with this retailer.
+  - code: PREPARATION_TIME_TOO_HIGH
+    meaning: The time needed for the order preparation is excessively high.
+  - code: PRODUCT_OUT_OF_STOCK
+    meaning: Order cannot be processed because one or multiple ordered products are not in stock.
+  - code: PURCHASE_NOT_FOR_RESALE
+    meaning: This purchase does not seem to be for resale.
+  - code: RETAILER_AGREED_TO_DO_CHANGES_TO_ORDER
+    meaning: The retailer agreed so that they can do changes to the order.
+  - code: RETAILER_NOT_GOOD_FIT_FOR_BRAND
+    meaning: The retailer who made an order does not fit the brand's criteria.
+  - code: RETAILER_VAT_NUMBER_MISSING
+    meaning: The retailer VAT number is missing.
+  - code: OTHER
+    meaning: No listed reason is suitable; a free-text rejectReason (max 1000 chars) MUST be provided.

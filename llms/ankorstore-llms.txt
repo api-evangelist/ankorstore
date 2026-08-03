@@ -1,0 +1,39 @@
+# Ankorstore
+
+> Ankorstore is a European B2B wholesale marketplace connecting independent brands with independent retailers. Its public developer platform (JSON:API over OAuth2 client credentials) lets brands and partners manage catalog and stock, process and transition orders, get shipping quotes and schedule pickups, run Fulfillment Center replenishments, use OrderPay, and subscribe to real-time webhooks. A public sandbox and a downloadable mock server support testing.
+
+## APIs
+
+- [Ankorstore Public API](https://ankorstore.github.io/api-docs/): Catalog, ordering, shipping, fulfillment, OrderPay, and webhook subscriptions. Base URL https://www.ankorstore.com
+- [ASTRAL — Stock Tracking and Logistics API](https://ankorstore.github.io/api-docs/): Stock state, movements (postings/transactions), and locations with lot-level detail.
+- [Fulfillment Service API](https://ankorstore.github.io/api-docs/): Media (PDF) documents linked to fulfillment master orders.
+
+## Specs
+
+- [Public API OpenAPI 3.1](https://raw.githubusercontent.com/ankorstore/api-docs/main/pull/ankorstore/00717/public.yaml)
+- [ASTRAL OpenAPI 3.1](https://raw.githubusercontent.com/ankorstore/api-docs/main/pull/astral/00028/public.yaml)
+- [Fulfillment OpenAPI 3.1](https://raw.githubusercontent.com/ankorstore/api-docs/main/pull/fulfillment/00011/openapi.yaml)
+- [Ankorstore JSON:API specification](https://api-spec.ankorstore.com)
+
+## Docs
+
+- [Getting Started](https://ankorstore.github.io/api-docs/#section/Getting-Started)
+- [Authentication (OAuth2 client credentials)](https://ankorstore.github.io/api-docs/#section/Authentication)
+- [How to work with API (JSON:API, pagination, filters, includes, versioning)](https://ankorstore.github.io/api-docs/#section/How-to-work-with-API)
+- [Error Handling](https://ankorstore.github.io/api-docs/#section/Error-Handling)
+- [Webhook Subscription](https://ankorstore.github.io/api-docs/#section/Webhook-Subscription)
+- [Testing API (sandbox + mock server)](https://ankorstore.github.io/api-docs/#section/Testing-API)
+- [Changelog](https://ankorstore.github.io/api-docs/#section/Changelog)
+
+## Auth
+
+- OAuth2 client credentials. Token endpoint: POST https://www.ankorstore.com/oauth/token (sandbox: https://www.public.ankorstore-sandbox.com/oauth/token) with scope=*; Bearer token valid 3600s. Create applications in the Integrations area of your Ankorstore account. /oauth/token is limited to 60 requests/hour.
+
+## Conventions
+
+- Media type application/vnd.api+json (required Accept header). Cursor pagination (page[limit]/page[after]/page[before]). Includes via include=; filters via filter[field]. Idempotency via client-supplied data.id UUID on POST creates. Rate-limit headers X-RateLimit-Limit / X-RateLimit-Remaining / X-RateLimit-Reset / Retry-After. Webhooks signed with HMAC-SHA256 in the `signature` header.
+
+## Repos
+
+- [GitHub org](https://github.com/ankorstore)
+- [api-docs (spec source)](https://github.com/ankorstore/api-docs)

@@ -1,0 +1,24 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Ankorstore Public API
+  version: 1.0.0
+extends: openapi/ankorstore-main-openapi-original.yml
+actions:
+- target: $.info
+  update:
+    x-apievangelist-rating: 4
+    x-apievangelist-notes: >-
+      Rich, well-documented JSON:API over OAuth2 client credentials with a public sandbox, mock server,
+      webhooks, cursor pagination, documented idempotency, rate-limit headers and a deprecation policy.
+      Gaps: no granular OAuth scopes (wildcard scope=*), no public status page, no published AsyncAPI.
+- target: $.info
+  update:
+    x-artifacts:
+      authentication: authentication/ankorstore-authentication.yml
+      conventions: conventions/ankorstore-conventions.yml
+      errors: errors/ankorstore-problem-types.yml
+      error_codes: errors/ankorstore-error-codes.yml
+      lifecycle: lifecycle/ankorstore-lifecycle.yml
+      sandbox: sandbox/ankorstore-sandbox.yml
+      webhooks: asyncapi/ankorstore-webhooks.yml
+      data_model: data-model/ankorstore-data-model.yml

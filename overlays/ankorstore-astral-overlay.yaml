@@ -1,0 +1,13 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Ankorstore ASTRAL API
+  version: 1.0.0
+extends: openapi/ankorstore-astral-openapi-original.yml
+actions:
+- target: $.info
+  update:
+    x-apievangelist-rating: 3
+    x-apievangelist-notes: >-
+      Focused JSON:API stock-tracking and logistics API (stock state, movements, locations) with
+      lot-level detail. Declares a session-cookie apiKey scheme; production auth is the shared OAuth2
+      client-credentials flow of the Public API.

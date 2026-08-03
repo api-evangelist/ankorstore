@@ -1,0 +1,24 @@
+generated: '2026-07-17'
+method: generated
+source: openapi/ankorstore-main-openapi-original.yml
+notes: >-
+  Packaged Agent Skills for the Ankorstore Public API. One skill per marquee flow, grounded in real
+  operationIds verified against the OpenAPI. Steps encode the OAuth2 auth, JSON:API conventions,
+  idempotency (client-supplied data.id UUID) and error handling captured in conventions/ and errors/.
+skills:
+- file: ankorstore-catalog-sync.md
+  name: Sync catalog and stock
+  api: openapi/ankorstore-main-openapi-original.yml
+  operations: [list-products, get-product, update-product-variant-stock, update-product-variant-prices, post-catalog-integration-operations]
+- file: ankorstore-order-processing.md
+  name: Process and ship an order
+  api: openapi/ankorstore-main-openapi-original.yml
+  operations: [list-master-orders, get-master-order, brand-accept-order, brand-reject-order, list-order-shipping-quotes, confirm-order-shipping-quote, ship-internal-order-schedule-pickup]
+- file: ankorstore-webhook-subscription.md
+  name: Subscribe to order webhooks
+  api: openapi/ankorstore-main-openapi-original.yml
+  operations: [list-applications, get-available-webhook-events, add-application-webhook-subscription]
+- file: ankorstore-fulfillment-replenishment.md
+  name: Replenish and track fulfillment
+  api: openapi/ankorstore-main-openapi-original.yml
+  operations: [fulfillment-create-replenishment, fulfillment-patch-replenishment, fulfillment-list-fulfillable, fulfillment-get-order]

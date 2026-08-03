@@ -1,0 +1,53 @@
+generated: '2026-07-17'
+method: derived
+source: openapi/ankorstore-main-openapi-original.yml
+searched: https://ankorstore.github.io/api-docs/#section/Error-Handling
+format: json:api
+notes: >-
+  Ankorstore does NOT use RFC 9457 application/problem+json. Errors follow the JSON:API error object
+  spec (https://jsonapi.org/format/#errors): a top-level errors[] array of objects with status, title,
+  detail, optional application-specific code, and source.pointer. Derived from the OpenAPI shared
+  response components and enriched from the published Error Handling guide. See
+  errors/ankorstore-error-codes.yml for the application-specific code registry.
+envelope_field: errors
+problems:
+- status: 400
+  title: Bad Request
+  detail: The request is malformed or missing required parameters (invalid JSON, missing required headers).
+  retryable: false
+- status: 401
+  title: Unauthorized
+  detail: Authentication failed or the Bearer token has expired. Re-authenticate via POST /oauth/token and retry once.
+  retryable: once
+- status: 403
+  title: Forbidden
+  detail: You do not have permission to access this resource (e.g. accessing another brand's resources).
+  retryable: false
+- status: 404
+  title: Not Found
+  detail: The requested resource does not exist (invalid or deleted resource ID).
+  retryable: false
+- status: 406
+  title: Not Acceptable
+  detail: The Accept header is not application/vnd.api+json.
+  retryable: false
+- status: 409
+  title: Conflict
+  detail: The action conflicts with the current resource state (e.g. accepting an already-shipped order). Re-fetch state before retrying.
+  retryable: conditional
+- status: 415
+  title: Unsupported Media Type
+  detail: The Content-Type header is not application/vnd.api+json on a POST/PATCH.
+  retryable: false
+- status: 422
+  title: Unprocessable Entity
+  detail: The request body is valid JSON but contains invalid data. One error object per invalid field; use source.pointer to map each error to a field.
+  retryable: false
+- status: 429
+  title: Too Many Requests
+  detail: Rate limit exceeded. Wait for the Retry-After header duration before retrying.
+  retryable: true
+- status: 500
+  title: Internal Server Error
+  detail: Server-side error. Retry with exponential backoff.
+  retryable: true

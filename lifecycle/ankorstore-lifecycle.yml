@@ -1,0 +1,39 @@
+generated: '2026-07-17'
+method: searched
+source: https://ankorstore.github.io/api-docs/#section/How-to-work-with-API
+notes: >-
+  Versioning and deprecation posture searched from the published API Versioning and Changelog sections,
+  and derived from OpenAPI deprecated flags. No public status page or SLA page was found (status
+  subdomain returned 404); those fields are recorded as absent.
+versioning:
+  scheme: uri-path
+  current: v1
+  path_prefix: /api/v1
+  docs: https://ankorstore.github.io/api-docs/#section/How-to-work-with-API
+backward_compatibility:
+  guaranteed_within_major:
+  - existing endpoints remain at the same paths
+  - existing response fields keep the same types
+  - existing request parameters keep being accepted
+  - existing enum values are not removed
+  additive_without_new_version:
+  - new optional response fields
+  - new optional query parameters / filters
+  - new enum values on existing fields
+  - new endpoints under the same version prefix
+  - new webhook event types
+deprecation:
+  policy_documented: true
+  policy_url: https://ankorstore.github.io/api-docs/#section/How-to-work-with-API
+  process:
+  - endpoint or field is marked deprecated in the documentation
+  - a migration guide is published in the changelog
+  - deprecated features remain functional for a transition period
+  - removal is announced in advance via the changelog
+  sunset_header: false
+  deprecated_operations_in_spec: 5
+sla:
+  url: null
+  uptime_target: null
+status_page: null
+changelog: https://ankorstore.github.io/api-docs/#section/Changelog
