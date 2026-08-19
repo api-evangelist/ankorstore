@@ -1,0 +1,281 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Brands API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Brands",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List brands",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands",
+            "params": [
+              {
+                "name": "filter[id][]",
+                "value": "",
+                "type": "query",
+                "description": "Limit the result set to brands matching one of the supplied UUIDs. Unknown or hidden ids are silently omitted. Capped at 50 ids per request — chunk client-side beyond that."
+              },
+              {
+                "name": "page[from]",
+                "value": "",
+                "type": "query",
+                "description": "Cursor (brand UUID, exclusive) to start the page from when iterating forward."
+              },
+              {
+                "name": "page[to]",
+                "value": "",
+                "type": "query",
+                "description": "Cursor (brand UUID, exclusive) to end the page at when iterating backward."
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of brands returned per page."
+              }
+            ]
+          },
+          "docs": "Returns a filtered list of brands. Used both publicly (e.g. resolving brand display data\nfor a known set of brand UUIDs via `filter[id]`) and internally (full directory listing\nwith name / hasOrderFrom / hasIdentifier filters and cursor pagination).\n\nAuthenticated brand consumers are auto-scoped to their own brand — filter[id] is ignored\nin their case. Other authenticated consumers (retailers, admins, machine clients) see the\nfull filtered result.\n"
+        },
+        {
+          "info": {
+            "name": "Get own brand details",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/me",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: brand-contacts)"
+              }
+            ]
+          },
+          "docs": "Get own brand details"
+        },
+        {
+          "info": {
+            "name": "List brand payouts",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/payouts",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query",
+                "description": "Number of items to skip"
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return"
+              }
+            ]
+          },
+          "docs": "List payouts for the authenticated brand. Returns paginated payout records including transfer details."
+        },
+        {
+          "info": {
+            "name": "Returns Franco and fee for a given list of brands.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/franco",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "filter[brandId]",
+                "value": "",
+                "type": "query"
+              }
+            ]
+          },
+          "docs": "Returns Franco (free shipping threshold) and fee for a given list of brands.\n"
+        },
+        {
+          "info": {
+            "name": "List the Franco settings of the authenticated brand",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/franco-settings",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "isOnboarding",
+                "value": "",
+                "type": "query",
+                "description": "Flag to indicate if the request is part of the brand onboarding process"
+              }
+            ]
+          },
+          "docs": "List the Franco (free shipping threshold) settings of the authenticated brand.\n"
+        },
+        {
+          "info": {
+            "name": "Save a new Franco Settings entry",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/franco-settings",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "If the values change for the given corridor, it saves a new Franco Settings entry and returns a 201 status code. If the values are identical, it only returns the existing entry with a 200 status code.\n"
+        },
+        {
+          "info": {
+            "name": "Get Retailer relation",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/retailers/:retailerId",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "retailerId",
+                "value": "",
+                "type": "path",
+                "description": "Ankorstore retailer UUID"
+              }
+            ]
+          },
+          "docs": "Returns brand retailer relation"
+        },
+        {
+          "info": {
+            "name": "Create a new brand contact",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/brand-contacts",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create a new contact for the authenticated brand. The brand is resolved from the authenticated session. This endpoint can be used only by brands.\n"
+        },
+        {
+          "info": {
+            "name": "Update an existing brand contact",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/brand-contacts/:id",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the requested resource"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update the email or purposes of an existing brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.\n"
+        },
+        {
+          "info": {
+            "name": "Delete an existing brand contact",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/brand-contacts/:id",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the requested resource"
+              }
+            ]
+          },
+          "docs": "Delete a brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

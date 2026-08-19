@@ -1,0 +1,364 @@
+{
+  "item": [
+    {
+      "id": "be58e58e-ecd5-42c8-88bf-60f2b6164b61",
+      "name": "Applications",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "e344cbf2-3334-442e-9be5-cfaa818773d3",
+          "name": "List Applications",
+          "request": {
+            "name": "List Applications",
+            "description": {
+              "content": "List existing application for the current authenticated user",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "applications"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: webhookSubscriptions)"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "aba2c3b1-10f3-4de1-a004-25e8391444cf",
+              "name": "Collection of application resources",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"ea5d9dc7-b335-ad35-185c-d6cd4b7d6efc\",\n    \"type\": \"string\",\n    \"attributes\": {\n      \"name\": \"string\",\n      \"developerEmail\": \"developer@application.com\",\n      \"clientId\": \"string\",\n      \"clientSecret\": null\n    },\n    \"relationships\": {\n      \"webhookSubscriptions\": {\n        \"data\": [\n          {\n            \"id\": \"bb84d823-ae52-c89d-1b88-a2cbb7215fdc\",\n            \"type\": \"string\",\n            \"meta\": {\n              \"key_0\": \"string\",\n              \"key_1\": false\n            }\n          },\n          {\n            \"id\": \"7fbd5d2b-db2f-9699-665f-4763049b1d80\",\n            \"type\": \"string\",\n            \"meta\": {\n              \"key_0\": 109.70042377649536,\n              \"key_1\": 669,\n              \"key_2\": \"string\",\n              \"key_3\": false,\n              \"key_4\": 3520.9508851050896\n            }\n          }\n        ]\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"id\": \"29eb10cd-40bb-9e26-d7ac-f2da8a8f42d2\",\n      \"type\": \"webhook-subscriptions\",\n      \"attributes\": {\n        \"webhookUrl\": \"https://my.app/webhook/listener\",\n        \"events\": [\n          \"order.shipment_refused\",\n          \"order.brand_accepted\"\n        ],\n        \"signingSecret\": \"string\"\n      }\n    },\n    {\n      \"id\": \"e3dfb625-472b-51b4-ce0a-ff5cdb905994\",\n      \"type\": \"webhook-subscriptions\",\n      \"attributes\": {\n        \"webhookUrl\": \"https://my.app/webhook/listener\",\n        \"events\": [\n          \"order.brand_paid\",\n          \"order.shipped\"\n        ],\n        \"signingSecret\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {\n      \"key_0\": 4337\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "586fd196-6e60-46c8-9b57-cd74dc5c52df",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8ce8dc1f-333d-4926-b91b-dd27281ddbc1",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "58fdb866-ccdc-42ef-a890-046a985486f6",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f36ad4b9-f7cf-4d12-ac20-34fe579dc565",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "30b42e8e-094c-45f5-97b8-c6a8df36a146",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "60085e78-bbe4-4b6c-96e6-9f078b9b4cb4",
+    "name": "Ankorstore Stock Tracking and Logistics Applications API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

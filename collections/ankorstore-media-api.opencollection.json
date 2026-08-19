@@ -1,0 +1,107 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Media API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Media",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List media documents",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/fulfillment/v1/media",
+            "params": [
+              {
+                "name": "filter[masterOrderUuid]",
+                "value": "",
+                "type": "query",
+                "description": "UUID of the master order to filter documents by."
+              },
+              {
+                "name": "fields[media]",
+                "value": "",
+                "type": "query",
+                "description": "JSON:API sparse fieldsets parameter. When specified, only the requested fields are returned in the response. If omitted, default fields are returned (`masterOrderUuid`, `originalFilename`, `type`, `createdAt`).\n"
+              }
+            ]
+          },
+          "docs": "Retrieve all media documents linked to a fulfillment order (`masterOrderUuid`).\n"
+        },
+        {
+          "info": {
+            "name": "Delete every media linked to a masterOrderUUID",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "http://www.ankorlocal.com:8000/api/fulfillment/v1/media",
+            "params": [
+              {
+                "name": "masterOrderUuid",
+                "value": "",
+                "type": "query",
+                "description": "UUID of the master order whose media will be deleted"
+              }
+            ]
+          },
+          "docs": "Delete one or more PDF documents linked to a fulfillment order (`masterOrderUuid`).\n"
+        },
+        {
+          "info": {
+            "name": "Delete a specific media document",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "http://www.ankorlocal.com:8000/api/fulfillment/v1/media/:mediaUuid",
+            "params": [
+              {
+                "name": "mediaUuid",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the media document to delete"
+              }
+            ]
+          },
+          "docs": "Delete a specific document by its UUID"
+        },
+        {
+          "info": {
+            "name": "Upload PDF documents",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/fulfillment/v1/media/upload",
+            "body": {
+              "type": "multipart-form",
+              "data": [
+                {
+                  "name": "masterOrderUuid",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "documents",
+                  "type": "text",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "docs": "Upload one or more PDF documents linked to a fulfillment order (`masterOrderUuid`). Each document may include its own UUID, or the backend can generate one if not provided.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,1835 @@
+{
+  "item": [
+    {
+      "id": "334acfc8-82ec-480d-a671-5aa0ebc4893e",
+      "name": "Webhooks",
+      "description": {
+        "content": "ℹ️ This section describes the API endpoints which can be used for managing webhook subscriptions.\n\n## 💡 Overview\nIn order to be able to manage Webhook Subscriptions via API you should understand the relationship model\naround webhook notifications system. In general, a Webhook Subscription always contains a list of chosen events\nand always belongs to an application. More on this later.\n\n### Application\nApplication is a representation of a single private integration. Whenever you create a new set of credentials for\naccessing API in your account, under the hood you create an Application entity. Once created, the entity allows you\nto attach as many Webhook Subscriptions as needed. It means, there's no way to manage Webhook Subscriptions outside of\nApplication context and this restriction is also reflected in the current API architecture.\n\n### Webhook Subscription\nWebhook Subscription is an entity representing \"an intent of receiving HTTP requests to the specified URL whenever\none of the chosen Webhook Subscription Events is triggered on the platform\". For every new URL you should create a\nseparate Webhook Subscription.\n\n### Webhook Subscription Events\nWebhook Subscription Event is a name of the corresponding event fired on certain conditions on the platform. There are\na list of only valid and supported events which can be used in the Webhook Subscription management. You can fetch this\nlist using a corresponding [endpoint](#tag/Webhooks/operation/get-available-webhook-events)\n\n## 💡 How to create a new webhook subscription?\n\n### 1. Find ApplicationID\nAs it was mentioned above, Webhook Subscription always belong to some application. Hence, you should start from\nfinding out the ID of the target Application in order to link the new Webhook Subscription to it. For this purpose\nyou should use [List Applications](#tag/Applications/operation/list-applications) endpoint. This endpoint returns\na list of all available Applications in your account, so you could identify the needed one by `name`, `developerEmail`\nor `clientId` in the Application resource body:\n\n`GET https://ankorstore.com/api/v1/applications`\n```json\n{\n  \"data\": {\n    \"id\": \"43efbfbd-bfbd-1eef-1e6a-6200efbfbdef\",\n    \"type\": \"application\",\n    \"attributes\": {\n      \"name\": \"My Application\",\n      \"developerEmail\": \"dev@acme.com\",\n      \"clientId\": \"k322k7frs87e8w7hri3jkke7ry7\",\n      \"clientSecret\": null\n    }\n  }\n}\n```\n**NOTE**: The client secret in the response is always `null` due to security reasons. The actual client secret\ncan be seen only via UI and only once - during the creation of the application.\n\n### 2. Find valid webhook events to subscribe to\nNext step should be to find the valid names of the webhook events which you could use in the create webhook request\npayload:\n\n`GET https://ankorstore.com/api/v1/webhook-subscriptions/events`\n```json\n{\n  \"data\": [\n    {\n      \"type\": \"webhook-subscriptions/events\",\n      \"id\": \"order.brand_created\"\n    },\n    {\n      \"type\": \"webhook-subscriptions/events\",\n      \"id\": \"order.brand_accepted\"\n    }\n  ]\n}\n```\nYou can find detailed description of each event in the [dedicated section](#tag/Webhook-Subscription) of the docs.\n\n### 3. Create webhook subscription\nNow you are all set for creating actual webhook subscription. The prerequisites for this step are:\n- The Application ID from step 1 (`43efbfbd-bfbd-1eef-1e6a-6200efbfbdef` in this example)\n- The chosen events from step 2 (e.g. `order.brand_created` and `order.brand_accepted`)\nWith this setup the final request should look like:\n\n`POST https://ankorstore.com/api/v1/webhook-subscriptions`\n```json\n{\n  \"data\": {\n    \"type\": \"webhook-subscriptions\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"order.brand_created\",\n        \"order.brand_accepted\"\n      ]\n    },\n    \"relationships\": {\n      \"application\": {\n        \"data\": {\n          \"type\": \"applications\",\n          \"id\": \"43efbfbd-bfbd-1eef-1e6a-6200efbfbdef\"\n        }\n      }\n    }\n  }\n}\n```\nAfter this request is succeeded, you will start receiving notification about chosen events on the chosen URL.\n\n## 💡 How to manage existing Webhook Subscriptions?\nFor most of the operations with an existing Webhook Subscription you need to fetch its ID first. It can be achieved by\nusing [List Applications](#tag/Applications/operation/list-applications) endpoint and explicit including\nthe Webhook Subscription resource into the response.\n\n`GET /api/v1/applications?include=webhookSubscriptions`\n```json\n{\n  \"data\": {\n    \"id\": \"`43efbfbd-bfbd-1eef-1e6a-6200efbfbdef\",\n    \"type\": \"applications\",\n    \"attributes\": {},\n    \"relationships\": {\n      \"webhookSubscriptions\": {\n        \"data\": [\n          {\n            \"type\": \"webhook-subscriptions\",\n            \"id\": \"a863e15d-3d20-4af2-b92b-d9590a4a9606\"\n          }\n        ]\n      }\n    }\n  },\n  \"includes\": [\n    {\n      \"type\": \"webhook-subscriptions\",\n      \"id\": \"a863e15d-3d20-4af2-b92b-d9590a4a9606\",\n      \"attributes\": {\n        \"url\": \"https://my-app.com/webhook-listener\",\n        \"events\": [\n          \"order.brand_created\",\n          \"order.brand_accepted\"\n        ],\n        \"signingSecret\": \"LQxZs6kiSyNr45hjT32OsntYddzH4BvToLIQcgSL\"\n      }\n    }\n  ]\n}\n```\n\nThe data in this response gives you an idea about the current Webhook Subscription state and also lets you update\nor delete Webhook Subscriptions, whenever needed. For updating or deleting Webhook Subscription you need to use the\nWebhook Subscription ID received in the response (`a863e15d-3d20-4af2-b92b-d9590a4a9606` in this particular case). Please\nrefer to the [Update webhook subscription](#tag/Webhooks/operation/update-application-webhook-subscription)\nand [Delete webhook subscription](#tag/Webhooks/operation/delete-application-webhook-subscription) endpoints\nfor detailed information.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "6d73ab7e-2a8d-4f22-a3e9-51cbca6f930d",
+          "name": "List Applications",
+          "request": {
+            "name": "List Applications",
+            "description": {
+              "content": "List existing application for the current authenticated user",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "applications"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: webhookSubscriptions)"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "52dc9767-78cf-40ec-9119-bf499dd772e2",
+              "name": "Collection of application resources",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"81e93e7b-1b36-a48e-030f-6f85119492cf\",\n    \"type\": \"string\",\n    \"attributes\": {\n      \"name\": \"string\",\n      \"developerEmail\": \"developer@application.com\",\n      \"clientId\": \"string\",\n      \"clientSecret\": null\n    },\n    \"relationships\": {\n      \"webhookSubscriptions\": {\n        \"data\": [\n          {\n            \"id\": \"e3cf57d9-6e9b-679e-4268-51ee2a70bdd4\",\n            \"type\": \"string\",\n            \"meta\": {\n              \"key_0\": true,\n              \"key_1\": 1604\n            }\n          },\n          {\n            \"id\": \"714902a1-dbc0-8e2e-7c50-ef646b27b678\",\n            \"type\": \"string\",\n            \"meta\": {\n              \"key_0\": true,\n              \"key_1\": 2697\n            }\n          }\n        ]\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"id\": \"7fe71cb1-61f3-02aa-6d0c-e5c734504862\",\n      \"type\": \"webhook-subscriptions\",\n      \"attributes\": {\n        \"webhookUrl\": \"https://my.app/webhook/listener\",\n        \"events\": [\n          \"order.cancelled\",\n          \"order.brand_rejected\"\n        ],\n        \"signingSecret\": \"string\"\n      }\n    },\n    {\n      \"id\": \"7d6f71a8-dd9a-0b31-2a46-e447db6be1dd\",\n      \"type\": \"webhook-subscriptions\",\n      \"attributes\": {\n        \"webhookUrl\": \"https://my.app/webhook/listener\",\n        \"events\": [\n          \"order.shipment_refused\",\n          \"order.shipment_received\"\n        ],\n        \"signingSecret\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {\n      \"key_0\": true\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4bc0fde7-e951-4de7-a422-21cc12a6068f",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6560c8ea-a520-43e6-8367-a62918e2e63a",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8426d81a-6d9e-4942-b19a-27f1a2d36196",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7664fef0-e08f-4636-b59e-abf3e398533c",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "91e69a78-059c-4452-99f9-7fbf4d7154f1",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "applications"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c4edbaff-5b79-4bc2-890a-b2172bc4b3d9",
+          "name": "List Webhook Subscription Events",
+          "request": {
+            "name": "List Webhook Subscription Events",
+            "description": {
+              "content": "Returns a list of webhook events available in the system",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhook-subscriptions",
+                "events"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "f4709726-6a2d-4d59-b806-addd76b4d12b",
+              "name": "OK",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"type\": \"order.brand_created\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.brand_accepted\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.shipping_labels_generated\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.shipped\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.shipment_received\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.shipment_refused\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.brand_paid\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    },\n    {\n      \"type\": \"order.cancelled\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d5c4df4c-e808-44c8-8d5b-0acb3f3be8d8",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1f4bd41e-6846-4572-aa13-e3b245eb50f1",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "aa716026-80ba-4867-8cb3-1f7955775435",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "bd7a1a53-f9d2-4feb-8623-a6681c46947e",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    "events"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "4cf742f8-c2a3-4182-91f6-becb9f2bb7b5",
+          "name": "Add Webhook Subscription to Application",
+          "request": {
+            "name": "Add Webhook Subscription to Application",
+            "description": {
+              "content": "Adds a new webhook subscription to the existing application",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhook-subscriptions"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"<uri>\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "fde90690-034a-4da9-8a86-9d019930627d",
+              "name": "Single application webhook subscription resource response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": [\n    {\n      \"type\": \"webhook-subscription\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\",\n      \"attributes\": {\n        \"webhookUrl\": \"https://my.app/webhook/listener\",\n        \"events\": [\n          \"order.brand_created\",\n          \"order.shipped\",\n          \"order.brand_paid\"\n        ],\n        \"signingSecret\": \"whsec_abc123def456\"\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "20a78d07-3b80-4fa9-be94-f69de914bcf6",
+              "name": "Bad request",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Bad request\",\n      \"status\": \"400\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4fcd7cd1-60a4-4b6c-a8a9-8ee023308900",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4ce0fc21-bff9-4d97-9a31-b8d2d1b7acc2",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "df858264-bd05-49c7-b779-09058bef74f3",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "40fc99ee-600d-4049-a865-70566ffdd32e",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "09dc1a13-e22a-43f7-abbf-982d26912a9c",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d26625ba-9070-4eca-a1ba-a69c7918ca07",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"webhook-subscription\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"<string>\"\n      ]\n    },\n    \"relationships\": {\n      \"applications\": {\n        \"data\": {\n          \"type\": \"<string>\",\n          \"id\": \"<string>\"\n        }\n      }\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "2484346e-586e-4f66-913a-da63492638fd",
+          "name": "Update Application Webhook Subscription",
+          "request": {
+            "name": "Update Application Webhook Subscription",
+            "description": {
+              "content": "Update application subscription with given ID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhook-subscriptions",
+                ":webhookSubscriptionId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookSubscriptionId",
+                  "description": "(Required) Webhook Subscription ID"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"<uri>\",\n      \"events\": [\n        \"<string>\"\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "33050e58-4cfc-415f-8b0a-b13291d88335",
+              "name": "Single application webhook subscription resource response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": [\n    {\n      \"type\": \"webhook-subscription\",\n      \"id\": \"1ef27156-618d-6b1e-996c-0ef14cd127ec\",\n      \"attributes\": {\n        \"webhookUrl\": \"https://my.app/webhook/listener\",\n        \"events\": [\n          \"order.brand_created\",\n          \"order.shipped\",\n          \"order.brand_paid\"\n        ],\n        \"signingSecret\": \"whsec_abc123def456\"\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a483c29a-905f-462b-b476-064e407e8a6e",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c876c444-72da-4fdc-a107-36002d1a2e23",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "dc516ebd-329e-430b-8af8-e3142f8674b4",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "53ea1c96-7d0d-4847-845f-dc6fc9ca2a07",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5dc0a714-4e7f-4ff9-bbab-dfd083b3227b",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4dcb3962-4c12-4c83-b04a-f38bfd5780dc",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"<string>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"url\": \"https://my.app/webhook/listener\",\n      \"events\": [\n        \"order.brand_created\"\n      ]\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "138116b1-8d17-4d0a-81fc-f01c231f37ca",
+          "name": "Delete Application Webhook Subscription",
+          "request": {
+            "name": "Delete Application Webhook Subscription",
+            "description": {
+              "content": "Delete application webhook subscription by given ID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "webhook-subscriptions",
+                ":webhookSubscriptionId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<string>",
+                  "key": "webhookSubscriptionId",
+                  "description": "(Required) Webhook Subscription ID"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "DELETE",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "551baff3-5d11-4e46-9245-c70a89cbbe98",
+              "name": "OK",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "b951896d-f25f-456b-a025-e7d999bec9eb",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "14b81f36-f959-48e1-8586-72657ec88330",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ba4efc84-a537-4554-9b83-41a340dac961",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "523bac42-763a-498f-b0d1-bd6bb4f27f27",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "73b80522-7cf7-4cbd-b373-997003da1b36",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "webhook-subscriptions",
+                    ":webhookSubscriptionId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<string>",
+                      "key": "webhookSubscriptionId",
+                      "description": "(Required) Webhook Subscription ID"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "(Required) application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "853560ea-419f-460c-a000-074ee1835676",
+    "name": "Ankorstore Stock Tracking and Logistics Applications Webhooks API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

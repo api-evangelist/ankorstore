@@ -1,0 +1,285 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Catalog API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Catalog",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List Products",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/products",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: productVariant)"
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query",
+                "description": "limit the amount of results returned"
+              },
+              {
+                "name": "page[before]",
+                "value": "",
+                "type": "query",
+                "description": "show items before the provided ID (uuid format)"
+              },
+              {
+                "name": "page[after]",
+                "value": "",
+                "type": "query",
+                "description": "show items after the provided ID (uuid format)"
+              }
+            ]
+          },
+          "docs": "Returns all products"
+        },
+        {
+          "info": {
+            "name": "Get Product",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/products/:product",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "product",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: productVariant)"
+              }
+            ]
+          },
+          "docs": "Retrieve a specific product"
+        },
+        {
+          "info": {
+            "name": "List Product Variants",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variants",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "filter[id][]",
+                "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa,4271bdc1-fa01-44fa-9342-d99bd1c2befa",
+                "type": "query",
+                "description": "Filter by ID(s)"
+              },
+              {
+                "name": "filter[productId][]",
+                "value": "2291bdc1-bc01-44fa-9342-d95bd1c2befa,4271bdc1-fa11-54fa-9242-d99bd1c2befb",
+                "type": "query",
+                "description": "Filter by product ID(s)"
+              },
+              {
+                "name": "filter[sku]",
+                "value": "MY-SKU12,MY-SKU34",
+                "type": "query",
+                "description": "Filter by SKU(s)"
+              },
+              {
+                "name": "filter[ian]",
+                "value": "1924859325863,1924859325867",
+                "type": "query",
+                "description": "Filter by IAN/EAN (exact match, comma-separated for multiple)"
+              },
+              {
+                "name": "filter[skuOrName]",
+                "value": "",
+                "type": "query",
+                "description": "Filter by SKU or name"
+              },
+              {
+                "name": "filter[archived]",
+                "value": "",
+                "type": "query",
+                "description": "Filter by archived status (`archivedAt` attribute is nullable or not)"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: product)"
+              }
+            ]
+          },
+          "docs": "Returns all product variants with their stock"
+        },
+        {
+          "info": {
+            "name": "Get Product Variant",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variants/:productVariant",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "productVariant",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: product)"
+              }
+            ]
+          },
+          "docs": "Get product variant with stock"
+        },
+        {
+          "info": {
+            "name": "Update Product Variant Stock",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variants/:productVariant/stock",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "productVariant",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update product variant stock"
+        },
+        {
+          "info": {
+            "name": "Update wholesale and retail prices of a product variant",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variants/:productVariant/prices",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "productVariant",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update wholesale and retail prices of a product variant"
+        },
+        {
+          "info": {
+            "name": "Declare product variant as fulfillment item",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variants/:productVariant/declare-fulfillment-item",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "productVariant",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Declare product variant as fulfillment item"
+        },
+        {
+          "info": {
+            "name": "Get prices for product variants",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variant-prices",
+            "params": [
+              {
+                "name": "filter[id][]",
+                "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa,4271bdc1-fa01-44fa-9342-d99bd1c2befa",
+                "type": "query",
+                "description": "One or more product variant UUIDs to price. Repeat the parameter for\neach UUID. Minimum 1, maximum 50 per request.\n"
+              }
+            ]
+          },
+          "docs": "Returns retailer-specific wholesale prices for a batch of product variants.\nPrices are computed with all applicable discounts applied (AKS+, segment,\nbusiness-event discounts), so `wholesale_price` reflects the actual price\nthe authenticated retailer would pay.\n\nBoth the original (pre-discount) and the effective (post-discount) wholesale\nprices are returned so callers can display strikethrough pricing when a\ndiscount applies.\n\nVariants not found or not priceable for the authenticated retailer ar"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

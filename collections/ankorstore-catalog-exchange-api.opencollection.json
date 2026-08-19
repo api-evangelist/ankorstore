@@ -1,0 +1,82 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Catalog Exchange API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Catalog Exchange",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List error reports",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/catalog/exchange/error-reports"
+          },
+          "docs": "Returns the error reports owned by the authenticated brand, sorted by descending creation date."
+        },
+        {
+          "info": {
+            "name": "Request an error report for a PIM import job",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/catalog/exchange/error-reports",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Triggers the asynchronous generation of an XLSX error report listing the failed items of a given PIM\nimport job. Failed cells are highlighted and carry the validation message as a cell comment. Items whose\nfailure is technical (PIM-side operational error) are included in the file but not highlighted, so the\nbrand can simply re-upload them.\n\nThe operation is idempotent per PIM import job: a second call for the same `pim_import_job_id` returns\nthe existing report instead of creating a new one.\n"
+        },
+        {
+          "info": {
+            "name": "Retrieve an error report",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/catalog/exchange/error-reports/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the error report."
+              }
+            ]
+          },
+          "docs": "Fetches a single error report. Use to poll its status until `completed` (or `failed`)."
+        },
+        {
+          "info": {
+            "name": "Download a completed error report",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/catalog/exchange/storage/error-reports/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the error report."
+              }
+            ]
+          },
+          "docs": "Streams the generated XLSX file for a completed error report. The endpoint returns 404 if the report is\nnot yet completed or if it has expired (reports are retained for 30 days after completion).\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

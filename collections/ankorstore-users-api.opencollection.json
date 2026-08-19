@@ -1,0 +1,35 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Users API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Users",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Generic platform configuration",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/platform/config",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ]
+          },
+          "docs": "Returns generic platform config parameters used for all users"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

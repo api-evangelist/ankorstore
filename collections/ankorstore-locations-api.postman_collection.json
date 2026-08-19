@@ -1,0 +1,270 @@
+{
+  "item": [
+    {
+      "id": "d90412b9-7fb8-4866-832a-1d62bcea99e7",
+      "name": "Locations",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "629e737b-d21a-48d9-ae80-6a9046b5d2e7",
+          "name": "List locations",
+          "request": {
+            "name": "List locations",
+            "description": {
+              "content": "Return the list of available locations",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "astral",
+                "v1",
+                "stock",
+                "locations"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "filter[locationTypes][]",
+                  "value": "<string>",
+                  "description": "A set of location types to check quantities at"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[externalId]",
+                  "value": "<uuid>",
+                  "description": "An external identifier to match on"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[limit]",
+                  "value": "10",
+                  "description": "limit the amount of results returned"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[before]",
+                  "value": "<uuid>",
+                  "description": "show items before the provided ID (uuid format)"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[after]",
+                  "value": "<uuid>",
+                  "description": "show items after the provided ID (uuid format)"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Brand entity when none provided via auth token",
+                "key": "X-Aks-Brand-Uuid",
+                "value": "<uuid>"
+              },
+              {
+                "disabled": false,
+                "description": "Retailer entity when none provided via auth token",
+                "key": "X-Aks-Retailer-Uuid",
+                "value": "<uuid>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "40d217b3-8ea6-45da-b5fb-85cb8a093ad4",
+              "name": "Set of locations",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "astral",
+                    "v1",
+                    "stock",
+                    "locations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[locationTypes][]",
+                      "value": "brand"
+                    },
+                    {
+                      "key": "filter[externalId]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "10"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<uuid>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Brand entity when none provided via auth token",
+                    "key": "X-Aks-Brand-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Retailer entity when none provided via auth token",
+                    "key": "X-Aks-Retailer-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"type\": \"string\",\n      \"id\": \"66edb811-d0b1-08e9-2be9-2b8b716b5e97\",\n      \"attributes\": {\n        \"type\": \"warehouse\",\n        \"externalId\": \"a3c758f0-5b6b-f38d-697a-af92b9056359\"\n      }\n    },\n    {\n      \"type\": \"string\",\n      \"id\": \"84414935-8adc-4b84-7e20-bf7627c73304\",\n      \"attributes\": {\n        \"type\": \"retailer\",\n        \"externalId\": \"a58e1cb9-8c43-f37b-6e6b-e665a4feffcf\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {}\n  },\n  \"meta\": {\n    \"page\": {\n      \"from\": \"4D0cBD9f-44Aa-BADa-c6f3-2A80FaD0EcFE,8119445511\",\n      \"to\": \"a571a403-9d0E-b1c9-03eA-a2BdEF7dA07C\",\n      \"hasMore\": true,\n      \"perPage\": 3078\n    }\n  },\n  \"links\": {\n    \"first\": \"https://www.ankorstore.com/api/v1/orders?page[limit]=15\",\n    \"next\": \"https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15\",\n    \"prev\": \"https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0fd43ee7-92c6-490c-a7c4-464cfceaa8e3",
+              "name": "Example response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "astral",
+                    "v1",
+                    "stock",
+                    "locations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[locationTypes][]",
+                      "value": "brand"
+                    },
+                    {
+                      "key": "filter[externalId]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "10"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<uuid>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Brand entity when none provided via auth token",
+                    "key": "X-Aks-Brand-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Retailer entity when none provided via auth token",
+                    "key": "X-Aks-Retailer-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"status\": 9357,\n      \"title\": \"string\",\n      \"source\": {\n        \"pointer\": \"string\"\n      },\n      \"detail\": \"string\",\n      \"meta\": {\n        \"stack\": [\n          \"string\",\n          \"string\"\n        ]\n      }\n    },\n    {\n      \"status\": 71,\n      \"title\": \"string\",\n      \"source\": {\n        \"pointer\": \"string\"\n      },\n      \"detail\": \"string\",\n      \"meta\": {\n        \"stack\": [\n          \"string\",\n          \"string\"\n        ]\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {}\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "34f1f9c2-165f-4ce4-b400-501f61ea2f90",
+    "name": "Ankorstore Stock Tracking and Logistics Applications Locations API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

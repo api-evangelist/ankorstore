@@ -1,0 +1,342 @@
+{
+  "item": [
+    {
+      "id": "2fdd53c3-7eb5-4405-8866-46f811e2a043",
+      "name": "Testing",
+      "description": {
+        "content": "ℹ️ This section is dedicated to the testing API during development process. \nThe listed endpoints are **not available** on production environment.\n\n### Creating Test Orders\n\nWhen using the public sandbox, a subsection of the API will be available to create test orders.\n\nThis endpoint `/api/testing/orders/create` can be called to create a new test order with a new retailer,\nand a couple of new products.\n\nYou can also pass in options to specify the exact retailer or products themselves.\nTo find out more, you can view the [endpoint specification here](a45de155779ff-create-test-order-sandbox-only).\n\n### Finding the Retailer ID\n\nThere is an option to specify the `retailerId` to use the same retailer for every test order, to find this, \nlogin as that retailer you created and open up the developer tools. You will see it logged to the console.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "784988c6-e6a2-4957-a47b-f7fb91457768",
+          "name": "Create Test Order",
+          "request": {
+            "name": "Create Test Order",
+            "description": {
+              "content": "Creates a test order ready to be confirmed based on the options provided.\n**ONLY AVAILABLE IN SANDBOX ENVIRONMENT**.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "testing",
+                "orders",
+                "create"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included."
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"retailerId\": \"<string,null>\",\n  \"itemQuantity\": \"<integer,null>\",\n  \"productVariants\": [\n    {\n      \"id\": \"<uuid>\",\n      \"itemQuantity\": \"<integer>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"itemQuantity\": \"<integer>\"\n    }\n  ],\n  \"productOptions\": [\n    {\n      \"id\": \"<uuid>\",\n      \"itemQuantity\": \"<integer>\"\n    },\n    {\n      \"id\": \"<uuid>\",\n      \"itemQuantity\": \"<integer>\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "6f9ff2db-da90-4916-ab3d-4bc3260bb396",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "testing",
+                    "orders",
+                    "create"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Content-Type",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"retailerId\": \"5ee4d438-0489-4634-aa60-746f485af458\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"order\",\n    \"id\": \"1ecb023e-8ec0-6d5c-a477-0242ac170007\",\n    \"attributes\": {\n      \"status\": \"brand_confirmed\",\n      \"reference\": 3434273911,\n      \"brandCurrency\": \"EUR\",\n      \"brandNetAmount\": 10229,\n      \"brandTotalAmount\": 10940,\n      \"brandTotalAmountVat\": 602,\n      \"brandTotalAmountWithVat\": 11542,\n      \"brandRejectReason\": null,\n      \"retailerRejectReason\": null,\n      \"retailerCancellationRequestReason\": null,\n      \"billingName\": \"Charles Attan\",\n      \"billingOrganisationName\": \"Jumbo\",\n      \"billingStreet\": \"Kortricklaan 101\",\n      \"billingPostalCode\": \"8121 GW\",\n      \"billingCity\": \"Arnhem\",\n      \"billingCountryCode\": \"NL\",\n      \"submittedAt\": \"2022-03-17T13:19:33+00:00\",\n      \"shippedAt\": null,\n      \"brandPaidAt\": null,\n      \"createdAt\": \"2022-02-01T14:37:10+00:00\",\n      \"updatedAt\": \"2022-03-31T15:10:07+00:00\",\n      \"shippingMethod\": null,\n      \"shippingOverview\": {\n        \"availableShippingMethods\": [\n          \"custom\",\n          \"ankorstore\"\n        ],\n        \"shipToAddress\": {\n          \"name\": \"John Smith\",\n          \"organisationName\": \"Test\",\n          \"street\": \"Test Street\",\n          \"city\": \"Commentry\",\n          \"postalCode\": \"03633\",\n          \"countryCode\": \"FR\"\n        },\n        \"expectedShippingDates\": {\n          \"minimum\": \"2022-03-22T00:00:00+00:00\",\n          \"maximum\": \"2022-03-24T23:59:59+00:00\",\n          \"updatedMaximum\": \"2022-03-30T23:59:59+00:00\"\n        },\n        \"provider\": null,\n        \"tracking\": null,\n        \"latestQuote\": null,\n        \"parcels\": [],\n        \"transaction\": null\n      }\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "89932bfc-f4a9-44df-8aca-2df5f39f8f73",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "testing",
+                    "orders",
+                    "create"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Content-Type",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"retailerId\": \"5ee4d438-0489-4634-aa60-746f485af458\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "04889454-616d-4390-9f45-0dcba917769b",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "testing",
+                    "orders",
+                    "create"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Content-Type",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"retailerId\": \"5ee4d438-0489-4634-aa60-746f485af458\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5e3fb470-5367-4ae4-9461-1ac232a3fc03",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "testing",
+                    "orders",
+                    "create"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Content-Type",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"retailerId\": \"5ee4d438-0489-4634-aa60-746f485af458\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "1193cae3-834c-4118-bae3-09f8ad88b93a",
+    "name": "Ankorstore Stock Tracking and Logistics Applications Testing API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

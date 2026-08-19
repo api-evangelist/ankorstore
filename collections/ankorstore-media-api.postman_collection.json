@@ -1,0 +1,642 @@
+{
+  "item": [
+    {
+      "id": "3fc84e25-d81e-40a3-b7ff-2bf4a762cd9a",
+      "name": "Media",
+      "description": {
+        "content": "Operations for documents linked to fulfillment requests",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "3fcef68d-b5f6-4c68-9dd0-c8291a164ef3",
+          "name": "Delete every media linked to a masterOrderUUID",
+          "request": {
+            "name": "Delete every media linked to a masterOrderUUID",
+            "description": {
+              "content": "Delete one or more PDF documents linked to a fulfillment order (`masterOrderUuid`).\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "fulfillment",
+                "v1",
+                "media"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "masterOrderUuid",
+                  "value": "<uuid>",
+                  "description": "(Required) UUID of the master order whose media will be deleted"
+                }
+              ],
+              "variable": []
+            },
+            "method": "DELETE",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "04aa1b05-13e9-4209-92f3-45fa894dce7e",
+              "name": "Media document successfully deleted",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "masterOrderUuid",
+                      "value": "<uuid>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "7fef8cd1-eade-4833-a627-8cfbcfac360a",
+              "name": "Master order not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "masterOrderUuid",
+                      "value": "<uuid>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "de5aac97-86bf-4b19-ad78-170db85fec57",
+          "name": "List media documents",
+          "request": {
+            "name": "List media documents",
+            "description": {
+              "content": "Retrieve all media documents linked to a fulfillment order (`masterOrderUuid`).\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "fulfillment",
+                "v1",
+                "media"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "filter[masterOrderUuid]",
+                  "value": "<uuid>",
+                  "description": "(Required) UUID of the master order to filter documents by."
+                },
+                {
+                  "disabled": false,
+                  "key": "fields[media]",
+                  "value": "<string>",
+                  "description": "JSON:API sparse fieldsets parameter. When specified, only the requested fields are returned in the response. If omitted, default fields are returned (`masterOrderUuid`, `originalFilename`, `type`, `createdAt`).\n"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "20b27634-2c47-4cf3-a337-1cb85465c220",
+              "name": "Successfully retrieved media documents.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[masterOrderUuid]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "fields[media]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"c9da5ce0-89aa-286f-5bfb-6263d6d30c91\",\n      \"type\": \"media\",\n      \"attributes\": {\n        \"masterOrderUuid\": \"b2ea9972-7511-e2b2-391a-0367ae4a36de\",\n        \"originalFilename\": \"string\",\n        \"createdAt\": \"1995-12-17T19:25:24.548Z\",\n        \"type\": \"attachment\",\n        \"content\": \"string\",\n        \"encoding\": \"string\"\n      }\n    },\n    {\n      \"id\": \"6c1afae2-d5d7-3308-e6d1-b36b5174ecff\",\n      \"type\": \"media\",\n      \"attributes\": {\n        \"masterOrderUuid\": \"a6e9ca3a-5847-9db8-7bde-4a17d6d7ae0b\",\n        \"originalFilename\": \"string\",\n        \"createdAt\": \"1956-11-10T18:28:11.001Z\",\n        \"type\": \"attachment\",\n        \"content\": \"string\",\n        \"encoding\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "54e70e40-53e4-4fd2-b9c4-0c01016d6b1f",
+              "name": "Missing or invalid query parameter.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[masterOrderUuid]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "fields[media]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"status\": \"422\",\n      \"code\": \"cannot_download_document\",\n      \"description\": \"string\",\n      \"meta\": {\n        \"filename\": \"string\",\n        \"key_0\": \"string\",\n        \"key_1\": false,\n        \"key_2\": \"string\",\n        \"key_3\": 1157.9919729967148\n      }\n    },\n    {\n      \"status\": \"422\",\n      \"code\": \"invalid_file_extension\",\n      \"description\": \"string\",\n      \"meta\": {\n        \"filename\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "987046e5-0b26-4347-b874-99c791d5d188",
+              "name": "Internal server error while fetching documents.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[masterOrderUuid]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "fields[media]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"status\": \"422\",\n      \"code\": \"cannot_download_document\",\n      \"description\": \"string\",\n      \"meta\": {\n        \"filename\": \"string\",\n        \"key_0\": \"string\",\n        \"key_1\": false,\n        \"key_2\": \"string\",\n        \"key_3\": 1157.9919729967148\n      }\n    },\n    {\n      \"status\": \"422\",\n      \"code\": \"invalid_file_extension\",\n      \"description\": \"string\",\n      \"meta\": {\n        \"filename\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c579831a-cb28-4d9f-becc-3f3bb1fd61c9",
+          "name": "Delete a specific media document",
+          "request": {
+            "name": "Delete a specific media document",
+            "description": {
+              "content": "Delete a specific document by its UUID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "fulfillment",
+                "v1",
+                "media",
+                ":mediaUuid"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "mediaUuid",
+                  "description": "(Required) UUID of the media document to delete"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "a2fb3cbc-482e-42f0-bb66-849791784e15",
+              "name": "Media document successfully deleted",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media",
+                    ":mediaUuid"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "mediaUuid",
+                      "description": "(Required) UUID of the media document to delete"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "7f622365-90e6-4d50-84b9-a8ff9c529582",
+              "name": "Media document not found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media",
+                    ":mediaUuid"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "mediaUuid",
+                      "description": "(Required) UUID of the media document to delete"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "a8d9d77c-67a1-4f1c-a081-325dea7abd21",
+          "name": "Upload PDF documents",
+          "request": {
+            "name": "Upload PDF documents",
+            "description": {
+              "content": "Upload one or more PDF documents linked to a fulfillment order (`masterOrderUuid`). Each document may include its own UUID, or the backend can generate one if not provided.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "fulfillment",
+                "v1",
+                "media",
+                "upload"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "masterOrderUuid",
+                  "value": "<uuid>",
+                  "type": "text",
+                  "description": "(Required) UUID of the master order to which the documents will be linked."
+                },
+                {
+                  "key": "documents",
+                  "value": "[{\"file\":\"<binary>\",\"uuid\":\"<uuid>\",\"type\":\"attachment\"},{\"file\":\"<binary>\",\"uuid\":\"<uuid>\",\"type\":\"attachment\"}]",
+                  "type": "text",
+                  "description": "(Required) List of documents to upload."
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "8dd90db7-59e5-4341-bb9d-2bab2129f3c8",
+              "name": "Documents successfully uploaded.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media",
+                    "upload"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) UUID of the master order to which the documents will be linked.",
+                        "type": "text/plain"
+                      },
+                      "key": "masterOrderUuid",
+                      "value": "<uuid>",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) List of documents to upload.",
+                        "type": "text/plain"
+                      },
+                      "key": "documents",
+                      "value": "[{\"file\":\"<binary>\",\"uuid\":\"<uuid>\",\"type\":\"attachment\"},{\"file\":\"<binary>\",\"uuid\":\"<uuid>\",\"type\":\"attachment\"}]",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"c9da5ce0-89aa-286f-5bfb-6263d6d30c91\",\n      \"type\": \"media\",\n      \"attributes\": {\n        \"masterOrderUuid\": \"b2ea9972-7511-e2b2-391a-0367ae4a36de\",\n        \"originalFilename\": \"string\",\n        \"createdAt\": \"1995-12-17T19:25:24.548Z\",\n        \"type\": \"attachment\",\n        \"content\": \"string\",\n        \"encoding\": \"string\"\n      }\n    },\n    {\n      \"id\": \"6c1afae2-d5d7-3308-e6d1-b36b5174ecff\",\n      \"type\": \"media\",\n      \"attributes\": {\n        \"masterOrderUuid\": \"a6e9ca3a-5847-9db8-7bde-4a17d6d7ae0b\",\n        \"originalFilename\": \"string\",\n        \"createdAt\": \"1956-11-10T18:28:11.001Z\",\n        \"type\": \"attachment\",\n        \"content\": \"string\",\n        \"encoding\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3690b5ed-df3e-4f88-9b18-da1877aee34b",
+              "name": "Validation error during upload.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "fulfillment",
+                    "v1",
+                    "media",
+                    "upload"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "description": {
+                        "content": "(Required) UUID of the master order to which the documents will be linked.",
+                        "type": "text/plain"
+                      },
+                      "key": "masterOrderUuid",
+                      "value": "<uuid>",
+                      "type": "text"
+                    },
+                    {
+                      "description": {
+                        "content": "(Required) List of documents to upload.",
+                        "type": "text/plain"
+                      },
+                      "key": "documents",
+                      "value": "[{\"file\":\"<binary>\",\"uuid\":\"<uuid>\",\"type\":\"attachment\"},{\"file\":\"<binary>\",\"uuid\":\"<uuid>\",\"type\":\"attachment\"}]",
+                      "type": "text"
+                    }
+                  ]
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"status\": \"422\",\n      \"code\": \"cannot_download_document\",\n      \"description\": \"string\",\n      \"meta\": {\n        \"filename\": \"string\",\n        \"key_0\": \"string\",\n        \"key_1\": false,\n        \"key_2\": \"string\",\n        \"key_3\": 1157.9919729967148\n      }\n    },\n    {\n      \"status\": \"422\",\n      \"code\": \"invalid_file_extension\",\n      \"description\": \"string\",\n      \"meta\": {\n        \"filename\": \"string\"\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "5f90b7c0-cb4e-47dd-b3bd-9420576b984e",
+    "name": "Ankorstore Stock Tracking and Logistics Applications Media API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

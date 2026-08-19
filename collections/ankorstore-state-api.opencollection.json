@@ -1,0 +1,128 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications State API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "State",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Stock quantities by location and status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/astral/v1/stock/state",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              },
+              {
+                "name": "X-Aks-Brand-Uuid",
+                "value": ""
+              },
+              {
+                "name": "X-Aks-Retailer-Uuid",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "filter[productVariantIds][]",
+                "value": "",
+                "type": "query",
+                "description": "A set of identifiers representing the items to check quantities for"
+              },
+              {
+                "name": "filter[status][]",
+                "value": "",
+                "type": "query",
+                "description": "A set of statuses to check quantities for"
+              },
+              {
+                "name": "filter[locationTypes][]",
+                "value": "",
+                "type": "query",
+                "description": "A set of location types to check quantities at"
+              },
+              {
+                "name": "filter[locationIds][]",
+                "value": "",
+                "type": "query",
+                "description": "A set of identifiers representing the locations to check quantities at"
+              },
+              {
+                "name": "filter[productType]",
+                "value": "",
+                "type": "query",
+                "description": "A specific product type to check quantities for"
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query",
+                "description": "limit the amount of results returned"
+              },
+              {
+                "name": "page[before]",
+                "value": "",
+                "type": "query",
+                "description": "show items before the provided ID (uuid format)"
+              },
+              {
+                "name": "page[after]",
+                "value": "",
+                "type": "query",
+                "description": "show items after the provided ID (uuid format)"
+              },
+              {
+                "name": "stateAt",
+                "value": "",
+                "type": "query",
+                "description": "obtain state up to and including transactions for the given timestamp"
+              }
+            ]
+          },
+          "docs": "Return the current quantity for a given product variant across locations, statuses and potentially lots.\nOne stock state entity is returned per product variant, so the identifier of each entity will correspond with\nthe product variant identifier for which quantities are returned.\n"
+        },
+        {
+          "info": {
+            "name": "Update stock state",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/astral/v1/stock/state",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              },
+              {
+                "name": "X-Aks-Brand-Uuid",
+                "value": ""
+              },
+              {
+                "name": "X-Aks-Retailer-Uuid",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Override the stock state for one or more product variants.\n* Only brand locations and available or onHand statuses are available for update.\n* You may only specify either onHand or available for the same product variant and location, not both.\n* Please include only absolute quantities.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

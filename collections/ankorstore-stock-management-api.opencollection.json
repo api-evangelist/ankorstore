@@ -1,0 +1,33 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Stock Management API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Stock Management",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Bulk Operations",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/operations",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Multiple operations on different resources by a single request"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

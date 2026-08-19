@@ -1,0 +1,251 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Shipping API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Shipping",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List master order shipment tracking",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/tracking",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ]
+          },
+          "docs": "Retrieve shipment information like the parcels and the tracking information"
+        },
+        {
+          "info": {
+            "name": "Create master order shipment tracking",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/tracking",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create shipment information like the parcels and the tracking information"
+        },
+        {
+          "info": {
+            "name": "Update master order shipment tracking",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/tracking",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update shipment information like the parcels and the tracking information"
+        },
+        {
+          "info": {
+            "name": "List Shipping Quotes",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order/shipping-quotes",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "List multiple carrier service quotes that you can choose to ship your order.\nPlease visit our [FAQs](https://knowledgecommunity.force.com/faq/s/article/how-do-i-benefit-from-shipping-with-ankorstore?language=en_US) for more information.'\n"
+        },
+        {
+          "info": {
+            "name": "Confirm Shipping Quote",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/shipping-quotes/:quote/confirm",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "quote",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Use this endpoint to confirm which quote you want to use to ship your order.\nYou can confirm either custom or ankorstore quote.\n"
+        },
+        {
+          "info": {
+            "name": "Schedule Pickup for order",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order/ship/schedule-pickup",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Use this endpoint for scheduling a pickup for the order"
+        },
+        {
+          "info": {
+            "name": "Get Brand's shipping settings",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/shipping-settings/:shippingSettingsId",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "shippingSettingsId",
+                "value": "",
+                "type": "path",
+                "description": "Shipping settings ID (same as Brand UUID)"
+              }
+            ]
+          },
+          "docs": "Gets Brand's shipping settings"
+        },
+        {
+          "info": {
+            "name": "Update Brand's shipping settings",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/brands/shipping-settings/:shippingSettingsId",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "shippingSettingsId",
+                "value": "",
+                "type": "path",
+                "description": "Shipping settings ID (same as Brand UUID)"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates Brand's shipping settings with support for both full and partial updates.\n\n**V1 (Full Updates):** Send all required fields for complete validation (existing behavior)\n**V2 (Partial Updates):** Send only the fields you want to update (new capability)\n\nThe API automatically detects whether you're performing a full or partial update based on the fields present in the request.\nPartial updates preserve existing values for omitted fields, making it perfect for field-by-field updates.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

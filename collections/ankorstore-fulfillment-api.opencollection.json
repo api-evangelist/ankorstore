@@ -1,0 +1,601 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Fulfillment API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Fulfillment",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Declare product variant as fulfillment item",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/product-variants/:productVariant/declare-fulfillment-item",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "productVariant",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Declare product variant as fulfillment item"
+        },
+        {
+          "info": {
+            "name": "List Fulfillment Bundles",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/bundles",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              }
+            ]
+          },
+          "docs": "Returns a list of fulfillable bundles"
+        },
+        {
+          "info": {
+            "name": "List Fulfillment Orders",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/orders",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "filter[status]",
+                "value": "",
+                "type": "query",
+                "description": "Request a specific status only"
+              },
+              {
+                "name": "filter[uuid]",
+                "value": "",
+                "type": "query",
+                "description": "List of fulfillment orders uuids"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Specify what attribute(s) to sort by"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: statusUpdates)"
+              }
+            ]
+          },
+          "docs": "Returns a list of fulfillment orders for the authenticated brand"
+        },
+        {
+          "info": {
+            "name": "Get Fulfillment Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/orders/:id",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Fulfillment order ID"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: statusUpdates)"
+              }
+            ]
+          },
+          "docs": "Returns details of a single fulfillment order"
+        },
+        {
+          "info": {
+            "name": "List Fulfillables",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/fulfillable",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "fulfillableIds[]",
+                "value": "",
+                "type": "query",
+                "description": "A set of UUIDs representing the fulfillables to check availability for"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: item,lots)"
+              }
+            ]
+          },
+          "docs": "Returns a list of fulfillables with their stock availability"
+        },
+        {
+          "info": {
+            "name": "List Fulfillment Items",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/items",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "filter[id]",
+                "value": "",
+                "type": "query",
+                "description": "Filter by fulfillment item UUIDs"
+              },
+              {
+                "name": "filter[productVariantIds]",
+                "value": "",
+                "type": "query",
+                "description": "Filter items by product variant UUIDs"
+              },
+              {
+                "name": "filter[status]",
+                "value": "",
+                "type": "query",
+                "description": "Filter by item status. Accepts either a single status or an array of statuses\n(e.g. `filter[status][]=synced&filter[status][]=pending_measurements`).\n"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Specify what attribute(s) to sort by"
+              }
+            ]
+          },
+          "docs": "Returns a list of fulfillment items for the authenticated brand"
+        },
+        {
+          "info": {
+            "name": "Create Fulfillment Item",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/items",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create a fulfillment item for the authenticated brand.\nThe referenced product variant must belong to the authenticated brand.\n"
+        },
+        {
+          "info": {
+            "name": "Get Fulfillment Item",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/items/:id",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Fulfillment item ID"
+              }
+            ]
+          },
+          "docs": "Returns a single fulfillment item for the authenticated brand"
+        },
+        {
+          "info": {
+            "name": "List Fulfillment Item Lots",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/items/:id/lots",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Fulfillment item ID"
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Specify what attribute(s) to sort by"
+              }
+            ]
+          },
+          "docs": "Returns a list of lots related to a fulfillment item"
+        },
+        {
+          "info": {
+            "name": "List Fulfillment Item Lot Relationships",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/items/:id/relationships/lots",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Fulfillment item ID"
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Specify what attribute(s) to sort by"
+              }
+            ]
+          },
+          "docs": "Returns lot relationships for a fulfillment item (JSON:API relationship format)"
+        },
+        {
+          "info": {
+            "name": "List lots in the warehouse",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/lots",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Specify what attribute(s) to sort by"
+              },
+              {
+                "name": "filter[minAvailableQuantity]",
+                "value": "",
+                "type": "query",
+                "description": "Request instances with a available quantity greater or equal to a given value"
+              },
+              {
+                "name": "filter[minSellByDate]",
+                "value": "",
+                "type": "query",
+                "description": "Request instances with a last sell by date greater or equal to a given value"
+              },
+              {
+                "name": "filter[maxSellByDate]",
+                "value": "",
+                "type": "query",
+                "description": "Request instances with a last sell by date smaller or equal to a given value"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: fulfillmentItem)"
+              }
+            ]
+          },
+          "docs": "Returns a list of lots"
+        },
+        {
+          "info": {
+            "name": "Get the fulfillment costs",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/costs/order",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Returns a list of fulfillment costs for the given specification."
+        },
+        {
+          "info": {
+            "name": "Check fulfillment feasibility",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/feasibility",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Checks whether fulfillment is feasible for a given brand, delivery destination, and set of items.\nReturns an empty 200 response when fulfillment is feasible, or a 400 response with JSON:API\nerrors when it is not.\n\n**Feasibility checks performed:**\n- Brand is enrolled for fulfillment (`not_a_fulfillment_brand`)\n- Delivery destination is allowed (`AllowedFulfillmentDestination` validation)\n- HS codes are present for non-EU destinations (`missing_hs_code_for_international_order`)\n- Items are availa"
+        },
+        {
+          "info": {
+            "name": "List Brand Replenishments",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/replenishments",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[offset]",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Specify what attribute(s) to sort by"
+              }
+            ]
+          },
+          "docs": "Returns a list of declared replenishments"
+        },
+        {
+          "info": {
+            "name": "Create Replenishment",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/replenishments",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new replenishment"
+        },
+        {
+          "info": {
+            "name": "Details of a single replenishment",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/replenishments/:id",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Replenishment ID"
+              }
+            ]
+          },
+          "docs": "Returns details of a single replenishment"
+        },
+        {
+          "info": {
+            "name": "Update a replenishment",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/replenishments/:id",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Replenishment ID"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update a replenishment"
+        },
+        {
+          "info": {
+            "name": "Delete a draft replenishment",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "http://www.ankorlocal.com:8000/api/v1/fulfillment/replenishments/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Replenishment ID"
+              }
+            ]
+          },
+          "docs": "Delete a draft replenishment"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

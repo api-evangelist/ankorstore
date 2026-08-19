@@ -1,0 +1,556 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Ordering API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Ordering",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List Billing Exports",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/ordering/billing-exports"
+          },
+          "docs": "Returns a list of billing exports for the authenticated brand"
+        },
+        {
+          "info": {
+            "name": "Create Billing Export",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/ordering/billing-exports",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Allow brands to request a bulk billing export"
+        },
+        {
+          "info": {
+            "name": "Download a Billing Export",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/ordering/billing-exports/:billing_export/-actions/download",
+            "params": [
+              {
+                "name": "billing_export",
+                "value": "",
+                "type": "path",
+                "description": "Uuid of the Billing Export to download"
+              }
+            ]
+          },
+          "docs": "Downloads a completed billing export"
+        },
+        {
+          "info": {
+            "name": "List Master Orders",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query",
+                "description": "limit the amount of results returned"
+              },
+              {
+                "name": "page[before]",
+                "value": "",
+                "type": "query",
+                "description": "show items before the provided ID (uuid format)"
+              },
+              {
+                "name": "page[after]",
+                "value": "",
+                "type": "query",
+                "description": "show items after the provided ID (uuid format)"
+              }
+            ]
+          },
+          "docs": "Retrieve a list of Master Orders"
+        },
+        {
+          "info": {
+            "name": "Get Master Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:master_order",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "master_order",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ]
+          },
+          "docs": "Retrieve a specific Master Order"
+        },
+        {
+          "info": {
+            "name": "Patch Master Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:master_order",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "master_order",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Patch a specific Master Order"
+        },
+        {
+          "info": {
+            "name": "Check whether a master order is fulfillable",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/-actions/check-fulfillability",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Check whether a master order is fulfillable"
+        },
+        {
+          "info": {
+            "name": "Request fulfillment for a master order",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/-actions/request-fulfillment",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Request fulfillment for a master order"
+        },
+        {
+          "info": {
+            "name": "List Master Order Fulfillments Relationships",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/fulfillment-orders",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Retrieve a list of fulfillment relationships for a Master Order"
+        },
+        {
+          "info": {
+            "name": "List Master Order Fulfillments",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/relationships/fulfillment-orders",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Retrieve a list of fulfillments for a Master Order"
+        },
+        {
+          "info": {
+            "name": "List master order shipment tracking",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/tracking",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ]
+          },
+          "docs": "Retrieve shipment information like the parcels and the tracking information"
+        },
+        {
+          "info": {
+            "name": "Create master order shipment tracking",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/tracking",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create shipment information like the parcels and the tracking information"
+        },
+        {
+          "info": {
+            "name": "Update master order shipment tracking",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/master-orders/:orderId/tracking",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "orderId",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Update shipment information like the parcels and the tracking information"
+        },
+        {
+          "info": {
+            "name": "Update wrapped order items by given master order ID",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/ordering/master-orders/:id/-actions/update-order-items",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "UUID of the requested resource"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates the target quantity for one or more items of an order.\n\n**Quantity**\nEach item requires a `unitQuantity` field representing the total unit count.\n\n| `unitQuantity` value | Stored batch qty | Stored multiplied qty |\n|---|---|---|\n| evenly divisible by `unit_multiplier` | `unitQuantity / unit_multiplier` | `unitQuantity` |\n| **not** evenly divisible | `1` (one custom batch) | `unitQuantity` |\n| `0` | — | line removed |\n\n**Behavior**\n- `unitQuantity = 0` removes the line.\n- If the same `ord"
+        },
+        {
+          "info": {
+            "name": "List Internal Orders",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "filter[retailer]",
+                "value": "",
+                "type": "query",
+                "description": "Retailer Id"
+              },
+              {
+                "name": "filter[status]",
+                "value": "",
+                "type": "query",
+                "description": "Order Status"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included."
+              },
+              {
+                "name": "page[limit]",
+                "value": "",
+                "type": "query",
+                "description": "limit the amount of results returned"
+              },
+              {
+                "name": "page[before]",
+                "value": "",
+                "type": "query",
+                "description": "show items before the provided ID (uuid format)"
+              },
+              {
+                "name": "page[after]",
+                "value": "",
+                "type": "query",
+                "description": "show items after the provided ID (uuid format)"
+              }
+            ]
+          },
+          "docs": "Retrieve a list of Internal Orders"
+        },
+        {
+          "info": {
+            "name": "Get Internal Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included."
+              }
+            ]
+          },
+          "docs": "Retrieve a specific order"
+        },
+        {
+          "info": {
+            "name": "Check Internal Order Fulfillability",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order/is-fulfillable",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              }
+            ]
+          },
+          "docs": "Check whether an internal order can be fulfilled by Ankorstore logistics"
+        },
+        {
+          "info": {
+            "name": "Transition Internal Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order/-actions/transition",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Transition an order to a new state. This endpoint can be used to accept an order (with or without modifications),\nreject an order or reset generated shipping labels currently. Please see the documentation for more information.\n"
+        },
+        {
+          "info": {
+            "name": "Create NAFO External Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/external-orders/non-ankorstore-fulfillment-orders",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new External Order of type `nafo`"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,82 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications Deprecated API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Deprecated",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "[Ordering] Accept Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order/accept",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included."
+              }
+            ]
+          },
+          "docs": "[Deprecated] Please use the Order Transition endpoint."
+        },
+        {
+          "info": {
+            "name": "[Ordering] Reject Order",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/orders/:order/reject",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "order",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "include",
+                "value": "",
+                "type": "query",
+                "description": "A comma-separated list of resources to include (e.g: retailer,billingItems,orderItems.productVariant.product). If you include orderItems.productVariant you do not need to specify orderItems separately, it will be automatically included."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "[Deprecated] Please use the Order Transition endpoint."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

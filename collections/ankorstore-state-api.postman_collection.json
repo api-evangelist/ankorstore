@@ -1,0 +1,500 @@
+{
+  "item": [
+    {
+      "id": "46cf1671-c883-424b-8f77-f5422d65587b",
+      "name": "State",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "18dde6ec-9ed5-4509-bbeb-209fd3fbff60",
+          "name": "Stock quantities by location and status",
+          "request": {
+            "name": "Stock quantities by location and status",
+            "description": {
+              "content": "Return the current quantity for a given product variant across locations, statuses and potentially lots.\nOne stock state entity is returned per product variant, so the identifier of each entity will correspond with\nthe product variant identifier for which quantities are returned.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "astral",
+                "v1",
+                "stock",
+                "state"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "filter[productVariantIds][]",
+                  "value": "<uuid>",
+                  "description": "A set of identifiers representing the items to check quantities for"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[status][]",
+                  "value": "<string>",
+                  "description": "A set of statuses to check quantities for"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[locationTypes][]",
+                  "value": "<string>",
+                  "description": "A set of location types to check quantities at"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[locationIds][]",
+                  "value": "<uuid>",
+                  "description": "A set of identifiers representing the locations to check quantities at"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[productType]",
+                  "value": "<string>",
+                  "description": "A specific product type to check quantities for"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[limit]",
+                  "value": "10",
+                  "description": "limit the amount of results returned"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[before]",
+                  "value": "<uuid>",
+                  "description": "show items before the provided ID (uuid format)"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[after]",
+                  "value": "<uuid>",
+                  "description": "show items after the provided ID (uuid format)"
+                },
+                {
+                  "disabled": false,
+                  "key": "stateAt",
+                  "value": "<integer>",
+                  "description": "obtain state up to and including transactions for the given timestamp"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Brand entity when none provided via auth token",
+                "key": "X-Aks-Brand-Uuid",
+                "value": "<uuid>"
+              },
+              {
+                "disabled": false,
+                "description": "Retailer entity when none provided via auth token",
+                "key": "X-Aks-Retailer-Uuid",
+                "value": "<uuid>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "0407458d-2a12-4390-94ee-aff54b88dbb9",
+              "name": "Set of stock state records",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "astral",
+                    "v1",
+                    "stock",
+                    "state"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[productVariantIds][]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "filter[status][]",
+                      "value": "incoming"
+                    },
+                    {
+                      "key": "filter[locationTypes][]",
+                      "value": "warehouse"
+                    },
+                    {
+                      "key": "filter[locationIds][]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "filter[productType]",
+                      "value": "bundle"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "10"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "stateAt",
+                      "value": "<integer>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Brand entity when none provided via auth token",
+                    "key": "X-Aks-Brand-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Retailer entity when none provided via auth token",
+                    "key": "X-Aks-Retailer-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"type\": \"stock-state\",\n      \"id\": \"1ed86ab7-c16e-6002-b4d0-0242ac15000c\",\n      \"attributes\": {\n        \"quantities\": [\n          {\n            \"quantity\": 10,\n            \"locationId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n            \"locationType\": \"warehouse\",\n            \"status\": \"available\",\n            \"lot\": {\n              \"lotNumber\": \"lot-20240915-a\",\n              \"expiryDate\": \"2024-09-15\"\n            }\n          },\n          {\n            \"quantity\": 7,\n            \"locationId\": \"0f358c35-9698-46f4-8856-d0441e0533e5\",\n            \"locationType\": \"warehouse\",\n            \"status\": \"reserved\",\n            \"lot\": {\n              \"lotNumber\": \"lot-20240915-a\",\n              \"expiryDate\": \"2024-09-15\"\n            }\n          },\n          {\n            \"quantity\": 3,\n            \"locationId\": \"0f358c35-9698-46f4-8856-d0441e0533e5\",\n            \"locationType\": \"warehouse\",\n            \"status\": \"reserved\"\n          },\n          {\n            \"quantity\": 2,\n            \"locationId\": \"0f358c35-9698-46f4-8856-d0441e0533e5\",\n            \"locationType\": \"warehouse\",\n            \"status\": \"blocked\",\n            \"lot\": {\n              \"lotNumber\": \"lot-20231215-x\",\n              \"expiryDate\": \"2023-12-15\"\n            }\n          }\n        ]\n      }\n    },\n    {\n      \"type\": \"stock-state\",\n      \"id\": \"018fc37c-d9bc-7a25-96e0-9c80c843b6ea\",\n      \"attributes\": {\n        \"quantities\": [\n          {\n            \"quantity\": 5,\n            \"locationId\": \"018fc37e-4460-7b27-8151-ee7422b71f2e\",\n            \"locationType\": \"warehouse\",\n            \"status\": \"incoming\",\n            \"lot\": {\n              \"lotNumber\": \"lot-without-expiry\"\n            }\n          },\n          {\n            \"quantity\": 7,\n            \"locationId\": \"0f358c35-9698-46f4-8856-d0441e0533e5\",\n            \"locationType\": \"warehouse\",\n            \"status\": \"available\",\n            \"lot\": {\n              \"lotNumber\": \"lot-without-expiry\"\n            }\n          }\n        ]\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {}\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "28190fb0-89d2-4721-a91f-d9b290a9bc63",
+              "name": "Example response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "astral",
+                    "v1",
+                    "stock",
+                    "state"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[productVariantIds][]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "filter[status][]",
+                      "value": "incoming"
+                    },
+                    {
+                      "key": "filter[locationTypes][]",
+                      "value": "warehouse"
+                    },
+                    {
+                      "key": "filter[locationIds][]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "filter[productType]",
+                      "value": "bundle"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "10"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<uuid>"
+                    },
+                    {
+                      "key": "stateAt",
+                      "value": "<integer>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Brand entity when none provided via auth token",
+                    "key": "X-Aks-Brand-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Retailer entity when none provided via auth token",
+                    "key": "X-Aks-Retailer-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"status\": 2051,\n      \"title\": \"string\",\n      \"source\": {\n        \"pointer\": \"string\"\n      },\n      \"detail\": \"string\",\n      \"meta\": {\n        \"stack\": [\n          \"string\",\n          \"string\"\n        ]\n      }\n    },\n    {\n      \"status\": 8583,\n      \"title\": \"string\",\n      \"source\": {\n        \"pointer\": \"string\"\n      },\n      \"detail\": \"string\",\n      \"meta\": {\n        \"stack\": [\n          \"string\",\n          \"string\"\n        ]\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {}\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "27e98d1d-8005-4977-b481-2588e71501ff",
+          "name": "Update stock state",
+          "request": {
+            "name": "Update stock state",
+            "description": {
+              "content": "Override the stock state for one or more product variants.\n* Only brand locations and available or onHand statuses are available for update.\n* You may only specify either onHand or available for the same product variant and location, not both.\n* Please include only absolute quantities.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "astral",
+                "v1",
+                "stock",
+                "state"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "Brand entity when none provided via auth token",
+                "key": "X-Aks-Brand-Uuid",
+                "value": "<uuid>"
+              },
+              {
+                "disabled": false,
+                "description": "Retailer entity when none provided via auth token",
+                "key": "X-Aks-Retailer-Uuid",
+                "value": "<uuid>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": [\n    {\n      \"type\": \"<string>\",\n      \"id\": \"<uuid>\",\n      \"attributes\": {\n        \"quantities\": [\n          {\n            \"quantity\": \"<integer>\",\n            \"locationId\": \"<uuid>\",\n            \"locationType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"status\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"unitMultiplier\": \"<integer>\",\n            \"lot\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"productType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          },\n          {\n            \"quantity\": \"<integer>\",\n            \"locationId\": \"<uuid>\",\n            \"locationType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"status\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"unitMultiplier\": \"<integer>\",\n            \"lot\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"productType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          }\n        ]\n      }\n    },\n    {\n      \"type\": \"<string>\",\n      \"id\": \"<uuid>\",\n      \"attributes\": {\n        \"quantities\": [\n          {\n            \"quantity\": \"<integer>\",\n            \"locationId\": \"<uuid>\",\n            \"locationType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"status\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"unitMultiplier\": \"<integer>\",\n            \"lot\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"productType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          },\n          {\n            \"quantity\": \"<integer>\",\n            \"locationId\": \"<uuid>\",\n            \"locationType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"status\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"unitMultiplier\": \"<integer>\",\n            \"lot\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            \"productType\": {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          }\n        ]\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "5ad44024-f825-4d2c-9357-fd9596aca137",
+              "name": "No content",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "astral",
+                    "v1",
+                    "stock",
+                    "state"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Brand entity when none provided via auth token",
+                    "key": "X-Aks-Brand-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Retailer entity when none provided via auth token",
+                    "key": "X-Aks-Retailer-Uuid",
+                    "value": "<uuid>"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {}
+              },
+              "status": "No Content",
+              "code": 204,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "",
+              "cookie": [],
+              "_postman_previewlanguage": "text"
+            },
+            {
+              "id": "f1e182f4-d82d-4029-b7a9-d5dcc3c3ba45",
+              "name": "Example response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "astral",
+                    "v1",
+                    "stock",
+                    "state"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Brand entity when none provided via auth token",
+                    "key": "X-Aks-Brand-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "Retailer entity when none provided via auth token",
+                    "key": "X-Aks-Retailer-Uuid",
+                    "value": "<uuid>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"errors\": [\n    {\n      \"status\": 2143,\n      \"title\": \"string\",\n      \"source\": {\n        \"pointer\": \"string\"\n      },\n      \"detail\": \"string\",\n      \"meta\": {\n        \"stack\": [\n          \"string\",\n          \"string\"\n        ]\n      }\n    },\n    {\n      \"status\": 8368,\n      \"title\": \"string\",\n      \"source\": {\n        \"pointer\": \"string\"\n      },\n      \"detail\": \"string\",\n      \"meta\": {\n        \"stack\": [\n          \"string\",\n          \"string\"\n        ]\n      }\n    }\n  ],\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {}\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "1515ae35-8a30-48c7-a99f-ad2d386e8c32",
+    "name": "Ankorstore Stock Tracking and Logistics Applications State API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

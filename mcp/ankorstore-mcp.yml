@@ -2,11 +2,10 @@ generated: '2026-07-17'
 method: derived
 status: candidate
 source: openapi/ankorstore-main-openapi-original.yml
-notes: >-
-  No official hosted/remote Ankorstore MCP server was found (Ankorstore publishes a yokai-mcp-template
-  framework scaffold, but no MCP server for the Public API). This is a DERIVED candidate tool list,
-  one tool per marquee OpenAPI operationId, to seed an MCP server. Every source_operation id is verified
-  present in the spec. Not an authoritative provider claim.
+notes: No official hosted/remote Ankorstore MCP server was found (Ankorstore publishes a yokai-mcp-template
+  framework scaffold, but no MCP server for the Public API). This is a DERIVED candidate tool list, one
+  tool per marquee OpenAPI operationId, to seed an MCP server. Every source_operation id is verified present
+  in the spec. Not an authoritative provider claim.
 server:
   name: ankorstore
   transport: http
@@ -81,3 +80,9 @@ tools:
 - name: astral_list_locations
   description: List available stock locations (ASTRAL).
   source_operation: openapi/ankorstore-astral-openapi-original.yml#list-locations
+deployment:
+  mode: none
+  verified: derived
+  tools: 23
+  checked: '2026-08-12'
+  source: catalog MCP census

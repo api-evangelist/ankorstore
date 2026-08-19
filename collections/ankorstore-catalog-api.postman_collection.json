@@ -1,0 +1,3276 @@
+{
+  "item": [
+    {
+      "id": "51f94070-d352-4d2f-a64f-0e557942c0c0",
+      "name": "Catalog",
+      "description": {
+        "content": "ℹ️ This section describes the API endpoints that you can use to manage your catalog resources, such as products, product variants etc.\n\n## 💡 Working with Products\n\nHere you will find information about the product resource and its sub-resources. If you need further information please refer to the API specification.\n\n### Including Product Variants\n\nWhen retrieving the individual product via the API, you may pass an `?include=productVariants` query parameter that will return associated product variants inside the `included` root level object.\n\n### Important Fields within Product Resource\n\nIf the field contains no data, it will be `null`.\n\n## 💡 Stock Management\n\nThis API allows you to manage your product variants stock for the marketplace in both single- and bulk-operation mode.\nThere are 2 opposite options available for the stock update requests - set an explicit product quantity\nor mark the corresponding product as \"always in stock\".\n\n### Stock statuses\nStock for the marketplace can be in one of two states. It can be `available` to order on the marketplace, or `reserved` for an order that has been submitted, but not yet shipped.\nAdded together, these quantities make up the `onHand` state, which reflects the total quantity of the product variant \"on hand\" at your storage location(s).\n\n> ⚠️ **Unless specified otherwise, `stockQuantity` used in the following APIs refers to `onHand` quantity**\n\nSee also [Stock State](#tag/folderName_Stock-Concepts/Stock-state) for more general information about stock states used in the Stock Tracking  APIs.\n\n#### Example\n* 100 units of the product variant X are stock at your location (`onHand`).\n* 30 units of product variant X are `reserved` for Ankorstore orders that have not yet been shipped.\n* Then 70 units of product variant X are `available` to order on the marketplace.\n\nNow consider you produce 50 more units of product variant X, and sell 27 units on another marketplace. Your input for the stock update API would be:\n```\n// 100 + 50 - 27 = 133\n\"stockQuantity\": 123\n```\n\n### Set product variant stock explicit quantity\n\nTo set an explicit quantity for the particular product variant, you should specify the amount in the payload.\nIn case if the target product variant was previously marked as \"always in stock\", this option will be disabled and the stock\nwill be set to given value.\n\nExample of the payload to set a product variant stock to the given value (single-operation mode):\n\n`PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`\n```json\n{\n  \"data\": {\n    \"attributes\": {\n      \"stockQuantity\": 123\n    }\n  }\n}\n```\nMore details can be found in the endpoint specification\n\n### Set product variant as \"always in stock\"\n\nTo mark a particular product variant as \"always in stock\" and do not care about the stock amounts, you should include a\nflag `isAlwaysInStock` into the request payload. In case if the target product variant had explicit stock amount set previously,\nit will be reset.\n\nExample of the payload to set a product variant stock to the given value (single-operation mode):\n\n`PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`\n```json\n{\n  \"data\": {\n    \"attributes\": {\n      \"isAlwaysInStock\": true\n    }\n  }\n}\n```\nMore details can be found in the endpoint specification\n\n### Update stocks of multiple product variants in single request (bulk-operation mode)\n\nThis API allows to update stocks of multiple product variants in single request. There is a specific endpoint which\naccepts up to 50 operations per request. Validation, business rules and payload of each operation is identical to the\nsingle-operation mode, described above.\n\nExample of the payload to update stocks of multiple product variants in single request:\n\n`POST /api/v1/operations`\n```json\n{\n  \"atomic:operations\": [\n    {\n      \"op\": \"update\",\n      \"data\": {\n        \"type\": \"productVariants\",\n        \"id\": \"1ed18988-3253-610e-8223-aa5cd9844001\",\n        \"attributes\": {\n          \"isAlwaysInStock\": true\n        }\n      }\n    },\n    {\n      \"op\": \"update\",\n      \"data\": {\n        \"type\": \"productVariants\",\n        \"id\": \"1ed18988-6651-610e-8223-aa5cd9844f96\",\n        \"attributes\": {\n          \"stockQuantity\": 123\n        }\n      }\n    }\n  ]\n}\n```\nMore details can be found in the endpoint specification\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "fa54f026-9dc0-440f-aba6-f427bbc8d8ae",
+          "name": "List Products",
+          "request": {
+            "name": "List Products",
+            "description": {
+              "content": "Returns all products",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: productVariant)"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[limit]",
+                  "value": "<long>",
+                  "description": "limit the amount of results returned"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[before]",
+                  "value": "<string>",
+                  "description": "show items before the provided ID (uuid format)"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[after]",
+                  "value": "<string>",
+                  "description": "show items after the provided ID (uuid format)"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "a9030054-c18f-421a-a6c9-1d9fc4722fb9",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"meta\": {\n    \"page\": {\n      \"from\": \"123e4567-e89b-12d3-a456-426614174000\",\n      \"hasMore\": true,\n      \"perPage\": 2,\n      \"to\": \"1ecb023e-7ec0-6d5c-a477-0242ac170008\"\n    }\n  },\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"first\": \"https://www.ankorstore.com/api/v1/orders?include=&page%5Blimit%5D=2\",\n    \"next\": \"https://www.ankorstore.com/api/v1/orders?include=&page%5Bafter%5D=797910&page%5Blimit%5D=2\",\n    \"prev\": \"https://www.ankorstore.com/api/v1/orders?include=&page%5Bbefore%5D=904234&page%5Blimit%5D=2\"\n  },\n  \"data\": [\n    {\n      \"type\": \"product\",\n      \"id\": \"0c5e6540-0da9-1ecb-bf59-0242ac170007\",\n      \"attributes\": {\n        \"name\": \"Example Product\",\n        \"description\": \"Example description of product\",\n        \"language\": \"fr\",\n        \"dimensions\": \"5,5x5,5x6\",\n        \"netWeight\": \"100G\",\n        \"capacity\": \"100g\",\n        \"position\": 34,\n        \"unitMultiplier\": 12,\n        \"vatRate\": 5.5,\n        \"discountRate\": 0,\n        \"active\": true,\n        \"outOfStock\": false,\n        \"archived\": false,\n        \"retailPrice\": 750,\n        \"wholesalePrice\": 426,\n        \"originalWholesalePrice\": 426,\n        \"createdAt\": \"2020-08-27T14:26:38.000000Z\",\n        \"indexedAt\": \"2022-02-10T03:26:11.000000Z\",\n        \"updatedAt\": \"2022-02-09T14:49:09.000000Z\"\n      }\n    },\n    {\n      \"type\": \"product\",\n      \"id\": \"c8466a3c-4fb8-4474-a86f-20f10d14314f\",\n      \"attributes\": {\n        \"name\": \"Example Product 2\",\n        \"description\": \"Example description of product 2\",\n        \"language\": \"fr\",\n        \"dimensions\": \"10,5x10,5x12\",\n        \"netWeight\": \"250G\",\n        \"capacity\": \"250g\",\n        \"position\": 20,\n        \"unitMultiplier\": 12,\n        \"vatRate\": 5.5,\n        \"discountRate\": 0,\n        \"active\": true,\n        \"outOfStock\": false,\n        \"archived\": false,\n        \"retailPrice\": 900,\n        \"wholesalePrice\": 700,\n        \"originalWholesalePrice\": 700,\n        \"createdAt\": \"2020-09-27T14:26:38.000000Z\",\n        \"indexedAt\": \"2022-02-10T03:26:11.000000Z\",\n        \"updatedAt\": \"2022-02-09T14:49:09.000000Z\"\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "471ebdb1-aa7d-4fd2-b399-ba88c522877c",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c59fd6a7-ac7d-47ff-990c-c298341f6d75",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5cf2084d-ed10-465f-92ff-2c39f95f9b89",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "e8b192d1-4086-438f-9dee-069771699072",
+          "name": "Get Product",
+          "request": {
+            "name": "Get Product",
+            "description": {
+              "content": "Retrieve a specific product",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":product"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: productVariant)"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "079ba9ad-dcdb-4dda-ba0a-1174dad313c5",
+                  "key": "product",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "5ff6fb6c-c7fb-4cb9-9b25-4b9a25ebbb5d",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    ":product"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "079ba9ad-dcdb-4dda-ba0a-1174dad313c5",
+                      "key": "product",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"product\",\n    \"id\": \"0c5e6540-0da9-1ecb-bf59-0242ac170007\",\n    \"attributes\": {\n      \"name\": \"Example Product\",\n      \"description\": \"Example description of product\",\n      \"language\": \"fr\",\n      \"dimensions\": \"5,5x5,5x6\",\n      \"netWeight\": \"100G\",\n      \"capacity\": \"100g\",\n      \"position\": 34,\n      \"unitMultiplier\": 12,\n      \"vatRate\": 5.5,\n      \"discountRate\": 0,\n      \"productTypeId\": 1,\n      \"active\": true,\n      \"outOfStock\": false,\n      \"archived\": false,\n      \"retailPrice\": 750,\n      \"wholesalePrice\": 426,\n      \"originalWholesalePrice\": 426,\n      \"createdAt\": \"2020-08-27T14:26:38.000000Z\",\n      \"indexedAt\": \"2022-02-10T03:26:11.000000Z\",\n      \"updatedAt\": \"2022-02-09T14:49:09.000000Z\",\n      \"images\": [\n        {\n          \"order\": 1,\n          \"url\": \"https://example.com/image1.jpg\"\n        },\n        {\n          \"order\": 2,\n          \"url\": \"https://example.com/image2.jpg\"\n        }\n      ],\n      \"tags\": [\n        \"tags_organic\",\n        \"tags_handmade\",\n        \"tags_eco_friendly\"\n      ]\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"productVariant\",\n      \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n      \"attributes\": {\n        \"name\": \"Test Product Variant\",\n        \"sku\": \"Product-Variant-001\",\n        \"ian\": \"1924859325863\",\n        \"createdAt\": \"2020-08-27T14:29:15.000000Z\",\n        \"updatedAt\": \"2021-10-04T12:03:31.000000Z\",\n        \"archivedAt\": null,\n        \"retailPrice\": 800,\n        \"wholesalePrice\": 500,\n        \"originalWholesalePrice\": 500,\n        \"availableQuantity\": 125,\n        \"reservedQuantity\": 25,\n        \"stockQuantity\": 150,\n        \"isAlwaysInStock\": false,\n        \"inventoryPolicy\": \"deny\"\n      },\n      \"relationships\": {\n        \"product\": {\n          \"data\": {\n            \"type\": \"product\",\n            \"id\": \"c8466a3c-4fb8-4474-a86f-20f10d14314f\"\n          }\n        }\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "247cba7d-de3c-4194-9928-81b0cea07dd8",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    ":product"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "079ba9ad-dcdb-4dda-ba0a-1174dad313c5",
+                      "key": "product",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8a90e557-de4f-40db-80fb-cb5055e5165d",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    ":product"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "079ba9ad-dcdb-4dda-ba0a-1174dad313c5",
+                      "key": "product",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4a3e56b6-cda3-4b43-a98c-7c2322e67794",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    ":product"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "079ba9ad-dcdb-4dda-ba0a-1174dad313c5",
+                      "key": "product",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "94edf3c5-2498-47a5-af5c-082d297fce0b",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "products",
+                    ":product"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "079ba9ad-dcdb-4dda-ba0a-1174dad313c5",
+                      "key": "product",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "d880b3d7-94f6-4c27-a5fe-5242c45ee6af",
+          "name": "List Product Variants",
+          "request": {
+            "name": "List Product Variants",
+            "description": {
+              "content": "Returns all product variants with their stock",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "product-variants"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "filter[id][]",
+                  "value": "<uuid>",
+                  "description": "Filter by ID(s)"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[id][]",
+                  "value": "<uuid>",
+                  "description": "Filter by ID(s)"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[productId][]",
+                  "value": "<uuid>",
+                  "description": "Filter by product ID(s)"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[productId][]",
+                  "value": "<uuid>",
+                  "description": "Filter by product ID(s)"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[sku]",
+                  "value": "<string>",
+                  "description": "Filter by SKU(s)"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[ian]",
+                  "value": "<string>",
+                  "description": "Filter by IAN/EAN (exact match, comma-separated for multiple)"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[skuOrName]",
+                  "value": "<string>",
+                  "description": "Filter by SKU or name"
+                },
+                {
+                  "disabled": false,
+                  "key": "filter[archived]",
+                  "value": "<boolean>",
+                  "description": "Filter by archived status (`archivedAt` attribute is nullable or not)"
+                },
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: product)"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "57a5b06f-df7e-494e-b8e9-11a10174a90e",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "2291bdc1-bc01-44fa-9342-d95bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "4271bdc1-fa11-54fa-9242-d99bd1c2befb"
+                    },
+                    {
+                      "key": "filter[sku]",
+                      "value": "MY-SKU12,MY-SKU34"
+                    },
+                    {
+                      "key": "filter[ian]",
+                      "value": "1924859325863,1924859325867"
+                    },
+                    {
+                      "key": "filter[skuOrName]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "filter[archived]",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"meta\": {\n    \"page\": {\n      \"from\": \"3571bdc1-fa01-44fa-9342-d99bd1c2befa\",\n      \"hasMore\": true,\n      \"perPage\": 2,\n      \"to\": \"4271bdc1-fa01-44fa-9342-d99bd1c2befa\"\n    }\n  },\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"first\": \"https://www.ankorstore.com/api/v1/product-variants?include=&page%5Blimit%5D=2\",\n    \"next\": \"https://www.ankorstore.com/api/v1/product-variants?include=&page%5Bafter%5D=4271bdc1-fa01-44fa-9342-d99bd1c2befa&page%5Blimit%5D=2\",\n    \"prev\": \"https://www.ankorstore.com/api/v1/product-variants?include=&page%5Bbefore%5D=3571bdc1-fa01-44fa-9342-d99bd1c2befa&page%5Blimit%5D=2\"\n  },\n  \"data\": [\n    {\n      \"type\": \"productVariant\",\n      \"id\": \"3571bdc1-fa01-44fa-9342-d99bd1c2befa\",\n      \"attributes\": {\n        \"name\": \"Test Product Variant\",\n        \"sku\": \"Product-Variant-001\",\n        \"ian\": \"1924859325863\",\n        \"createdAt\": \"2020-08-27T14:29:15.000000Z\",\n        \"updatedAt\": \"2021-10-04T12:03:31.000000Z\",\n        \"archivedAt\": null,\n        \"retailPrice\": 800,\n        \"wholesalePrice\": 500,\n        \"originalWholesalePrice\": 500,\n        \"availableQuantity\": 125,\n        \"reservedQuantity\": 25,\n        \"stockQuantity\": 150,\n        \"isAlwaysInStock\": false,\n        \"inventoryPolicy\": \"deny\"\n      },\n      \"relationships\": {\n        \"product\": {\n          \"data\": {\n            \"type\": \"product\",\n            \"id\": \"4271bdc1-fa11-54fa-9242-d99bd1c2befb\"\n          }\n        }\n      }\n    },\n    {\n      \"type\": \"productVariant\",\n      \"id\": \"4271bdc1-fa01-44fa-9342-d99bd1c2befa\",\n      \"attributes\": {\n        \"name\": \"Another test Product Variant\",\n        \"sku\": \"Product-Variant-002\",\n        \"ian\": \"1924859325867\",\n        \"createdAt\": \"2020-08-27T14:29:15.000000Z\",\n        \"updatedAt\": \"2021-10-04T12:03:31.000000Z\",\n        \"archivedAt\": null,\n        \"retailPrice\": 800,\n        \"wholesalePrice\": 500,\n        \"originalWholesalePrice\": 500,\n        \"availableQuantity\": 125,\n        \"reservedQuantity\": 25,\n        \"stockQuantity\": 150,\n        \"isAlwaysInStock\": false,\n        \"inventoryPolicy\": \"continue\"\n      },\n      \"relationships\": {\n        \"product\": {\n          \"data\": {\n            \"type\": \"product\",\n            \"id\": \"2291bdc1-bc01-44fa-9342-d95bd1c2befa\"\n          }\n        }\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f4260f86-12f2-40eb-a171-b2af2eca5102",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "2291bdc1-bc01-44fa-9342-d95bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "4271bdc1-fa11-54fa-9242-d99bd1c2befb"
+                    },
+                    {
+                      "key": "filter[sku]",
+                      "value": "MY-SKU12,MY-SKU34"
+                    },
+                    {
+                      "key": "filter[ian]",
+                      "value": "1924859325863,1924859325867"
+                    },
+                    {
+                      "key": "filter[skuOrName]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "filter[archived]",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "89b7c1f3-5ce5-4167-b3a5-ed65ba7c8b0b",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "2291bdc1-bc01-44fa-9342-d95bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "4271bdc1-fa11-54fa-9242-d99bd1c2befb"
+                    },
+                    {
+                      "key": "filter[sku]",
+                      "value": "MY-SKU12,MY-SKU34"
+                    },
+                    {
+                      "key": "filter[ian]",
+                      "value": "1924859325863,1924859325867"
+                    },
+                    {
+                      "key": "filter[skuOrName]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "filter[archived]",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7f9f5ac5-0d22-4648-abd0-f9544618fcbc",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "2291bdc1-bc01-44fa-9342-d95bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "4271bdc1-fa11-54fa-9242-d99bd1c2befb"
+                    },
+                    {
+                      "key": "filter[sku]",
+                      "value": "MY-SKU12,MY-SKU34"
+                    },
+                    {
+                      "key": "filter[ian]",
+                      "value": "1924859325863,1924859325867"
+                    },
+                    {
+                      "key": "filter[skuOrName]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "filter[archived]",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b372edf7-557d-414f-8715-eb2266b8c4b4",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "2291bdc1-bc01-44fa-9342-d95bd1c2befa"
+                    },
+                    {
+                      "key": "filter[productId][]",
+                      "value": "4271bdc1-fa11-54fa-9242-d99bd1c2befb"
+                    },
+                    {
+                      "key": "filter[sku]",
+                      "value": "MY-SKU12,MY-SKU34"
+                    },
+                    {
+                      "key": "filter[ian]",
+                      "value": "1924859325863,1924859325867"
+                    },
+                    {
+                      "key": "filter[skuOrName]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "filter[archived]",
+                      "value": "<boolean>"
+                    },
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "string"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "a0abcaab-6b92-41e9-8320-9879b7135b83",
+          "name": "Get Product Variant",
+          "request": {
+            "name": "Get Product Variant",
+            "description": {
+              "content": "Get product variant with stock",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "product-variants",
+                ":productVariant"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "include",
+                  "value": "<string>",
+                  "description": "A comma-separated list of resources to include (e.g: product)"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "productVariant",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "91f3a64a-0034-4449-90e5-81aa5fad4737",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"productVariant\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"name\": \"Test Product Variant\",\n      \"sku\": \"Product-Variant-001\",\n      \"ian\": \"1924859325863\",\n      \"createdAt\": \"2020-08-27T14:29:15.000000Z\",\n      \"updatedAt\": \"2021-10-04T12:03:31.000000Z\",\n      \"archivedAt\": null,\n      \"retailPrice\": 800,\n      \"wholesalePrice\": 500,\n      \"originalWholesalePrice\": 500,\n      \"availableQuantity\": 125,\n      \"reservedQuantity\": 25,\n      \"stockQuantity\": 150,\n      \"isAlwaysInStock\": false,\n      \"inventoryPolicy\": \"deny\",\n      \"fulfillableId\": \"8f066352-67cb-1efa-bddb-9e3047198b2e\",\n      \"availableAt\": \"2028-01-01\",\n      \"images\": [\n        {\n          \"order\": 1,\n          \"url\": \"https://example.com/image1.jpg\"\n        },\n        {\n          \"order\": 2,\n          \"url\": \"https://example.com/image2.jpg\"\n        }\n      ]\n    },\n    \"relationships\": {\n      \"product\": {\n        \"data\": {\n          \"type\": \"product\",\n          \"id\": \"c8466a3c-4fb8-4474-a86f-20f10d14314f\"\n        }\n      }\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "926976e5-e5bb-4c37-bd57-11053ef3b24d",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9bcc7b36-74e7-480d-ba17-9436150cc806",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "89c75f04-87db-4441-acbd-e8000d968d18",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "968f97a2-5895-4c10-a735-ef25ae9553a1",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "40260cd0-d594-4f60-9069-ef450861256d",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "include",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "f46f8ab4-30a6-4a00-9990-7199a859099f",
+          "name": "Update Product Variant Stock",
+          "request": {
+            "name": "Update Product Variant Stock",
+            "description": {
+              "content": "Update product variant stock",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "product-variants",
+                ":productVariant",
+                "stock"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "productVariant",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"type\": \"product-variants\",\n    \"attributes\": {\n      \"stockQuantity\": \"<integer>\",\n      \"inventoryPolicy\": \"deny\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "2228bc8d-0a44-4900-91e0-10dfe54c5f2c",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"isAlwaysInStock\": false,\n      \"stockQuantity\": 20\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"productVariant\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"name\": \"Test Product Variant\",\n      \"sku\": \"Product-Variant-001\",\n      \"ian\": \"1924859325863\",\n      \"createdAt\": \"2020-08-27T14:29:15.000000Z\",\n      \"updatedAt\": \"2021-10-04T12:03:31.000000Z\",\n      \"archivedAt\": null,\n      \"retailPrice\": 800,\n      \"wholesalePrice\": 500,\n      \"originalWholesalePrice\": 500,\n      \"availableQuantity\": 125,\n      \"reservedQuantity\": 25,\n      \"stockQuantity\": 150,\n      \"isAlwaysInStock\": false,\n      \"inventoryPolicy\": \"deny\",\n      \"fulfillableId\": \"8f066352-67cb-1efa-bddb-9e3047198b2e\",\n      \"availableAt\": \"2028-01-01\",\n      \"images\": [\n        {\n          \"order\": 1,\n          \"url\": \"https://example.com/image1.jpg\"\n        },\n        {\n          \"order\": 2,\n          \"url\": \"https://example.com/image2.jpg\"\n        }\n      ]\n    },\n    \"relationships\": {\n      \"product\": {\n        \"data\": {\n          \"type\": \"product\",\n          \"id\": \"c8466a3c-4fb8-4474-a86f-20f10d14314f\"\n        }\n      }\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "50f930a6-9307-4736-9934-f7713f1ff1d0",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"isAlwaysInStock\": false,\n      \"stockQuantity\": 20\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "de076154-4422-4a86-b994-2a44739a6a35",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"isAlwaysInStock\": false,\n      \"stockQuantity\": 20\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "937f2012-62f4-4e47-8ea1-b6d74829359e",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"isAlwaysInStock\": false,\n      \"stockQuantity\": 20\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ed114f08-224a-440e-acd6-99158bb0feb9",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"isAlwaysInStock\": false,\n      \"stockQuantity\": 20\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1dc333ca-0fbe-47a2-9203-765c21f119f6",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "stock"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"isAlwaysInStock\": false,\n      \"stockQuantity\": 20\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "28189325-aeb6-4416-8343-3ccb169113e8",
+          "name": "Update wholesale and retail prices of a product variant",
+          "request": {
+            "name": "Update wholesale and retail prices of a product variant",
+            "description": {
+              "content": "Update wholesale and retail prices of a product variant",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "product-variants",
+                ":productVariant",
+                "prices"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "productVariant",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"<uuid>\",\n    \"attributes\": {\n      \"wholesalePrice\": \"<int>\",\n      \"retailPrice\": \"<int>\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "aa3c246b-9596-48e4-9d3e-4840bce609ef",
+              "name": "[OK](https://jsonapi.org/format/#fetching-resources-responses-200)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"wholesalePrice\": 100,\n      \"retailPrice\": 200\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"productVariant\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"name\": \"Test Product Variant\",\n      \"sku\": \"Product-Variant-001\",\n      \"ian\": \"1924859325863\",\n      \"createdAt\": \"2020-08-27T14:29:15.000000Z\",\n      \"updatedAt\": \"2021-10-04T12:03:31.000000Z\",\n      \"archivedAt\": null,\n      \"retailPrice\": 800,\n      \"wholesalePrice\": 500,\n      \"originalWholesalePrice\": 500,\n      \"availableQuantity\": 125,\n      \"reservedQuantity\": 25,\n      \"stockQuantity\": 150,\n      \"isAlwaysInStock\": false,\n      \"inventoryPolicy\": \"deny\",\n      \"fulfillableId\": \"8f066352-67cb-1efa-bddb-9e3047198b2e\",\n      \"availableAt\": \"2028-01-01\",\n      \"images\": [\n        {\n          \"order\": 1,\n          \"url\": \"https://example.com/image1.jpg\"\n        },\n        {\n          \"order\": 2,\n          \"url\": \"https://example.com/image2.jpg\"\n        }\n      ]\n    },\n    \"relationships\": {\n      \"product\": {\n        \"data\": {\n          \"type\": \"product\",\n          \"id\": \"c8466a3c-4fb8-4474-a86f-20f10d14314f\"\n        }\n      }\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e53737ea-a0a2-4890-95fa-6e88e2db2cd3",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"wholesalePrice\": 100,\n      \"retailPrice\": 200\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8ed6353b-1d4f-4f63-8177-86e0b6779ae0",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"wholesalePrice\": 100,\n      \"retailPrice\": 200\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f9e7f408-ed33-47ed-a02f-08031802a24e",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"wholesalePrice\": 100,\n      \"retailPrice\": 200\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "88274c2b-f83f-4c9a-87c1-9a9cae97e883",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"wholesalePrice\": 100,\n      \"retailPrice\": 200\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8c4ac600-6fb7-4073-a2a0-04cbd7425a8d",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"product-variants\",\n    \"id\": \"2171bdc1-fa01-44fa-9342-d99bd1c2befa\",\n    \"attributes\": {\n      \"wholesalePrice\": 100,\n      \"retailPrice\": 200\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "6e9819fd-3a7e-4e18-9c81-146bbef461a4",
+          "name": "Declare product variant as fulfillment item",
+          "request": {
+            "name": "Declare product variant as fulfillment item",
+            "description": {},
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "product-variants",
+                ":productVariant",
+                "declare-fulfillment-item"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "productVariant",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "2f43dc75-58ed-47b9-97bb-40c2a071e159",
+              "name": "Fulfillment item already exists for this product variant",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": null,\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {\n      \"key_0\": 7015.055970769151,\n      \"key_1\": false,\n      \"key_2\": \"string\",\n      \"key_3\": 8179\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b2d81fad-963a-428d-8def-9d3ba0102f5d",
+              "name": "Fulfillment item successfully created",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": null,\n  \"jsonapi\": {\n    \"version\": \"string\",\n    \"meta\": {\n      \"key_0\": 7015.055970769151,\n      \"key_1\": false,\n      \"key_2\": \"string\",\n      \"key_3\": 8179\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e0b11c4c-ce33-4ab4-9008-15f9ca6ad1ce",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "12857275-a2a9-43d4-81b4-444b19a1de52",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3d0bc494-3e7b-427c-945b-f4188a1c61e6",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "fc9ddd74-709c-49fd-bc93-cedf3e8a6160",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "30331591-b3d7-4995-be34-9d2596eee1a8",
+              "name": "Unprocessable Entity : Data provided are invalid",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"string\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"The field is required.\",\n      \"source\": {\n        \"pointer\": \"data.attributes.field\"\n      },\n      \"status\": \"422\",\n      \"title\": \"Unprocessable Content\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "048a354a-7ba2-4222-9305-89701d4573e4",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variants",
+                    ":productVariant",
+                    "declare-fulfillment-item"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "productVariant",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"barcode\": \"<string>\",\n    \"unitsPerBatch\": \"<integer>\",\n    \"unitCostMargin\": \"<float>\",\n    \"classificationCode\": \"<string,null>\",\n    \"expiryTracked\": \"<boolean>\",\n    \"shelfLife\": \"<integer,null>\",\n    \"lotTracked\": \"<boolean>\",\n    \"isFragile\": \"<boolean>\",\n    \"isOrganic\": \"<boolean>\",\n    \"needRepack\": \"<boolean>\",\n    \"needRelabel\": \"<boolean>\",\n    \"alcoholCode\": \"<integer>\",\n    \"alcoholPercentage\": \"<float>\",\n    \"volumeOfLiquidPerPack\": \"<float>\",\n    \"icpeCode\": \"<integer>\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "a2c50d7c-4b82-40e5-841d-eb525d8fe4f1",
+          "name": "Get prices for product variants",
+          "request": {
+            "name": "Get prices for product variants",
+            "description": {
+              "content": "Returns retailer-specific wholesale prices for a batch of product variants.\nPrices are computed with all applicable discounts applied (AKS+, segment,\nbusiness-event discounts), so `wholesale_price` reflects the actual price\nthe authenticated retailer would pay.\n\nBoth the original (pre-discount) and the effective (post-discount) wholesale\nprices are returned so callers can display strikethrough pricing when a\ndiscount applies.\n\nVariants not found or not priceable for the authenticated retailer are\nsilently omitted from the response.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "product-variant-prices"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "filter[id][]",
+                  "value": "<uuid>",
+                  "description": "(Required) One or more product variant UUIDs to price. Repeat the parameter for\neach UUID. Minimum 1, maximum 50 per request.\n"
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "28e7fb89-7150-4083-936d-19f99255e3a9",
+              "name": "OK",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variant-prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"type\": \"product-variant-prices\",\n      \"id\": \"3571bdc1-fa01-44fa-9342-d99bd1c2befa\",\n      \"attributes\": {\n        \"original_wholesale_price\": {\n          \"amount\": 2000,\n          \"currency\": \"EUR\"\n        },\n        \"wholesale_price\": {\n          \"amount\": 1800,\n          \"currency\": \"EUR\"\n        },\n        \"discount_rate\": 10\n      }\n    },\n    {\n      \"type\": \"product-variant-prices\",\n      \"id\": \"4271bdc1-fa01-44fa-9342-d99bd1c2befa\",\n      \"attributes\": {\n        \"original_wholesale_price\": {\n          \"amount\": 1500,\n          \"currency\": \"EUR\"\n        },\n        \"wholesale_price\": {\n          \"amount\": 1500,\n          \"currency\": \"EUR\"\n        },\n        \"discount_rate\": 0\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cce6a68c-3972-4c89-a4f3-4bd991f8cc5e",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variant-prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "12e3db99-d895-4726-ba35-5599144ef7b7",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variant-prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a0aefbaa-5445-4c39-a470-5de8e7b871f3",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variant-prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "18fc4445-1052-49d3-bcad-a27867bfeb3e",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variant-prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c122ca07-2efc-4b15-aa0d-a51c05d32c89",
+              "name": "Unprocessable Entity : Data provided are invalid",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "product-variant-prices"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "filter[id][]",
+                      "value": "3571bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    },
+                    {
+                      "key": "filter[id][]",
+                      "value": "4271bdc1-fa01-44fa-9342-d99bd1c2befa"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"string\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"The field is required.\",\n      \"source\": {\n        \"pointer\": \"data.attributes.field\"\n      },\n      \"status\": \"422\",\n      \"title\": \"Unprocessable Content\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "9acc6fe4-bca3-4e46-8fc6-cbe30cfb3ba8",
+    "name": "Ankorstore Stock Tracking and Logistics Applications Catalog API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}

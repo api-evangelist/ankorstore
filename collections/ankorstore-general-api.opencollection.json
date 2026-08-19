@@ -1,0 +1,73 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Ankorstore Stock Tracking and Logistics Applications General API",
+    "version": "1.2.2-oas3.1"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "General",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List of latest currency rates",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "http://www.ankorlocal.com:8000/api/v1/currencies/rates/latest",
+            "headers": [
+              {
+                "name": "Accept",
+                "value": ""
+              }
+            ]
+          },
+          "docs": "Returns a list of the latest currency rates. This endpoint is public and does not require authentication."
+        },
+        {
+          "info": {
+            "name": "Request Email Verification Code",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "http://www.ankorlocal.com:8000/api/v1/email-verifications",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Sends a verification code to the provided email address.\nReturns a verification token that must be used when verifying the code.\n"
+        },
+        {
+          "info": {
+            "name": "Verify Email Code",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "http://www.ankorlocal.com:8000/api/v1/email-verifications/:email_verification",
+            "params": [
+              {
+                "name": "email_verification",
+                "value": "550e8400-e29b-41d4-a716-446655440000",
+                "type": "path",
+                "description": "The verification token received from the create email verification request"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Verifies the code sent to the email address.\nThe verification token from the initial request must be provided as the resource ID.\n"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

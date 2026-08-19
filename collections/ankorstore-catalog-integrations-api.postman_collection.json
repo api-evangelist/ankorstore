@@ -1,0 +1,2209 @@
+{
+  "item": [
+    {
+      "id": "1de74e32-0b23-4f77-967d-6158036741a3",
+      "name": "Catalog Integrations",
+      "description": {
+        "content": "## 👋 Getting Started\n\nThe catalogue integration process relies on the concept of operations. An operation is a batch of records\nrepresenting the products to create, update or delete. The completion state of an operation depends\non the execution result for every record it contains. It means an operation might fail without necessarily\nstopping or marking the whole operation as failed (this particular state is defined as “Partially failed”).\n\n- Operations can be of type `import`, `update` or `delete`.\n- Only one open operation (not yet started) is allowed at a time.\n- Only one operation can be performed (`started`) at a time.\n  - Any subsequent operation will be queued with status `pending` until previous one has finished processing.\n  - If no previous operation is being processed, operation will start processing right away.\n\n### Operation Statuses\n\nThe `status` attribute represents the current state of the operation, below is a table that describes each state:\n\n| Status             | Description                                                                                                                                                                              |\n|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| `created`          | The operation was created and not yet started. At this stage, the operation is considered open and products can still be added to the batch.                                             |\n| `skipped`          | The operation is empty and was skipped (No action required). When an operation is skipped, an empty report is generated and the callback URL is called to notify operation is completed. |\n| `started`          | The operation started and is processing.                                                                                                                                                 |\n| `pending`          | Operation is waiting for its turn on the processing queue. The operation could not be started because another one was being processed.                                                                                                                               |\n| `succeeded`        | All products were successfully processed.                                                                                                                                                |\n| `failed`           | All products failed to be processed.                                                                                                                                                     |\n| `partially_failed` | Not all products were successfully processed.                                                                                                                                            |\n\n## 💡 Operation workflow\n\nThe complete workflow for an operation occurs in 3 stages: operation creation, operation processing and reporting.\nThe following diagram illustrates these stages and how they are chained.\n\n<pre class=\"mermaid\">\n%%{init: {\"flowchart\": {\"curve\":\"basis\", \"htmlLabels\":false, \"diagramPadding\":24 } } }%%\ngraph LR\n\ncreated(\"Operation Created\")\nstart(\"Start Processing\")\nstarted(\"Processing\\nStarted\")\nsucceeded(Succeeded):::success\nskipped(\"Processing Skipped\"):::success\npending(\"Operation pending\")\nfailed(Failed):::failure\npartial(Partially Failed):::warning\nreport(\"Report\\nGenerated\")\nnotified(Callback Sent)\n\nsubgraph creating[Creating Operation]\ncreated -- Add Products --> created\nend\n\ncreated -- Start Operation --> Start{?}\nStart -->|\"Another Operation execution in progress\"| pending\nStart --->|\"No other Operation in progress\"| start --> E{?}\nE -->|\"Batch.size > 0\"| processing\nE --->|\"Batch is empty\"| skipped\n\nsubgraph processing[Processing Operation]\ndirection LR\nstarted --> succeeded\nstarted --> partial\nstarted --> failed\nend\n\nsucceeded --> operationCompletedActions\npartial --> operationCompletedActions\nfailed --> operationCompletedActions\n\nsubgraph reporting[Reporting]\nreport -- Notify --> notified\nend\n\nsubgraph triggerNext[Trigger next pending Operation]\nend\n\nsubgraph operationCompletedActions[Post-Complete Operation Actions]\nreporting\ntriggerNext\nend\n\npending -- Wait for previous Operation to finish execution --> start\n\nskipped -- Generate empty report --> operationCompletedActions\n\nclassDef default stroke:#4b475f,stroke-width:1px,fill:#ffffff,color:#4b475f\nclassDef success stroke:#1aae9f,stroke-width:1px,fill:#cfeeeb,color:#293845\nclassDef failure stroke:#d3455b,stroke-width:1px,fill:#f6d8dd,color:#293845\nclassDef warning stroke:#f7c325,stroke-width:1px,fill:#fdf2d1,color:#293845\nlinkStyle default stroke:#788896,stroke-width:1px,fill:transparent\n</pre>\n\n### Creating an Operation\n\nThe full flow of creating a complete operation consists in two steps:\n\n#### 1. Create a new operation\n\nSend a `POST` request to `/api/v1/catalog/integrations/operations`\n\nExample request:\n```json\n{\n    \"data\": {\n        \"type\": \"catalog-integration-operation\",\n        \"attributes\": {\n            \"source\": \"shopify\",\n            \"callbackUrl\": \"https://callback.url/called/after/processing\",\n            \"operationType\": \"import\"\n        }\n    }\n}\n```\n\n- At this point the new operation has been created and waiting to receive products data\n- Operation ID will be returned in the response payload\n\n#### 2. Add product data to operation\n\nSend a `POST` request to `/api/v1/catalog/integrations/operations/{operationId}/products`\n\nProducts can be added only to operations with status `created`.\n\nIf operation has been started already (having any of `started`, `pending`, `skipped`, `succeeded`, `partially_failed`, `failed`, `cancelled` status),\nthe request will fail with a `403 Forbidden` status code.\n\nExample request:\n```json\n{\n    \"products\": [\n        {\n            \"id\": \"B006GWO5WK\",\n            \"type\": \"catalog-integration-product\",\n            \"attributes\": {\n                \"external_id\": \"B006GWO5WK\",\n                \"name\": \"Example product\"\n                // ...\n            }\n        }\n    ]\n}\n```\n\nYou can perform as many requests as needed to append product data during this stage.\n\n### Operation Processing\n\nIn order to start processing the operation, you have to send a `PATCH` request\nto `/api/v1/catalog/integrations/operations/{operationId}` with the expected operation status (i.e. “started”).\n\nIf there is any other operation being executed at that time, the operation will be enqueued to be processed\nwith the status `pending` and will be started as soon as it gets a free slot in the queue. Otherwise, the\noperation will be started right away.\n\nExample request:\n```json\n{\n    \"data\": {\n        \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n        \"type\": \"catalog-integration-operation\",\n        \"attributes\": {\n            \"status\": \"started\"\n        }\n    }\n}\n```\n\n### Execution Report\n\nWhen an operation completes, an execution report is generated.\nIt provides the execution results (success or failure) for every product of the operation.\n\nYou can access this report by reading from the following endpoint.\n\n```http\nGET /api/v1/catalog/integrations/operations/{operationId}/results\n```\n\n## 💡 Event Callbacks\n\nCallbacks enable you to get notified when events occur in the operation process. For example, you can\nconfigure a callback to notify you when the operation is completed. The notification is sent via\nan HTTP request to the URL you specify in the operation settings.\n\nCallbacks can be used to trigger automated actions in your integration.\n\n### Supported events\n\nYou can find here below the complete list of all the topics `{{resource}}.{{event}}` you can monitor:\n\n| Topic                                     | Trigger                                                                                                                                                        |\n|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| `catalog-integration-operation.completed` | An operation reaches a completed state such as **Success**, **Failed**, or **Partially Failed**                                                                |\n| `catalog-integration-operation.cancelled` | An operation was cancelled. This event is triggered when an operation processing is **Skipped** (i.e. the operation batch is empty and no action is required). |\n\n### Event schema\n\nA callback event is represented as a JSON object and has the following properties:\n\n- `event` — the name of the event that occurred (e.g. “completed”)\n- `topic` — the event category represented as a unique identifier of the event type.\n  The topic is defined as a concatenation of the resource and event names `{$.data.type}.{$.event}`,\n  e.g. “catalog-integration-operation.completed”. You might use this topic as a partition key to distribute\n  the callback events you receive to separate queues or pools of workers to process the callbacks asynchronously.\n- `occurredAt` — the date and time when the event occurred\n- `data` — the JSON:API resource describing the state of the entity which triggered the callback\n\nA callback event is delivered as a `POST` request to your endpoint. The following payload represents the notification\nrequest that is triggered when an operation successfully completes:\n\n```json\n{\n    \"event\": \"completed\",\n    \"topic\": \"catalog-integration-operation.completed\",\n    \"occurredAt\": \"2024-03-21T13:42:54+00:00\",\n    \"data\": {\n        \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n        \"type\": \"catalog-integration-operation\",\n        \"attributes\": {\n            // ...\n            \"status\": \"succeeded\",\n            \"createdAt\": \"2024-03-21T13:13:03+00:00\",\n            \"startedAt\": \"2024-03-21T13:19:32+00:00\",\n            \"completedAt\": \"2024-03-21T13:42:54+00:00\"\n            // ...\n        }\n    }\n}\n```\n\n### Handling callbacks\n\nThe endpoint listening for callbacks has **3 seconds** to respond with a `2xx` (usually `200`)\nresponse code, acknowledging a successful delivery. If the request times out or gets a response\nwith a status code other than `2xx`, it is considered failed.\n\n<div class=\"warning\">\n\n#### Handling webhook failures\n\nIf a callback fails (whatever the reason) no further calls to the related endpoint are made.\n</div>\n\n### Testing callback\n\nA number of websites, such as https://webhook.site and https://requestbin.com, provide free URLs that\ncan be used to test callbacks. Simply create a URL on one of these sites, then configure your webhook\nto use it. These sites allow you to see the details of the request sent to them by the callback service.\n\nIn addition, the Ngrok service (https://ngrok.com) allows you to tunnel callback requests to a non-publicly\naccessible server, enabling you to test your callback-handling code before making it public.\n\n### Operations and Drafts behaviour\n\n| Type     | Behaviour                                                                                                                                                                  |\n|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| `import` | When executing an import operation existing drafts will be cleaned and new ones will be created if any of the products attached to the operation has any validation issue. |\n| `update` | Will not have any impact on existing drafts.                                                                                                                               |\n| `delete` | Will not have any impact on existing drafts.                                                                                                                               |\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "7a91cedb-b9dd-42e2-8c5b-fc5f585d3cb7",
+          "name": "Create a new operation",
+          "request": {
+            "name": "Create a new operation",
+            "description": {
+              "content": "Create new Operation to process over related Catalog Integration\n> ID of the operation will be returned on the response payload.\n  This ID should be used to add products data through `POST /catalog/integrations/operations/{ID}`\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "catalog",
+                "integrations",
+                "operations"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"source\": \"<string>\",\n      \"operationType\": \"<string>\",\n      \"callbackUrl\": \"<string>\",\n      \"updateFields\": [\n        \"<string>\",\n        \"<string>\"\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "eafacef0-3901-4e56-911e-dce4ae9bb0ec",
+              "name": "The operation that was successfully created",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"operationType\": \"import\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n  },\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"status\": \"created\",\n      \"operationType\": \"import\",\n      \"createdAt\": \"2024-01-01T14:15:22Z\",\n      \"startedAt\": null,\n      \"completedAt\": null,\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"totalProductsCount\": 132,\n      \"processedProductsCount\": 0,\n      \"failedProductsCount\": 0\n    },\n    \"relationships\": {\n      \"results\": {\n        \"links\": {\n          \"related\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results\",\n          \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results\"\n        }\n      }\n    },\n    \"links\": {\n      \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d545d5ef-7ebc-4278-a2a0-b5242c4e16e4",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"operationType\": \"import\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f347594f-092d-497c-9074-5ac65779c11e",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"operationType\": \"import\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a805842b-d939-4a90-b177-737793ef3dac",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"operationType\": \"import\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a17975d9-3ea8-49f1-a9b2-943b340b918e",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"operationType\": \"import\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "225a6749-3262-468d-8372-ca25bbd979f7",
+          "name": "Create a deletion operation",
+          "request": {
+            "name": "Create a deletion operation",
+            "description": {
+              "content": "Creates an Operation that deletes products from Ankorstore's catalog. The operation is started directly after creation.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "catalog",
+                "integrations",
+                "operations",
+                "delete"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"<string>\",\n  \"callbackUrl\": \"<string>\",\n  \"products\": [\n    {\n      \"type\": \"<string>\",\n      \"attributes\": {\n        \"external_id\": \"<string>\",\n        \"variants\": [\n          {\n            \"sku\": \"<string>\"\n          },\n          {\n            \"sku\": \"<string>\"\n          }\n        ]\n      }\n    },\n    {\n      \"type\": \"<string>\",\n      \"attributes\": {\n        \"external_id\": \"<string>\",\n        \"variants\": [\n          {\n            \"sku\": \"<string>\"\n          },\n          {\n            \"sku\": \"<string>\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "4fb76265-a316-4c4c-8f3f-7174ea9a3d47",
+              "name": "The operation that was successfully created",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    "delete"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"shopify\",\n  \"callbackUrl\": \"https://callback.url/called/after/processing\",\n  \"products\": [\n    {\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"123456\",\n        \"variants\": [\n          {\n            \"sku\": \"123456-1\"\n          },\n          {\n            \"sku\": \"123456-2\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n  },\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"status\": \"started\",\n      \"operationType\": \"delete\",\n      \"createdAt\": \"2024-01-01T14:15:22Z\",\n      \"startedAt\": \"2024-01-01T15:27:22Z\",\n      \"completedAt\": null,\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"totalProductsCount\": 132,\n      \"processedProductsCount\": 0,\n      \"failedProductsCount\": 0\n    },\n    \"relationships\": {\n      \"results\": {\n        \"links\": {\n          \"related\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results\",\n          \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results\"\n        }\n      }\n    },\n    \"links\": {\n      \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e0fcb9f5-dd52-4d18-a1f1-88677ec72f0b",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    "delete"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"shopify\",\n  \"callbackUrl\": \"https://callback.url/called/after/processing\",\n  \"products\": [\n    {\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"123456\",\n        \"variants\": [\n          {\n            \"sku\": \"123456-1\"\n          },\n          {\n            \"sku\": \"123456-2\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6d3c2d01-e3f9-4bb7-b01f-c1466b4318d3",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    "delete"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"shopify\",\n  \"callbackUrl\": \"https://callback.url/called/after/processing\",\n  \"products\": [\n    {\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"123456\",\n        \"variants\": [\n          {\n            \"sku\": \"123456-1\"\n          },\n          {\n            \"sku\": \"123456-2\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c654d230-194c-48ac-9ed8-eded0c85b812",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    "delete"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"shopify\",\n  \"callbackUrl\": \"https://callback.url/called/after/processing\",\n  \"products\": [\n    {\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"123456\",\n        \"variants\": [\n          {\n            \"sku\": \"123456-1\"\n          },\n          {\n            \"sku\": \"123456-2\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cba37a8e-50dd-4657-88ea-32134a869f20",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    "delete"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"source\": \"shopify\",\n  \"callbackUrl\": \"https://callback.url/called/after/processing\",\n  \"products\": [\n    {\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"123456\",\n        \"variants\": [\n          {\n            \"sku\": \"123456-1\"\n          },\n          {\n            \"sku\": \"123456-2\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "a08ee564-721f-4ea5-a129-aa02cc5ab158",
+          "name": "Retrieve an operation",
+          "request": {
+            "name": "Retrieve an operation",
+            "description": {
+              "content": "Returns specific Operation resource data",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "catalog",
+                "integrations",
+                "operations",
+                ":operationId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "operationId",
+                  "description": "(Required) The unique identifier of the operation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "578f2167-09de-47b8-9185-47fc68a5c6be",
+              "name": "The operation resource",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n  },\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"status\": \"created\",\n      \"operationType\": \"import\",\n      \"createdAt\": \"2024-01-01T14:15:22Z\",\n      \"startedAt\": null,\n      \"completedAt\": null,\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"totalProductsCount\": 132,\n      \"processedProductsCount\": 0,\n      \"failedProductsCount\": 0\n    },\n    \"relationships\": {\n      \"results\": {\n        \"links\": {\n          \"related\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results\",\n          \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results\"\n        }\n      }\n    },\n    \"links\": {\n      \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "43f47479-a9c5-40fa-8165-e222c07d57a6",
+              "name": "[Not found](https://jsonapi.org/format/#fetching-resources-responses-404)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not found\",\n      \"status\": \"404\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "58dc0486-1b21-4028-afc5-c7465645a914",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "13d17619-3070-42bc-907b-29faed83d1a2",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2313fc20-8f5f-45b5-a4ca-0913097b70fc",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "c6171449-2ce5-452b-84fb-ef6652170991",
+          "name": "Patch Operation resource",
+          "request": {
+            "name": "Patch Operation resource",
+            "description": {
+              "content": "Patch Operation resource",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "catalog",
+                "integrations",
+                "operations",
+                ":operationId"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "operationId",
+                  "description": "(Required) The unique identifier of the operation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "PATCH",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"id\": \"<uuid>\",\n    \"type\": \"<string>\",\n    \"attributes\": {\n      \"status\": \"<string>\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "02aa79ce-e596-4da2-b395-1999c8e3d674",
+              "name": "The successfully updated operation",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"status\": \"started\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n  },\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"source\": \"shopify\",\n      \"status\": \"created\",\n      \"operationType\": \"import\",\n      \"createdAt\": \"2024-01-01T14:15:22Z\",\n      \"startedAt\": null,\n      \"completedAt\": null,\n      \"callbackUrl\": \"https://callback.url/called/after/processing\",\n      \"totalProductsCount\": 132,\n      \"processedProductsCount\": 0,\n      \"failedProductsCount\": 0\n    },\n    \"relationships\": {\n      \"results\": {\n        \"links\": {\n          \"related\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/results\",\n          \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c/relationships/results\"\n        }\n      }\n    },\n    \"links\": {\n      \"self\": \"https://www.ankorstore.com/api/v1/catalog/integrations/operations/90567710-de47-49e4-8536-aab80c1a469c\"\n    }\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e5728ef4-f8e2-476f-aa54-62f0b3e6bd12",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"status\": \"started\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b4de74fd-0b37-402c-8765-189a5b5282a4",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"status\": \"started\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "09125266-27ff-417a-b22c-1879d3a0bc35",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"status\": \"started\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "62fca887-dfd0-43c5-9213-633609927a7a",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "PATCH",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": {\n    \"id\": \"90567710-de47-49e4-8536-aab80c1a469c\",\n    \"type\": \"catalog-integration-operation\",\n    \"attributes\": {\n      \"status\": \"started\"\n    }\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "968411af-fab4-44dd-91ec-f26df31b31a8",
+          "name": "Add products to an operation",
+          "request": {
+            "name": "Add products to an operation",
+            "description": {
+              "content": "Add products data to an existing Operation resource",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "catalog",
+                "integrations",
+                "operations",
+                ":operationId",
+                "products"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "operationId",
+                  "description": "(Required) The unique identifier of the operation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/vnd.api+json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"products\": [\n    {\n      \"id\": \"<string>\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"<string>\",\n        \"name\": \"<string>\",\n        \"main_image\": \"<string>\",\n        \"images\": [\n          {\n            \"order\": \"<integer>\",\n            \"url\": \"<string>\"\n          },\n          {\n            \"order\": \"<integer>\",\n            \"url\": \"<string>\"\n          }\n        ],\n        \"hs_code\": \"<string>\",\n        \"currency\": \"<string>\",\n        \"vat_rate\": \"<float>\",\n        \"description\": \"<string>\",\n        \"discount_rate\": \"<float>\",\n        \"unit_multiplier\": \"<integer>\",\n        \"wholesale_price\": \"<float>\",\n        \"retail_price\": \"<float>\",\n        \"made_in_country\": \"<string>\",\n        \"shelf_life_days\": \"<integer>\",\n        \"storage_temperature\": \"<string>\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"<string>\",\n            \"width\": \"<float>\",\n            \"height\": \"<float>\",\n            \"length\": \"<float>\"\n          },\n          \"capacity\": {\n            \"unit_code\": \"<string>\",\n            \"amount\": \"<float>\"\n          },\n          \"weight\": {\n            \"unit_code\": \"<string>\",\n            \"amount\": \"<float>\"\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"<string>\",\n            \"sku\": \"<string>\",\n            \"stock_quantity\": \"<integer>\",\n            \"is_always_in_stock\": \"<boolean>\",\n            \"inventory_policy\": \"deny\",\n            \"external_id\": \"<string>\",\n            \"discount_rate\": \"<float>\",\n            \"retail_price\": \"<float>\",\n            \"wholesale_price\": \"<float>\",\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"<string>\",\n                \"width\": \"<float>\",\n                \"height\": \"<float>\",\n                \"length\": \"<float>\"\n              },\n              \"capacity\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              },\n              \"weight\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              },\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              },\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              }\n            ]\n          },\n          {\n            \"ian\": \"<string>\",\n            \"sku\": \"<string>\",\n            \"stock_quantity\": \"<integer>\",\n            \"is_always_in_stock\": \"<boolean>\",\n            \"inventory_policy\": \"deny\",\n            \"external_id\": \"<string>\",\n            \"discount_rate\": \"<float>\",\n            \"retail_price\": \"<float>\",\n            \"wholesale_price\": \"<float>\",\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"<string>\",\n                \"width\": \"<float>\",\n                \"height\": \"<float>\",\n                \"length\": \"<float>\"\n              },\n              \"capacity\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              },\n              \"weight\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              },\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              },\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              }\n            ]\n          }\n        ]\n      }\n    },\n    {\n      \"id\": \"<string>\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"<string>\",\n        \"name\": \"<string>\",\n        \"main_image\": \"<string>\",\n        \"images\": [\n          {\n            \"order\": \"<integer>\",\n            \"url\": \"<string>\"\n          },\n          {\n            \"order\": \"<integer>\",\n            \"url\": \"<string>\"\n          }\n        ],\n        \"hs_code\": \"<string>\",\n        \"currency\": \"<string>\",\n        \"vat_rate\": \"<float>\",\n        \"description\": \"<string>\",\n        \"discount_rate\": \"<float>\",\n        \"unit_multiplier\": \"<integer>\",\n        \"wholesale_price\": \"<float>\",\n        \"retail_price\": \"<float>\",\n        \"made_in_country\": \"<string>\",\n        \"shelf_life_days\": \"<integer>\",\n        \"storage_temperature\": \"<string>\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"<string>\",\n            \"width\": \"<float>\",\n            \"height\": \"<float>\",\n            \"length\": \"<float>\"\n          },\n          \"capacity\": {\n            \"unit_code\": \"<string>\",\n            \"amount\": \"<float>\"\n          },\n          \"weight\": {\n            \"unit_code\": \"<string>\",\n            \"amount\": \"<float>\"\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"<string>\",\n            \"sku\": \"<string>\",\n            \"stock_quantity\": \"<integer>\",\n            \"is_always_in_stock\": \"<boolean>\",\n            \"inventory_policy\": \"deny\",\n            \"external_id\": \"<string>\",\n            \"discount_rate\": \"<float>\",\n            \"retail_price\": \"<float>\",\n            \"wholesale_price\": \"<float>\",\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"<string>\",\n                \"width\": \"<float>\",\n                \"height\": \"<float>\",\n                \"length\": \"<float>\"\n              },\n              \"capacity\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              },\n              \"weight\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              },\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              },\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              }\n            ]\n          },\n          {\n            \"ian\": \"<string>\",\n            \"sku\": \"<string>\",\n            \"stock_quantity\": \"<integer>\",\n            \"is_always_in_stock\": \"<boolean>\",\n            \"inventory_policy\": \"deny\",\n            \"external_id\": \"<string>\",\n            \"discount_rate\": \"<float>\",\n            \"retail_price\": \"<float>\",\n            \"wholesale_price\": \"<float>\",\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"<string>\",\n                \"width\": \"<float>\",\n                \"height\": \"<float>\",\n                \"length\": \"<float>\"\n              },\n              \"capacity\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              },\n              \"weight\": {\n                \"unit_code\": \"<string>\",\n                \"amount\": \"<float>\"\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              },\n              {\n                \"name\": \"<string>\",\n                \"value\": \"<string>\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              },\n              {\n                \"order\": \"<integer>\",\n                \"url\": \"<string>\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "4ddcacbb-52cc-4121-aed6-37d512ef6443",
+              "name": "The products were successfully added to the operation",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n        \"name\": \"Example product 1\",\n        \"tags\": [\n          \"tags_fresh_product\",\n          \"tags_frozen_produc\",\n          \"tags_organic\",\n          \"tags_handmade\",\n          \"tags_eco_friendly\",\n          \"tags_zero_waste\",\n          \"tags_cruelty_free\",\n          \"tags_bestseller\",\n          \"tags_vegan\",\n          \"tags_contains_alcohol\"\n        ],\n        \"main_image\": \"https://url.of/product_main_image.png\",\n        \"images\\\"\": [\n          {\n            \"order\": 2,\n            \"url\": \"https://image.2/\"\n          },\n          {\n            \"order\": 3,\n            \"url\": \"https://image.3/\"\n          },\n          {\n            \"order\": 4,\n            \"url\": \"https://image.4/\"\n          }\n        ],\n        \"hs_code\": \"123456\",\n        \"currency\": \"EUR\",\n        \"vat_rate\": 20,\n        \"description\": \"This is an example of product description received in the payload.\",\n        \"discount_rate\": 0,\n        \"unit_multiplier\": 1,\n        \"retail_price\": 25,\n        \"wholesale_price\": 20,\n        \"made_in_country\": \"ES\",\n        \"shelf_life_days\": 1,\n        \"storage_temperature\": \"controlled\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"cm\",\n            \"width\": 10,\n            \"height\": 10,\n            \"length\": 10\n          },\n          \"capacity\": {\n            \"unit_code\": \"L\",\n            \"amount\": 1\n          },\n          \"weight\": {\n            \"unit_code\": \"kg\",\n            \"amount\": 1\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"1234567890123\",\n            \"sku\": \"Example SKU\",\n            \"stock_quantity\": 100,\n            \"is_always_in_stock\": false,\n            \"external_id\": \"747476f8-e268-4fab-9788-7f7752f61095\",\n            \"discount_rate\": 0,\n            \"retail_price\": 25,\n            \"wholesale_price\": 20,\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"cm\",\n                \"width\": 10,\n                \"height\": 10,\n                \"length\": 10\n              },\n              \"capacity\": {\n                \"unit_code\": \"L\",\n                \"amount\": 1\n              },\n              \"weight\": {\n                \"unit_code\": \"kg\",\n                \"amount\": 1\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"size\",\n                \"value\": \"XXL\"\n              },\n              {\n                \"name\": \"color\",\n                \"value\": \"blue\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": 1,\n                \"url\": \"https://image.1/\"\n              },\n              {\n                \"order\": 2,\n                \"url\": \"https://image.2/\"\n              },\n              {\n                \"order\": 3,\n                \"url\": \"https://image.3/\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"meta\": {\n    \"totalProductsCount\": 104\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "863675bd-bd3b-4d3b-9245-9febad2bbda6",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n        \"name\": \"Example product 1\",\n        \"tags\": [\n          \"tags_fresh_product\",\n          \"tags_frozen_produc\",\n          \"tags_organic\",\n          \"tags_handmade\",\n          \"tags_eco_friendly\",\n          \"tags_zero_waste\",\n          \"tags_cruelty_free\",\n          \"tags_bestseller\",\n          \"tags_vegan\",\n          \"tags_contains_alcohol\"\n        ],\n        \"main_image\": \"https://url.of/product_main_image.png\",\n        \"images\\\"\": [\n          {\n            \"order\": 2,\n            \"url\": \"https://image.2/\"\n          },\n          {\n            \"order\": 3,\n            \"url\": \"https://image.3/\"\n          },\n          {\n            \"order\": 4,\n            \"url\": \"https://image.4/\"\n          }\n        ],\n        \"hs_code\": \"123456\",\n        \"currency\": \"EUR\",\n        \"vat_rate\": 20,\n        \"description\": \"This is an example of product description received in the payload.\",\n        \"discount_rate\": 0,\n        \"unit_multiplier\": 1,\n        \"retail_price\": 25,\n        \"wholesale_price\": 20,\n        \"made_in_country\": \"ES\",\n        \"shelf_life_days\": 1,\n        \"storage_temperature\": \"controlled\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"cm\",\n            \"width\": 10,\n            \"height\": 10,\n            \"length\": 10\n          },\n          \"capacity\": {\n            \"unit_code\": \"L\",\n            \"amount\": 1\n          },\n          \"weight\": {\n            \"unit_code\": \"kg\",\n            \"amount\": 1\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"1234567890123\",\n            \"sku\": \"Example SKU\",\n            \"stock_quantity\": 100,\n            \"is_always_in_stock\": false,\n            \"external_id\": \"747476f8-e268-4fab-9788-7f7752f61095\",\n            \"discount_rate\": 0,\n            \"retail_price\": 25,\n            \"wholesale_price\": 20,\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"cm\",\n                \"width\": 10,\n                \"height\": 10,\n                \"length\": 10\n              },\n              \"capacity\": {\n                \"unit_code\": \"L\",\n                \"amount\": 1\n              },\n              \"weight\": {\n                \"unit_code\": \"kg\",\n                \"amount\": 1\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"size\",\n                \"value\": \"XXL\"\n              },\n              {\n                \"name\": \"color\",\n                \"value\": \"blue\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": 1,\n                \"url\": \"https://image.1/\"\n              },\n              {\n                \"order\": 2,\n                \"url\": \"https://image.2/\"\n              },\n              {\n                \"order\": 3,\n                \"url\": \"https://image.3/\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4be14f9f-8361-4c89-839d-78c157443511",
+              "name": "[Forbidden](https://jsonapi.org/format/#crud-creating-responses-403)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n        \"name\": \"Example product 1\",\n        \"tags\": [\n          \"tags_fresh_product\",\n          \"tags_frozen_produc\",\n          \"tags_organic\",\n          \"tags_handmade\",\n          \"tags_eco_friendly\",\n          \"tags_zero_waste\",\n          \"tags_cruelty_free\",\n          \"tags_bestseller\",\n          \"tags_vegan\",\n          \"tags_contains_alcohol\"\n        ],\n        \"main_image\": \"https://url.of/product_main_image.png\",\n        \"images\\\"\": [\n          {\n            \"order\": 2,\n            \"url\": \"https://image.2/\"\n          },\n          {\n            \"order\": 3,\n            \"url\": \"https://image.3/\"\n          },\n          {\n            \"order\": 4,\n            \"url\": \"https://image.4/\"\n          }\n        ],\n        \"hs_code\": \"123456\",\n        \"currency\": \"EUR\",\n        \"vat_rate\": 20,\n        \"description\": \"This is an example of product description received in the payload.\",\n        \"discount_rate\": 0,\n        \"unit_multiplier\": 1,\n        \"retail_price\": 25,\n        \"wholesale_price\": 20,\n        \"made_in_country\": \"ES\",\n        \"shelf_life_days\": 1,\n        \"storage_temperature\": \"controlled\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"cm\",\n            \"width\": 10,\n            \"height\": 10,\n            \"length\": 10\n          },\n          \"capacity\": {\n            \"unit_code\": \"L\",\n            \"amount\": 1\n          },\n          \"weight\": {\n            \"unit_code\": \"kg\",\n            \"amount\": 1\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"1234567890123\",\n            \"sku\": \"Example SKU\",\n            \"stock_quantity\": 100,\n            \"is_always_in_stock\": false,\n            \"external_id\": \"747476f8-e268-4fab-9788-7f7752f61095\",\n            \"discount_rate\": 0,\n            \"retail_price\": 25,\n            \"wholesale_price\": 20,\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"cm\",\n                \"width\": 10,\n                \"height\": 10,\n                \"length\": 10\n              },\n              \"capacity\": {\n                \"unit_code\": \"L\",\n                \"amount\": 1\n              },\n              \"weight\": {\n                \"unit_code\": \"kg\",\n                \"amount\": 1\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"size\",\n                \"value\": \"XXL\"\n              },\n              {\n                \"name\": \"color\",\n                \"value\": \"blue\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": 1,\n                \"url\": \"https://image.1/\"\n              },\n              {\n                \"order\": 2,\n                \"url\": \"https://image.2/\"\n              },\n              {\n                \"order\": 3,\n                \"url\": \"https://image.3/\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Forbidden\",\n      \"status\": \"403\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "3439bcb2-2eec-49d2-ad15-f07c3570002b",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n        \"name\": \"Example product 1\",\n        \"tags\": [\n          \"tags_fresh_product\",\n          \"tags_frozen_produc\",\n          \"tags_organic\",\n          \"tags_handmade\",\n          \"tags_eco_friendly\",\n          \"tags_zero_waste\",\n          \"tags_cruelty_free\",\n          \"tags_bestseller\",\n          \"tags_vegan\",\n          \"tags_contains_alcohol\"\n        ],\n        \"main_image\": \"https://url.of/product_main_image.png\",\n        \"images\\\"\": [\n          {\n            \"order\": 2,\n            \"url\": \"https://image.2/\"\n          },\n          {\n            \"order\": 3,\n            \"url\": \"https://image.3/\"\n          },\n          {\n            \"order\": 4,\n            \"url\": \"https://image.4/\"\n          }\n        ],\n        \"hs_code\": \"123456\",\n        \"currency\": \"EUR\",\n        \"vat_rate\": 20,\n        \"description\": \"This is an example of product description received in the payload.\",\n        \"discount_rate\": 0,\n        \"unit_multiplier\": 1,\n        \"retail_price\": 25,\n        \"wholesale_price\": 20,\n        \"made_in_country\": \"ES\",\n        \"shelf_life_days\": 1,\n        \"storage_temperature\": \"controlled\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"cm\",\n            \"width\": 10,\n            \"height\": 10,\n            \"length\": 10\n          },\n          \"capacity\": {\n            \"unit_code\": \"L\",\n            \"amount\": 1\n          },\n          \"weight\": {\n            \"unit_code\": \"kg\",\n            \"amount\": 1\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"1234567890123\",\n            \"sku\": \"Example SKU\",\n            \"stock_quantity\": 100,\n            \"is_always_in_stock\": false,\n            \"external_id\": \"747476f8-e268-4fab-9788-7f7752f61095\",\n            \"discount_rate\": 0,\n            \"retail_price\": 25,\n            \"wholesale_price\": 20,\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"cm\",\n                \"width\": 10,\n                \"height\": 10,\n                \"length\": 10\n              },\n              \"capacity\": {\n                \"unit_code\": \"L\",\n                \"amount\": 1\n              },\n              \"weight\": {\n                \"unit_code\": \"kg\",\n                \"amount\": 1\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"size\",\n                \"value\": \"XXL\"\n              },\n              {\n                \"name\": \"color\",\n                \"value\": \"blue\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": 1,\n                \"url\": \"https://image.1/\"\n              },\n              {\n                \"order\": 2,\n                \"url\": \"https://image.2/\"\n              },\n              {\n                \"order\": 3,\n                \"url\": \"https://image.3/\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a64d04a9-f891-47b0-b451-3c9786cef883",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n        \"name\": \"Example product 1\",\n        \"tags\": [\n          \"tags_fresh_product\",\n          \"tags_frozen_produc\",\n          \"tags_organic\",\n          \"tags_handmade\",\n          \"tags_eco_friendly\",\n          \"tags_zero_waste\",\n          \"tags_cruelty_free\",\n          \"tags_bestseller\",\n          \"tags_vegan\",\n          \"tags_contains_alcohol\"\n        ],\n        \"main_image\": \"https://url.of/product_main_image.png\",\n        \"images\\\"\": [\n          {\n            \"order\": 2,\n            \"url\": \"https://image.2/\"\n          },\n          {\n            \"order\": 3,\n            \"url\": \"https://image.3/\"\n          },\n          {\n            \"order\": 4,\n            \"url\": \"https://image.4/\"\n          }\n        ],\n        \"hs_code\": \"123456\",\n        \"currency\": \"EUR\",\n        \"vat_rate\": 20,\n        \"description\": \"This is an example of product description received in the payload.\",\n        \"discount_rate\": 0,\n        \"unit_multiplier\": 1,\n        \"retail_price\": 25,\n        \"wholesale_price\": 20,\n        \"made_in_country\": \"ES\",\n        \"shelf_life_days\": 1,\n        \"storage_temperature\": \"controlled\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"cm\",\n            \"width\": 10,\n            \"height\": 10,\n            \"length\": 10\n          },\n          \"capacity\": {\n            \"unit_code\": \"L\",\n            \"amount\": 1\n          },\n          \"weight\": {\n            \"unit_code\": \"kg\",\n            \"amount\": 1\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"1234567890123\",\n            \"sku\": \"Example SKU\",\n            \"stock_quantity\": 100,\n            \"is_always_in_stock\": false,\n            \"external_id\": \"747476f8-e268-4fab-9788-7f7752f61095\",\n            \"discount_rate\": 0,\n            \"retail_price\": 25,\n            \"wholesale_price\": 20,\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"cm\",\n                \"width\": 10,\n                \"height\": 10,\n                \"length\": 10\n              },\n              \"capacity\": {\n                \"unit_code\": \"L\",\n                \"amount\": 1\n              },\n              \"weight\": {\n                \"unit_code\": \"kg\",\n                \"amount\": 1\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"size\",\n                \"value\": \"XXL\"\n              },\n              {\n                \"name\": \"color\",\n                \"value\": \"blue\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": 1,\n                \"url\": \"https://image.1/\"\n              },\n              {\n                \"order\": 2,\n                \"url\": \"https://image.2/\"\n              },\n              {\n                \"order\": 3,\n                \"url\": \"https://image.3/\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "98a8d819-b6f4-4088-9cd0-88bbabd1d408",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "products"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n      \"type\": \"catalog-integration-product\",\n      \"attributes\": {\n        \"external_id\": \"a12aef05-7c20-4efb-a336-ea53be904d0e\",\n        \"name\": \"Example product 1\",\n        \"tags\": [\n          \"tags_fresh_product\",\n          \"tags_frozen_produc\",\n          \"tags_organic\",\n          \"tags_handmade\",\n          \"tags_eco_friendly\",\n          \"tags_zero_waste\",\n          \"tags_cruelty_free\",\n          \"tags_bestseller\",\n          \"tags_vegan\",\n          \"tags_contains_alcohol\"\n        ],\n        \"main_image\": \"https://url.of/product_main_image.png\",\n        \"images\\\"\": [\n          {\n            \"order\": 2,\n            \"url\": \"https://image.2/\"\n          },\n          {\n            \"order\": 3,\n            \"url\": \"https://image.3/\"\n          },\n          {\n            \"order\": 4,\n            \"url\": \"https://image.4/\"\n          }\n        ],\n        \"hs_code\": \"123456\",\n        \"currency\": \"EUR\",\n        \"vat_rate\": 20,\n        \"description\": \"This is an example of product description received in the payload.\",\n        \"discount_rate\": 0,\n        \"unit_multiplier\": 1,\n        \"retail_price\": 25,\n        \"wholesale_price\": 20,\n        \"made_in_country\": \"ES\",\n        \"shelf_life_days\": 1,\n        \"storage_temperature\": \"controlled\",\n        \"shape_properties\": {\n          \"dimensions\": {\n            \"unit_code\": \"cm\",\n            \"width\": 10,\n            \"height\": 10,\n            \"length\": 10\n          },\n          \"capacity\": {\n            \"unit_code\": \"L\",\n            \"amount\": 1\n          },\n          \"weight\": {\n            \"unit_code\": \"kg\",\n            \"amount\": 1\n          }\n        },\n        \"variants\": [\n          {\n            \"ian\": \"1234567890123\",\n            \"sku\": \"Example SKU\",\n            \"stock_quantity\": 100,\n            \"is_always_in_stock\": false,\n            \"external_id\": \"747476f8-e268-4fab-9788-7f7752f61095\",\n            \"discount_rate\": 0,\n            \"retail_price\": 25,\n            \"wholesale_price\": 20,\n            \"shape_properties\": {\n              \"dimensions\": {\n                \"unit_code\": \"cm\",\n                \"width\": 10,\n                \"height\": 10,\n                \"length\": 10\n              },\n              \"capacity\": {\n                \"unit_code\": \"L\",\n                \"amount\": 1\n              },\n              \"weight\": {\n                \"unit_code\": \"kg\",\n                \"amount\": 1\n              }\n            },\n            \"options\": [\n              {\n                \"name\": \"size\",\n                \"value\": \"XXL\"\n              },\n              {\n                \"name\": \"color\",\n                \"value\": \"blue\"\n              }\n            ],\n            \"images\": [\n              {\n                \"order\": 1,\n                \"url\": \"https://image.1/\"\n              },\n              {\n                \"order\": 2,\n                \"url\": \"https://image.2/\"\n              },\n              {\n                \"order\": 3,\n                \"url\": \"https://image.3/\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "1c5a71e7-40d9-46f4-9ca0-c81124a76fc4",
+          "name": "Retrieve an operation report",
+          "request": {
+            "name": "Retrieve an operation report",
+            "description": {
+              "content": "Once an operation is completed, an execution report is generated. This report summarises the result of the operation execution for each of its products.\n",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "catalog",
+                "integrations",
+                "operations",
+                ":operationId",
+                "results"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "page[limit]",
+                  "value": "<long>",
+                  "description": "limit the amount of results returned"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[before]",
+                  "value": "<string>",
+                  "description": "show items before the provided ID (uuid format)"
+                },
+                {
+                  "disabled": false,
+                  "key": "page[after]",
+                  "value": "<string>",
+                  "description": "show items after the provided ID (uuid format)"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "operationId",
+                  "description": "(Required) The unique identifier of the operation"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/vnd.api+json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "a6960e42-ca8b-4dda-b1a1-5aded628bd8f",
+              "name": "The execution result of the operation",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "results"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"meta\": {\n    \"page\": {\n      \"from\": \"29c60b89-0fb6-4bd9-9c1e-2d312cf141e3\",\n      \"hasMore\": true,\n      \"perPage\": 100,\n      \"to\": \"03dcf453-b9d3-4cc7-be24-b0e0f0453fb2\"\n    }\n  },\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"links\": {\n    \"first\": \"https://www.ankorstore.com/api/v1/catalog/integrations/3de86ffd-aa50-49e2-b178-e2ffd6e6f0e5/products?include=&page%5Blimit%5D=2\",\n    \"next\": \"https://www.ankorstore.com/api/v1/catalog/integrations/3de86ffd-aa50-49e2-b178-e2ffd6e6f0e5/products?include=&page%5Bafter%5D=797910&page%5Blimit%5D=2\",\n    \"prev\": \"https://www.ankorstore.com/api/v1/catalog/integrations/3de86ffd-aa50-49e2-b178-e2ffd6e6f0e5/products?include=&page%5Bbefore%5D=904234&page%5Blimit%5D=2\"\n  },\n  \"data\": [\n    {\n      \"id\": \"a830fb5a-c2f9-4227-a46a-4e1c72b5f4c1\",\n      \"type\": \"catalog-integration-result\",\n      \"attributes\": {\n        \"externalProductId\": \"fab0ccb6-2e5c-484e-994d-05475b54a013\",\n        \"status\": \"success\",\n        \"failureReason\": null,\n        \"issues\": []\n      }\n    },\n    {\n      \"id\": \"a52bdb84-8d4c-49f6-9457-6aafda51abda\",\n      \"type\": \"catalog-integration-result\",\n      \"attributes\": {\n        \"externalProductId\": \"07734e55-ca17-4bb3-8f1d-e6d957270d7d\",\n        \"status\": \"failure\",\n        \"failureReason\": \"validation_error\",\n        \"issues\": [\n          {\n            \"field\": \"variants[0].sku\",\n            \"reason\": \"required_field\",\n            \"message\": \"Variant SKU is required\"\n          },\n          {\n            \"field\": \"variants[0].ian\",\n            \"reason\": \"invalid_field\",\n            \"message\": \"This value should have exactly 13 characters\"\n          }\n        ]\n      }\n    },\n    {\n      \"id\": \"1cd7c89c-9428-44c5-9a77-9448467453c3\",\n      \"type\": \"catalog-integration-result\",\n      \"attributes\": {\n        \"externalProductId\": \"8d290277-b40e-4d53-98b8-c65b251fedae\",\n        \"status\": \"success\",\n        \"failureReason\": null,\n        \"issues\": []\n      }\n    },\n    {\n      \"id\": \"2246214c-f7b8-4d84-8fd4-de957c192b9a\",\n      \"type\": \"catalog-integration-result\",\n      \"attributes\": {\n        \"externalProductId\": \"ecfcb82c-3178-46ef-805f-1cdf2c22b14a\",\n        \"status\": \"failure\",\n        \"failureReason\": \"validation_error\",\n        \"issues\": [\n          {\n            \"field\": \"variants[0].sku\",\n            \"reason\": \"required_field\",\n            \"message\": \"Variant SKU is required\"\n          },\n          {\n            \"field\": \"variants[0].ian\",\n            \"reason\": \"invalid_field\",\n            \"message\": \"This value should have exactly 13 characters\"\n          }\n        ]\n      }\n    },\n    {\n      \"id\": \"a830fb5a-c2f9-4227-a46a-4e1c72b5f4c2\",\n      \"type\": \"catalog-integration-result\",\n      \"attributes\": {\n        \"externalProductId\": \"unknown\",\n        \"status\": \"failure\",\n        \"failureReason\": \"internal_error\",\n        \"issues\": [\n          {\n            \"message\": \"This is an internal error, that should not have happened. Please contact support team.\"\n          }\n        ]\n      }\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "bde71b03-d109-459d-a951-f463af3f4e43",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "results"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unauthorized\",\n      \"status\": \"401\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "89bef0cb-1d7d-42a1-b801-42f7922e526f",
+              "name": "Not Acceptable",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "results"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Acceptable",
+              "code": 406,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Not Acceptable\",\n      \"status\": \"406\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4a54d442-0202-4528-b3a8-808f14cba513",
+              "name": "Unsupported Media Type",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "results"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unsupported Media Type",
+              "code": 415,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Unsupported Media Type\",\n      \"status\": \"415\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "d5719f3d-921d-4519-bbe8-5ebe04bae5e0",
+              "name": "[Server Error](https://jsonapi.org/format/#errors)",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "catalog",
+                    "integrations",
+                    "operations",
+                    ":operationId",
+                    "results"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page[limit]",
+                      "value": "<long>"
+                    },
+                    {
+                      "key": "page[before]",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "page[after]",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "operationId",
+                      "description": "(Required) The unique identifier of the operation"
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "disabled": false,
+                    "description": "application/vnd.api+json",
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/vnd.api+json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/vnd.api+json"
+                }
+              ],
+              "body": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"errors\": [\n    {\n      \"detail\": \"Server Error\",\n      \"status\": \"500\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "http://www.ankorlocal.com:8000",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "c266841f-2ed0-4116-ba1b-2768311387d6",
+    "name": "Ankorstore Stock Tracking and Logistics Applications Catalog Integrations API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Ankorstore Stock Tracking and Logistics (ASTRAL) API specification\n\nContact Support:\n Name: Ankorstore\n Email: api@ankorstore.com",
+      "type": "text/plain"
+    }
+  }
+}
