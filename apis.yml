@@ -35,6 +35,17 @@ tags:
 - Retail
 - Wholesale
 - Marketplace
+- E-Commerce
+- Ordering
+- Fulfillment
+- Catalog
+- Webhook
+- JSON:API
+tags_raw:
+- Company
+- Retail
+- Wholesale
+- Marketplace
 - E-commerce
 - Ordering
 - Fulfillment
@@ -55,6 +66,8 @@ apis:
   humanURL: https://ankorstore.github.io/api-docs/
   baseURL: https://www.ankorstore.com
   tags:
+  - Application
+  tags_raw:
   - Applications
   properties:
   - type: OpenAPI
@@ -995,7 +1008,8 @@ apis:
     different currency zones.
   humanURL: https://ankorstore.github.io/api-docs/
   baseURL: https://www.ankorstore.com
-  tags:
+  tags: []
+  tags_raw:
   - General
   properties:
   - type: OpenAPI
@@ -2749,6 +2763,8 @@ apis:
   humanURL: https://ankorstore.github.io/api-docs/
   baseURL: https://www.ankorstore.com
   tags:
+  - States
+  tags_raw:
   - State
   properties:
   - type: OpenAPI
@@ -2862,6 +2878,8 @@ apis:
   humanURL: https://ankorstore.github.io/api-docs/
   baseURL: https://www.ankorstore.com
   tags:
+  - User
+  tags_raw:
   - Users
   properties:
   - type: OpenAPI
@@ -3104,6 +3122,8 @@ apis:
   humanURL: https://ankorstore.github.io/api-docs/
   baseURL: https://www.ankorstore.com
   tags:
+  - Webhook
+  tags_raw:
   - Webhooks
   properties:
   - type: OpenAPI
