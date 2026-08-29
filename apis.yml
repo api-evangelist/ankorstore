@@ -3141,6 +3141,9 @@ apis:
   - type: OpenAPI
     url: openapi/ankorstore-webhooks-api-openapi.yml
 common:
+- type: CapabilityMap
+  url: capabilities/ankorstore-capability-edges.yml
+  name: Ankorstore Business Capability Map
 - type: Overlay
   url: overlays/ankorstore-astral-overlay.yaml
 - type: Documentation
