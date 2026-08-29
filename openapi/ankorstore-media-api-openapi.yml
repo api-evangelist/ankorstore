@@ -1,16 +1,9 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  version: 1.2.2-oas3.1
-  title: Ankorstore Stock Tracking and Logistics Applications Media API
-  summary: API specification for the Ankorstore Stock Tracking and Logistics system
-  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
-  contact:
-    name: Ankorstore
-    url: https://www.ankorstore.com
-    email: api@ankorstore.com
-  license:
-    url: https://creativecommons.org/publicdomain/zero/1.0/
-    name: CC0 1.0 Universal
+  version: 1.1.0
+  title: Fulfillment service Media API
+  summary: API specification for the fulfillment service
+  description: Operations for documents linked to fulfillment requests
 servers:
 - url: http://www.ankorlocal.com:8000
   description: Local Development Server
@@ -195,16 +188,65 @@ paths:
       - Media
 components:
   schemas:
-    MediaList:
-      type: array
-      description: List of media resources.
-      items:
-        $ref: '#/components/schemas/Media'
+    JsonApiObject:
+      type: object
+      description: JSON:API version information.
+      properties:
+        version:
+          type: string
+          example: '1.0'
+          description: JSON:API specification version.
+      additionalProperties: false
+    ErrorMeta:
+      type: object
+      description: Additional metadata for an error.
+      properties:
+        filename:
+          type: string
+          description: Name of the file related to the error.
+      additionalProperties: true
     ErrorList:
       type: array
       description: List of errors.
       items:
         $ref: '#/components/schemas/Error'
+    MediaList:
+      type: array
+      description: List of media resources.
+      items:
+        $ref: '#/components/schemas/Media'
+    MediaAttributes:
+      type: object
+      description: Attributes describing an uploaded document.
+      properties:
+        masterOrderUuid:
+          type: string
+          format: uuid
+          description: UUID of the master order associated with the document.
+        originalFilename:
+          type: string
+          description: Original file name.
+        createdAt:
+          type: string
+          format: date-time
+          description: Date and time when the document was created.
+        type:
+          type: string
+          enum:
+          - invoice
+          - attachment
+          default: attachment
+          description: Type of the document. Defaults to 'attachment' if not specified.
+        content:
+          type: string
+          description: 'Document content. Only present when explicitly requested.
+
+            '
+        encoding:
+          type: string
+          description: 'Encoding format used for the content field. Only present when explicitly requested.
+
+            '
     Error:
       type: object
       description: A single error item.
@@ -240,57 +282,3 @@ components:
           description: Resource type (always `media`).
         attributes:
           $ref: '#/components/schemas/MediaAttributes'
-    JsonApiObject:
-      type: object
-      description: JSON:API version information.
-      properties:
-        version:
-          type: string
-          example: '1.0'
-          description: JSON:API specification version.
-      additionalProperties: false
-    ErrorMeta:
-      type: object
-      description: Additional metadata for an error.
-      properties:
-        filename:
-          type: string
-          description: Name of the file related to the error.
-      additionalProperties: true
-    MediaAttributes:
-      type: object
-      description: Attributes describing an uploaded document.
-      properties:
-        masterOrderUuid:
-          type: string
-          format: uuid
-          description: UUID of the master order associated with the document.
-        originalFilename:
-          type: string
-          description: Original file name.
-        createdAt:
-          type: string
-          format: date-time
-          description: Date and time when the document was created.
-        type:
-          type: string
-          enum:
-          - invoice
-          - attachment
-          default: attachment
-          description: Type of the document. Defaults to 'attachment' if not specified.
-        content:
-          type: string
-          description: 'Document content. Only present when explicitly requested.
-
-            '
-        encoding:
-          type: string
-          description: 'Encoding format used for the content field. Only present when explicitly requested.
-
-            '
-  securitySchemes:
-    CookieKey:
-      type: apiKey
-      name: ankorstore_session
-      in: cookie

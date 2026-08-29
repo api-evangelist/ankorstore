@@ -1,23 +1,55 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  version: 1.2.2-oas3.1
-  title: Ankorstore Stock Tracking and Logistics Applications Webhooks API
-  summary: API specification for the Ankorstore Stock Tracking and Logistics system
-  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  version: 1.0.0
+  title: Ankorstore Public Webhooks API
+  description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
+
+    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
+
+    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
+
+
+    ### Quick Links
+
+
+    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
+
+    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
+
+    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
+
+    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
+
+    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
+
+    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
+
+
+    ### Support
+
+
+    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
+
+    '
   contact:
-    name: Ankorstore
-    url: https://www.ankorstore.com
+    name: Ankorstore Support
     email: api@ankorstore.com
+    url: https://www.ankorstore.com
   license:
-    url: https://creativecommons.org/publicdomain/zero/1.0/
     name: CC0 1.0 Universal
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+  x-prefix: Ankorstore
+  x-logo:
+    url: https://cdn.ankorstore.com/images/logo/logo-black.svg
+    altText: Ankorstore
+    href: /
 servers:
-- url: http://www.ankorlocal.com:8000
-  description: Local Development Server
-- url: https://www.preprod.ankorstore.com
+- url: https://www.public.ankorstore-sandbox.com
   description: Staging Environment
 - url: https://www.ankorstore.com
-  description: Prod Environment
+  description: Production Environment
+security:
+- ProductionOAuth2ClientCredentials: []
 tags:
 - name: Webhooks
   description: "ℹ️ This section describes the API endpoints which can be used for managing webhook subscriptions.\n\n## \U0001F4A1 Overview\nIn order to be able to manage Webhook Subscriptions via API you should understand the relationship model\naround webhook notifications system. In general, a Webhook Subscription always contains a list of chosen events\nand always belongs to an application. More on this later.\n\n### Application\nApplication is a representation of a single private integration. Whenever you create a new set of credentials for\naccessing API in your account, under the hood you create an Application entity. Once created, the entity allows you\nto attach as many Webhook Subscriptions as needed. It means, there's no way to manage Webhook Subscriptions outside of\nApplication context and this restriction is also reflected in the current API architecture.\n\n### Webhook Subscription\nWebhook Subscription is an entity representing \"an intent of receiving HTTP requests to the specified URL whenever\none of the chosen Webhook Subscription Events is triggered on the platform\". For every new URL you should create a\nseparate Webhook Subscription.\n\n### Webhook Subscription Events\nWebhook Subscription Event is a name of the corresponding event fired on certain conditions on the platform. There are\na list of only valid and supported events which can be used in the Webhook Subscription management. You can fetch this\nlist using a corresponding [endpoint](#tag/Webhooks/operation/get-available-webhook-events)\n\n## \U0001F4A1 How to create a new webhook subscription?\n\n### 1. Find ApplicationID\nAs it was mentioned above, Webhook Subscription always belong to some application. Hence, you should start from\nfinding out the ID of the target Application in order to link the new Webhook Subscription to it. For this purpose\nyou should use [List Applications](#tag/Applications/operation/list-applications) endpoint. This endpoint returns\na list of all available Applications in your account, so you could identify the needed one by `name`, `developerEmail`\nor `clientId` in the Application resource body:\n\n`GET https://ankorstore.com/api/v1/applications`\n```json\n{\n  \"data\": {\n    \"id\": \"43efbfbd-bfbd-1eef-1e6a-6200efbfbdef\",\n    \"type\": \"application\",\n    \"attributes\": {\n      \"name\": \"My Application\",\n      \"developerEmail\": \"dev@acme.com\",\n      \"clientId\": \"k322k7frs87e8w7hri3jkke7ry7\",\n      \"clientSecret\": null\n    }\n  }\n}\n```\n**NOTE**: The client secret in the response is always `null` due to security reasons. The actual client secret\ncan be seen only via UI and only once - during the creation of the application.\n\n### 2. Find valid webhook events to subscribe to\nNext step should be to find the valid names of the webhook events which you could use in the create webhook request\npayload:\n\n`GET https://ankorstore.com/api/v1/webhook-subscriptions/events`\n```json\n{\n  \"data\": [\n    {\n      \"type\": \"webhook-subscriptions/events\",\n      \"id\": \"order.brand_created\"\n    },\n    {\n      \"type\": \"webhook-subscriptions/events\",\n      \"id\": \"order.brand_accepted\"\n    }\n  ]\n}\n```\nYou can find detailed description of each event in the [dedicated section](#tag/Webhook-Subscription) of the docs.\n\n### 3. Create webhook subscription\nNow you are all set for creating actual webhook subscription. The prerequisites for this step are:\n- The Application ID from step 1 (`43efbfbd-bfbd-1eef-1e6a-6200efbfbdef` in this example)\n- The chosen events from step 2 (e.g. `order.brand_created` and `order.brand_accepted`)\nWith this setup the final request should look like:\n\n`POST https://ankorstore.com/api/v1/webhook-subscriptions`\n```json\n{\n  \"data\": {\n    \"type\": \"webhook-subscriptions\",\n    \"attributes\": {\n      \"url\": \"https://my-app.com/webhook-listener\",\n      \"events\": [\n        \"order.brand_created\",\n        \"order.brand_accepted\"\n      ]\n    },\n    \"relationships\": {\n      \"application\": {\n        \"data\": {\n          \"type\": \"applications\",\n          \"id\": \"43efbfbd-bfbd-1eef-1e6a-6200efbfbdef\"\n        }\n      }\n    }\n  }\n}\n```\nAfter this request is succeeded, you will start receiving notification about chosen events on the chosen URL.\n\n## \U0001F4A1 How to manage existing Webhook Subscriptions?\nFor most of the operations with an existing Webhook Subscription you need to fetch its ID first. It can be achieved by\nusing [List Applications](#tag/Applications/operation/list-applications) endpoint and explicit including\nthe Webhook Subscription resource into the response.\n\n`GET /api/v1/applications?include=webhookSubscriptions`\n```json\n{\n  \"data\": {\n    \"id\": \"`43efbfbd-bfbd-1eef-1e6a-6200efbfbdef\",\n    \"type\": \"applications\",\n    \"attributes\": {},\n    \"relationships\": {\n      \"webhookSubscriptions\": {\n        \"data\": [\n          {\n            \"type\": \"webhook-subscriptions\",\n            \"id\": \"a863e15d-3d20-4af2-b92b-d9590a4a9606\"\n          }\n        ]\n      }\n    }\n  },\n  \"includes\": [\n    {\n      \"type\": \"webhook-subscriptions\",\n      \"id\": \"a863e15d-3d20-4af2-b92b-d9590a4a9606\",\n      \"attributes\": {\n        \"url\": \"https://my-app.com/webhook-listener\",\n        \"events\": [\n          \"order.brand_created\",\n          \"order.brand_accepted\"\n        ],\n        \"signingSecret\": \"LQxZs6kiSyNr45hjT32OsntYddzH4BvToLIQcgSL\"\n      }\n    }\n  ]\n}\n```\n\nThe data in this response gives you an idea about the current Webhook Subscription state and also lets you update\nor delete Webhook Subscriptions, whenever needed. For updating or deleting Webhook Subscription you need to use the\nWebhook Subscription ID received in the response (`a863e15d-3d20-4af2-b92b-d9590a4a9606` in this particular case). Please\nrefer to the [Update webhook subscription](#tag/Webhooks/operation/update-application-webhook-subscription)\nand [Delete webhook subscription](#tag/Webhooks/operation/delete-application-webhook-subscription) endpoints\nfor detailed information.\n"
@@ -183,7 +215,7 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: &id001
+                    properties:
                       version:
                         type: string
                       meta:
@@ -200,7 +232,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: &id002
+                properties:
                   errors:
                     type: array
                     uniqueItems: true
@@ -234,9 +266,15 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: *id001
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
                     additionalProperties: false
-                required: &id003
+                required:
                 - errors
               example:
                 jsonapi:
@@ -251,8 +289,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id002
-                required: *id003
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -266,8 +346,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id002
-                required: *id003
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -281,8 +403,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id002
-                required: *id003
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -296,8 +460,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id002
-                required: *id003
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -379,7 +585,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: &id004
+                properties:
                   errors:
                     type: array
                     uniqueItems: true
@@ -421,7 +627,7 @@ paths:
                         type: object
                         additionalProperties: true
                     additionalProperties: false
-                required: &id005
+                required:
                 - errors
               example:
                 jsonapi:
@@ -436,8 +642,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id004
-                required: *id005
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -451,8 +699,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id004
-                required: *id005
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -466,8 +756,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id004
-                required: *id005
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -560,7 +892,7 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: &id006
+                    properties:
                       version:
                         type: string
                       meta:
@@ -592,7 +924,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: &id007
+                properties:
                   errors:
                     type: array
                     uniqueItems: true
@@ -626,9 +958,15 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: *id006
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
                     additionalProperties: false
-                required: &id008
+                required:
                 - errors
               example:
                 jsonapi:
@@ -643,8 +981,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id007
-                required: *id008
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -658,8 +1038,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id007
-                required: *id008
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -673,8 +1095,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id007
-                required: *id008
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -688,8 +1152,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id007
-                required: *id008
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -703,8 +1209,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id007
-                required: *id008
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -718,8 +1266,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id007
-                required: *id008
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -882,7 +1472,7 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: &id009
+                    properties:
                       version:
                         type: string
                       meta:
@@ -914,7 +1504,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: &id010
+                properties:
                   errors:
                     type: array
                     uniqueItems: true
@@ -948,9 +1538,15 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: *id009
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
                     additionalProperties: false
-                required: &id011
+                required:
                 - errors
               example:
                 jsonapi:
@@ -965,8 +1561,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id010
-                required: *id011
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -980,8 +1618,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id010
-                required: *id011
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -995,8 +1675,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id010
-                required: *id011
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1010,8 +1732,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id010
-                required: *id011
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1025,8 +1789,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id010
-                required: *id011
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1144,7 +1950,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: &id012
+                properties:
                   errors:
                     type: array
                     uniqueItems: true
@@ -1186,7 +1992,7 @@ paths:
                         type: object
                         additionalProperties: true
                     additionalProperties: false
-                required: &id013
+                required:
                 - errors
               example:
                 jsonapi:
@@ -1201,8 +2007,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id012
-                required: *id013
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1216,8 +2064,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id012
-                required: *id013
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1231,8 +2121,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id012
-                required: *id013
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1246,8 +2178,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id012
-                required: *id013
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1256,7 +2230,49 @@ paths:
                   status: '500'
 components:
   securitySchemes:
-    CookieKey:
-      type: apiKey
-      name: ankorstore_session
-      in: cookie
+    ProductionOAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://www.ankorstore.com/oauth/token
+          refreshUrl: https://www.ankorstore.com/oauth/token
+          scopes: {}
+    TestOauth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://www.public.ankorstore-sandbox.com/oauth/token
+          refreshUrl: https://www.public.ankorstore-sandbox.com/oauth/token
+          scopes: {}
+externalDocs:
+  description: Ankorstore API Specification
+  url: https://api-spec.ankorstore.com
+x-tagGroups:
+- name: Main
+  tags:
+  - Getting Started
+  - How to work with API
+  - Authentication
+  - Available APIs
+  - Integration Scenarios
+  - Webhook Subscription
+  - Error Handling
+  - Changelog
+  - Testing API
+  - Fair Use Statement
+- name: API Resource Endpoints
+  tags:
+  - Applications
+  - Brands
+  - General
+  - User
+  - Catalog
+  - Catalog Integrations
+  - Integration
+  - Ordering
+  - Shipping
+  - Fulfillment
+  - OrderPay
+  - Webhooks
+  - Testing
+  - Deprecated

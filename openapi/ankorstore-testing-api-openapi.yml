@@ -1,23 +1,55 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  version: 1.2.2-oas3.1
-  title: Ankorstore Stock Tracking and Logistics Applications Testing API
-  summary: API specification for the Ankorstore Stock Tracking and Logistics system
-  description: Ankorstore Stock Tracking and Logistics (ASTRAL) API specification
+  version: 1.0.0
+  title: Ankorstore Public Testing API
+  description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
+
+    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
+
+    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
+
+
+    ### Quick Links
+
+
+    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
+
+    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
+
+    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
+
+    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
+
+    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
+
+    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
+
+
+    ### Support
+
+
+    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
+
+    '
   contact:
-    name: Ankorstore
-    url: https://www.ankorstore.com
+    name: Ankorstore Support
     email: api@ankorstore.com
+    url: https://www.ankorstore.com
   license:
-    url: https://creativecommons.org/publicdomain/zero/1.0/
     name: CC0 1.0 Universal
+    url: https://creativecommons.org/publicdomain/zero/1.0/
+  x-prefix: Ankorstore
+  x-logo:
+    url: https://cdn.ankorstore.com/images/logo/logo-black.svg
+    altText: Ankorstore
+    href: /
 servers:
-- url: http://www.ankorlocal.com:8000
-  description: Local Development Server
-- url: https://www.preprod.ankorstore.com
+- url: https://www.public.ankorstore-sandbox.com
   description: Staging Environment
 - url: https://www.ankorstore.com
-  description: Prod Environment
+  description: Production Environment
+security:
+- ProductionOAuth2ClientCredentials: []
 tags:
 - name: Testing
   description: "ℹ️ This section is dedicated to the testing API during development process. \nThe listed endpoints are **not available** on production environment.\n\n### Creating Test Orders\n\nWhen using the public sandbox, a subsection of the API will be available to create test orders.\n\nThis endpoint `/api/testing/orders/create` can be called to create a new test order with a new retailer,\nand a couple of new products.\n\nYou can also pass in options to specify the exact retailer or products themselves.\nTo find out more, you can view the [endpoint specification here](a45de155779ff-create-test-order-sandbox-only).\n\n### Finding the Retailer ID\n\nThere is an option to specify the `retailerId` to use the same retailer for every test order, to find this, \nlogin as that retailer you created and open up the developer tools. You will see it logged to the console.\n"
@@ -538,7 +570,7 @@ paths:
                                           type: string
                                         currentStatus:
                                           type: object
-                                          properties: &id001
+                                          properties:
                                             status:
                                               type: string
                                               description: The current status of the order/parcel
@@ -638,7 +670,45 @@ paths:
                                         description: The tracking link for the order
                                       currentStatus:
                                         type: object
-                                        properties: *id001
+                                        properties:
+                                          status:
+                                            type: string
+                                            description: The current status of the order/parcel
+                                            enum:
+                                            - UNKNOWN
+                                            - PRE_TRANSIT
+                                            - DELIVERED
+                                            - RETURNED
+                                            - FAILURE
+                                          statusDetails:
+                                            description: Human readable version of status
+                                            type:
+                                            - string
+                                            - 'null'
+                                          updatedAt:
+                                            type: string
+                                            description: Last time the status was updated
+                                            format: datetime
+                                          location:
+                                            type: object
+                                            description: Last known location
+                                            properties:
+                                              city:
+                                                type:
+                                                - 'null'
+                                                - string
+                                              state:
+                                                type:
+                                                - 'null'
+                                                - string
+                                              zip:
+                                                type:
+                                                - 'null'
+                                                - string
+                                              country:
+                                                type:
+                                                - 'null'
+                                                - string
                                 required:
                                 - pickup
                                 - tracking
@@ -726,10 +796,10 @@ paths:
                                 allOf:
                                 - description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                   type: object
-                                  required: &id002
+                                  required:
                                   - id
                                   - type
-                                  properties: &id003
+                                  properties:
                                     id:
                                       type: string
                                       description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
@@ -757,8 +827,21 @@ paths:
                                   allOf:
                                   - description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                     type: object
-                                    required: *id002
-                                    properties: *id003
+                                    required:
+                                    - id
+                                    - type
+                                    properties:
+                                      id:
+                                        type: string
+                                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        format: uuid
+                                      type:
+                                        type: string
+                                        description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      meta:
+                                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                        type: object
+                                        additionalProperties: true
                                     additionalProperties: false
                                   - type: object
                                     properties:
@@ -775,8 +858,21 @@ paths:
                                   allOf:
                                   - description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                     type: object
-                                    required: *id002
-                                    properties: *id003
+                                    required:
+                                    - id
+                                    - type
+                                    properties:
+                                      id:
+                                        type: string
+                                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        format: uuid
+                                      type:
+                                        type: string
+                                        description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      meta:
+                                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                        type: object
+                                        additionalProperties: true
                                     additionalProperties: false
                                   - type: object
                                     properties:
@@ -789,8 +885,21 @@ paths:
                               data:
                                 description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                 type: object
-                                required: *id002
-                                properties: *id003
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
                                 additionalProperties: false
                           orderItems-productOption-product:
                             description: 'Schema: Order Item -> Product Option Resource -> Product'
@@ -799,8 +908,21 @@ paths:
                               data:
                                 description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                 type: object
-                                required: *id002
-                                properties: *id003
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
                                 additionalProperties: false
                           orderItems-productVariant:
                             description: 'Schema: Order Item -> Product Variant Resource'
@@ -809,8 +931,21 @@ paths:
                               data:
                                 description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                 type: object
-                                required: *id002
-                                properties: *id003
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
                                 additionalProperties: false
                           orderItems-productVariant-product:
                             description: 'Schema: Order Item -> Product Variant Resource -> Product'
@@ -819,8 +954,21 @@ paths:
                               data:
                                 description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                 type: object
-                                required: *id002
-                                properties: *id003
+                                required:
+                                - id
+                                - type
+                                properties:
+                                  id:
+                                    type: string
+                                    description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                    format: uuid
+                                  type:
+                                    type: string
+                                    description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                  meta:
+                                    description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                    type: object
+                                    additionalProperties: true
                                 additionalProperties: false
                     required:
                     - type
@@ -921,11 +1069,24 @@ paths:
                                   data:
                                     description: An array of objects each containing `type` and `id` members for to-many relationships.
                                     type: array
-                                    items: &id004
+                                    items:
                                       description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                       type: object
-                                      required: *id002
-                                      properties: *id003
+                                      required:
+                                      - id
+                                      - type
+                                      properties:
+                                        id:
+                                          type: string
+                                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                          format: uuid
+                                        type:
+                                          type: string
+                                          description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        meta:
+                                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                          type: object
+                                          additionalProperties: true
                                       additionalProperties: false
                                     uniqueItems: true
                         required:
@@ -1008,7 +1169,25 @@ paths:
                                   data:
                                     description: An array of objects each containing `type` and `id` members for to-many relationships.
                                     type: array
-                                    items: *id004
+                                    items:
+                                      description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                      type: object
+                                      required:
+                                      - id
+                                      - type
+                                      properties:
+                                        id:
+                                          type: string
+                                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                          format: uuid
+                                        type:
+                                          type: string
+                                          description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        meta:
+                                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                          type: object
+                                          additionalProperties: true
+                                      additionalProperties: false
                                     uniqueItems: true
                           meta:
                             description: Non-standard meta-information that can not be represented as an attribute or relationship.
@@ -1181,8 +1360,21 @@ paths:
                                   data:
                                     description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                     type: object
-                                    required: *id002
-                                    properties: *id003
+                                    required:
+                                    - id
+                                    - type
+                                    properties:
+                                      id:
+                                        type: string
+                                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        format: uuid
+                                      type:
+                                        type: string
+                                        description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      meta:
+                                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                        type: object
+                                        additionalProperties: true
                                     additionalProperties: false
                         required:
                         - type
@@ -1329,8 +1521,21 @@ paths:
                                   data:
                                     description: Resource identification present in Resource Objects and Resource Identifier Objects.
                                     type: object
-                                    required: *id002
-                                    properties: *id003
+                                    required:
+                                    - id
+                                    - type
+                                    properties:
+                                      id:
+                                        type: string
+                                        description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        format: uuid
+                                      type:
+                                        type: string
+                                        description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                      meta:
+                                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                        type: object
+                                        additionalProperties: true
                                     additionalProperties: false
                         required:
                         - type
@@ -1449,7 +1654,25 @@ paths:
                                   data:
                                     description: An array of objects each containing `type` and `id` members for to-many relationships.
                                     type: array
-                                    items: *id004
+                                    items:
+                                      description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                      type: object
+                                      required:
+                                      - id
+                                      - type
+                                      properties:
+                                        id:
+                                          type: string
+                                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                          format: uuid
+                                        type:
+                                          type: string
+                                          description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        meta:
+                                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                          type: object
+                                          additionalProperties: true
+                                      additionalProperties: false
                                     uniqueItems: true
                               productVariant:
                                 description: 'Reference: Product Variant Resource'
@@ -1458,7 +1681,25 @@ paths:
                                   data:
                                     description: An array of objects each containing `type` and `id` members for to-many relationships.
                                     type: array
-                                    items: *id004
+                                    items:
+                                      description: Resource identification present in Resource Objects and Resource Identifier Objects.
+                                      type: object
+                                      required:
+                                      - id
+                                      - type
+                                      properties:
+                                        id:
+                                          type: string
+                                          description: '[resource object identifier (uuid)](https://jsonapi.org/format/#document-resource-object-identification)'
+                                          format: uuid
+                                        type:
+                                          type: string
+                                          description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+                                        meta:
+                                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                                          type: object
+                                          additionalProperties: true
+                                      additionalProperties: false
                                     uniqueItems: true
                         required:
                         - type
@@ -1466,7 +1707,7 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: &id005
+                    properties:
                       version:
                         type: string
                       meta:
@@ -1534,7 +1775,7 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: &id006
+                properties:
                   errors:
                     type: array
                     uniqueItems: true
@@ -1568,9 +1809,15 @@ paths:
                   jsonapi:
                     description: An object describing the server's implementation
                     type: object
-                    properties: *id005
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
                     additionalProperties: false
-                required: &id007
+                required:
                 - errors
               example:
                 jsonapi:
@@ -1585,8 +1832,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id006
-                required: *id007
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1600,8 +1889,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: false
-                properties: *id006
-                required: *id007
+                properties:
+                  errors:
+                    type: array
+                    uniqueItems: true
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          description: An application-specific error code, expressed as a string value.
+                          type: string
+                        detail:
+                          description: A human-readable explanation specific to this occurrence of the problem.
+                          type: string
+                        status:
+                          description: The HTTP status code applicable to this problem, expressed as a string value.
+                          type: string
+                        title:
+                          description: The HTTP status code description applicable to this problem
+                          type: string
+                        source:
+                          type: object
+                          description: Optional object pointing towards the problematic field
+                          properties:
+                            pointer:
+                              type: string
+                              description: The field key
+                        meta:
+                          description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                          type: object
+                          additionalProperties: true
+                      additionalProperties: false
+                  jsonapi:
+                    description: An object describing the server's implementation
+                    type: object
+                    properties:
+                      version:
+                        type: string
+                      meta:
+                        description: Non-standard meta-information that can not be represented as an attribute or relationship.
+                        type: object
+                        additionalProperties: true
+                    additionalProperties: false
+                required:
+                - errors
               example:
                 jsonapi:
                   version: '1.0'
@@ -1610,7 +1941,49 @@ paths:
                   status: '415'
 components:
   securitySchemes:
-    CookieKey:
-      type: apiKey
-      name: ankorstore_session
-      in: cookie
+    ProductionOAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://www.ankorstore.com/oauth/token
+          refreshUrl: https://www.ankorstore.com/oauth/token
+          scopes: {}
+    TestOauth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://www.public.ankorstore-sandbox.com/oauth/token
+          refreshUrl: https://www.public.ankorstore-sandbox.com/oauth/token
+          scopes: {}
+externalDocs:
+  description: Ankorstore API Specification
+  url: https://api-spec.ankorstore.com
+x-tagGroups:
+- name: Main
+  tags:
+  - Getting Started
+  - How to work with API
+  - Authentication
+  - Available APIs
+  - Integration Scenarios
+  - Webhook Subscription
+  - Error Handling
+  - Changelog
+  - Testing API
+  - Fair Use Statement
+- name: API Resource Endpoints
+  tags:
+  - Applications
+  - Brands
+  - General
+  - User
+  - Catalog
+  - Catalog Integrations
+  - Integration
+  - Ordering
+  - Shipping
+  - Fulfillment
+  - OrderPay
+  - Webhooks
+  - Testing
+  - Deprecated
