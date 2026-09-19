@@ -1042,6 +1042,8 @@ apis:
   humanURL: https://ankorstore.github.io/api-docs/
   baseURL: https://www.ankorstore.com
   tags:
+  - Location
+  tags_raw:
   - Locations
   properties:
   - type: OpenAPI
