@@ -11,7 +11,7 @@ capability_model:
   attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
     CC BY 4.0
   notice: NOTICE
-edge_count: 2
+edge_count: 4
 edges:
 - tag: Webhooks
   spec_file: ankorstore-webhooks-api-openapi.yml
@@ -35,3 +35,26 @@ edges:
   reason: The surface orchestrates master orders into fulfilment orders, checks fulfillability and requests
     fulfilment — order promising and fulfilment orchestration. Billing-export operations are secondary
     reporting artefacts.
+- tag: State
+  spec_file: ankorstore-state-api-openapi.yml
+  capability_id: BC-530
+  capability_id_l1: BC-530
+  capability_name: Inventory Management
+  confidence: 0.78
+  evidence: GET /api/astral/v1/stock/state  Stock quantities by location and status; PATCH /api/astral/v1/stock/state  Update
+    stock state
+  reason: Reads and updates stock quantities by location and status (ProductVariantStockState, StockStatus,
+    Lot) — inventory stock position management. No specific L2 named by the evidence.
+  recovered_from: vertical-retail-consumer-goods-edges.json
+- tag: Movements
+  spec_file: ankorstore-movements-api-openapi.yml
+  capability_id: BC-530
+  capability_id_l1: BC-530
+  capability_name: Inventory Management
+  confidence: 0.72
+  evidence: 'List postings; List transactions; schemas: MovementType, StockStatus, ProductVariantStockQuantity,
+    Lot'
+  reason: Stock ledger movements — postings and transactions with MovementType and stock quantities per
+    product variant and lot. This is inventory stock movement tracking; no single L2 fits cleanly (not
+    target levels, not cycle counting).
+  recovered_from: vertical-retail-consumer-goods-edges.json
