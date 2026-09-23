@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Shipping API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,7 +26,7 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: Shipping
-  description: "ℹ️ Here your can find endpoints related to different types of shipping, available on the platform.\n\n<div class=\"warning\">\n\nPlease note, that shipping information described here is only available for _Internal Orders_.\nFor more details check the [Orders](#tag/Ordering/General-conceptions) section.\n\n</div>\n\n## \U0001F4A1 How to ship an Internal Order?\n\nFor shipping an internal order, Ankorstore provides two methods:\n- `Ankorstore Label` method : For this method, the shipping will be handled by Ankorstore carrier partners. The cost of shipping will be charged to the brand.\n- `Brand Label` method : For this method, the shipping will be handled by the brand itself and Ankorstore will provide a refund.\n\nTo retrieve the shipping quotes, the brand must call the following endpoint:\n- Get quote list : `/v1/orders/:orderId/shipping-quotes`\n\nIn the list of quotes, the `Ankorstore Label` method can be found by the carrier name `ankorstore` :\n```json\n{\n    \"data\": [\n        {\n            \"quoteUuid\": \"1efcd179-5753-6ee0-91a4-72a6c4e49e6a\",\n            \"carrierCode\": \"ankorstore\",\n            \"serviceCode\": \"\",\n            \"serviceCommercialName\": \"\",\n            \"collectionMethod\": [],\n            \"shippingCost\": {\n                // Amount refunded to the brand if the quote is selected\n                \"amount\": 1006,\n                \"currency\": \"EUR\"\n            },\n            \"timeInTransit\": null\n        }\n    ]\n}\n```\nOther methods have a different `carrierCode`:\n```json\n{\n    \"data\": [\n        {\n            \"quoteUuid\": \"1edd47df-b91a-68b0-b517-52e73cd28d4f\",\n            \"carrierCode\": \"ups\",\n            \"serviceCode\": \"11\",\n            \"serviceCommercialName\": \"UPS Standard\",\n            \"collectionMethod\": [\n                \"pickup\",\n                \"drop-off\"\n            ],\n            \"shippingCost\": {\n                // Amount subtracted from total amount if the quote is selected\n                \"amount\": 807,\n                \"currency\": \"EUR\"\n            },\n            \"timeInTransit\": {\n                \"estimatedDeliveryDate\": \"2025-01-10\",\n                \"pickupDate\": \"2025-01-08\",\n                \"businessDaysInTransit\": 2\n            }\n        }\n    ]\n}\n```\n\nOnce the quote is generated, the brand must confirm the selected one by calling :\n- Confirm shipping : `/v1/shipping-quotes/:quoteId/confirm`\n\n<div class=\"info\">\n\nTo find out more about Ankorstore's shipping options, please [visit our FAQs.](https://ankorstoresas.my.site.com/faq/s/article/what-shipping-options-are-available-with-ankorstore?language=en_US)\n\n</div>\n\nThe brand can list many quotes before they decide to **confirm** the quote. An example flow:\n\n<pre class=\"mermaid\">\nflowchart LR\n    A[Start] --> B[Get shipping quote list: <br> orders/:orderId/shipping-quotes]\n    B --> B.1{ankorstore carrier quote selected ?}\n    B.1 -- NO --> B.YES[The brand will get the quote amount as a refund for the shipping]\n    B.1 -- YES --> B.NO[The brand will be charged for the shipping by the quote amount]\n    B.YES --> D[I Confirm the quote: <br> shipping-quotes/:quoteId/confirm]\n    B.NO --> D\n</pre>\n\n<div class=\"warning\">\n\n#### Parcels\n\nOn either shipping method, if the brand has previously generated a quote and is now generating a new one\nthe full list of parcels must be provided. The quote endpoint **cannot** be called with an empty parcel list\nto re-use the old parcel data.\n\n</div>\n\n<div class=\"danger\">\n\n#### Confirming a quote\n\nTo confirm a quote, the ID must be provided when calling the `/v1/shipping-quotes/:quoteId/confirm` endpoint.\n\n</div>\n\nAll information regarding shipping and tracking is stored within the `shippingOverview` object. This includes the `latestQuote` generated and the `shippingCostsOverview`.\n\n## \U0001F4A1 Shipping Costs\n\nIn the endpoint for listing quotes `v1/orders/:orderId/shipping-quotes`, the shipping cost of the selected\nquote will be the **fee** subtracted from total amount for carriers (`ups`, `dhl_express`, etc) and a **refund** amount\nfor `ankorstore` carrier (amount refunded to the brand):\n```json\n{\n    \"data\": [\n        {\n            \"quoteUuid\": \"1edd47df-b91a-68b0-b517-52e73cd28d4f\",\n            \"carrierCode\": \"ups\",\n            \"serviceCode\": \"11\",\n            \"serviceCommercialName\": \"UPS Standard\",\n            \"collectionMethod\": [\n                \"pickup\",\n                \"drop-off\"\n            ],\n            \"shippingCost\": {\n                // Amount subtracted from total amount if the quote is selected\n                \"amount\": 807,\n                \"currency\": \"EUR\"\n            }\n        },\n        {\n            \"quoteUuid\": \"1efcd179-5753-6ee0-91a4-72a6c4e49e6a\",\n            \"carrierCode\": \"ankorstore\",\n            \"serviceCode\": \"\",\n            \"serviceCommercialName\": \"\",\n            \"collectionMethod\": [],\n            \"shippingCost\": {\n                // Amount refunded to the brand if the quote is selected\n                \"amount\": 1006,\n                \"currency\": \"EUR\"\n            }\n        }\n    ]\n}\n```\n\n<div class=\"info\">\n\n#### Want more information about shipping contribution?\n\nTo find out more about Ankorstore's contribution to your shipping costs, please [visit our FAQs.](https://knowledgecommunity.force.com/faq/s/article/shippingpolicy?language=en_US)\n\n</div>\n\n### Shipping with Brand Label\n\nThe quote action will return an amount that will be refunded back to the brand based on the shipping grid refund matrix.\n\nThe confirm action is synchronous, meaning when the action is called the order resource will have its status\nchanged to `shipped` upon returning a response. It is up to brand to provide tracking details for the retailer when calling this action.\n\n<pre class=\"mermaid\">\nsequenceDiagram\n  participant O as Order\n  participant SWC as Ship : orders/:orderId/shipping-quotes\n  participant SC as Confirm : shipping-quotes/:quoteId/confirm\n  participant SH as Shipped\n\n  O->>SWC: List quotes\n  SWC-->>O: Quote OK\n  O->>SC: Confirm 'ankorstore' carrier quote\n  SC->>SH: Status\n  SC-->>O: OK\n</pre>\n\n<div class=\"info\">\n\nIn the `orders/:orderId/shipping-quotes` endpoint response, the quote uuid generated is the following:\n\n```json\n {\n    \"quoteUuid\": \"1efcd179-56c1-6432-98e7-72a6c4e49e6a\",\n    \"carrierCode\": \"ankorstore\",\n     ...\n   }\n }\n```\n\n</div>\n\n### Shipping with Ankorstore Label (carrier name like ups, dhl_express, etc)\n\nWhen calling the `confirm` action for the order's Ankorstore shipping quote, the returned order resource's status\nwill still be `brand_confirmed`. A job in the background will generate the shipping labels for the order.\nIt is this background processing that moves the status to `shipping_labels_generated`.\n\n<div class=\"info\">\n\n#### How will I know when the labels have been generated?\n\nRight now, the order must be polled periodically. Checking every minute would be suitable to detect the status change\nand then pull the label PDF data within the shippingOverview of an order resource.\n\n</div>\n\n<pre class=\"mermaid\">\nsequenceDiagram\n  participant O as Order\n  participant SWA as Ship with Ankorstore Label : <br> orders/:orderId/shipping-quotes\n  participant SC as Confirm shipping : <br> shipping-quotes/:quoteId/confirm\n  participant BG as Async Processing\n  participant C as Carrier\n  participant SH as Shipped\n\n  O->>SWA: Get shipping quote list\n  SWA-->>O: I accept one quote\n  O->>SC: I confirm the quote\n  SC-->>O: OK status=brand_confirmed\n  SC-->>BG: Dispatch generate labels job\n  Note over SC,BG: Async worker job\n  BG-->>O: Labels generated, status=shipping_labels_generated\n  Note over BG,O: (Async worker)\n  C-->>SH: Parcels scanned, status=shipped\n  Note over C,SH: (External service)\n</pre>\n\nAt step 6 (shipping labels generated) the download URL's for each packages label will be available within\nthe shippingOverview of an order resource. These labels are in PDF format and will also be visible in order details page on Ankorstore.\n\nIn the `orders/:orderId/shipping-quotes` endpoint response, the quote uuid generated is the following:\n\n```json\n {\n    \"quoteUuid\": \"1efcd179-56c1-6432-98e7-72a6c4e49e6a\",\n    \"carrierCode\": \"ups\",\n     ...\n   }\n }\n```\n\n### Schedule a Pickup\n\nIf the brand is not taking the parcels to the local drop-off point for the carrier the brand can schedule a pickup\nfor this order. A pickup can only be scheduled on a working day (monday to friday).\nFor full information please refer to the API documentation.\n\n<div class=\"info\">\n\n#### Pickup is not accepted\n\nFor now, Ankorstore does not know in advance which date/time configuration is available,\nif the requested pickup is denied please try a different date or time frame.\n\n</div>\n\n## ⚠️ Deprecation notice\n\n<div class=\"warning\">\n\nSome of the endpoints and documents from this section are deprecated and will be removed in the future.\nYou can temporarily still find them [here](#tag/Deprecated).\n\n</div>\n"
+  description: ℹ️ Here your can find endpoints related to different types of shipping, available on the platform.
 paths:
   /api/v1/master-orders/{orderId}/tracking:
     get:
@@ -2189,9 +2163,7 @@ paths:
       operationId: list-order-shipping-quotes
       description: 'List multiple carrier service quotes that you can choose to ship your order.
 
-        Please visit our [FAQs](https://knowledgecommunity.force.com/faq/s/article/how-do-i-benefit-from-shipping-with-ankorstore?language=en_US) for more information.''
-
-        '
+        Please visit our FAQs for more information.'''
       tags:
       - Shipping
       parameters:
@@ -2672,9 +2644,7 @@ paths:
       operationId: confirm-order-shipping-quote
       description: 'Use this endpoint to confirm which quote you want to use to ship your order.
 
-        You can confirm either custom or ankorstore quote.
-
-        '
+        You can confirm either custom or ankorstore quote.'
       tags:
       - Shipping
       parameters:
@@ -5529,9 +5499,7 @@ paths:
 
         The API automatically detects whether you''re performing a full or partial update based on the fields present in the request.
 
-        Partial updates preserve existing values for omitted fields, making it perfect for field-by-field updates.
-
-        '
+        Partial updates preserve existing values for omitted fields, making it perfect for field-by-field updates.'
       parameters:
       - name: Accept
         in: header

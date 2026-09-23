@@ -40,7 +40,8 @@
     "ankorstore-main-openapi-original.yml: declared missing tag: Brands",
     "ankorstore-main-openapi-original.yml: declared missing tag: Integration",
     "ankorstore-main-openapi-original.yml: declared missing tag: Stock Management",
-    "ankorstore-main-openapi-original.yml: declared missing tag: Users"
+    "ankorstore-main-openapi-original.yml: declared missing tag: Users",
+    "apis.yml register: already-registered"
   ],
   "skipped": [
     "ankorstore-applications-api-openapi.yml: previously refined output, superseded by openapi/_original/",

@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Catalog Exchange API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -68,9 +42,7 @@ paths:
 
         The operation is idempotent per PIM import job: a second call for the same `pim_import_job_id` returns
 
-        the existing report instead of creating a new one.
-
-        '
+        the existing report instead of creating a new one.'
       tags:
       - Catalog Exchange
       requestBody:
@@ -1478,9 +1450,7 @@ paths:
       operationId: catalog-exchange-error-reports-download
       description: 'Streams the generated XLSX file for a completed error report. The endpoint returns 404 if the report is
 
-        not yet completed or if it has expired (reports are retained for 30 days after completion).
-
-        '
+        not yet completed or if it has expired (reports are retained for 30 days after completion).'
       tags:
       - Catalog Exchange
       parameters:

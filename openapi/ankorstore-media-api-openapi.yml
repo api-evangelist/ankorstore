@@ -18,9 +18,7 @@ paths:
   /api/fulfillment/v1/media:
     delete:
       summary: Delete every media linked to a masterOrderUUID
-      description: 'Delete one or more PDF documents linked to a fulfillment order (`masterOrderUuid`).
-
-        '
+      description: Delete one or more PDF documents linked to a fulfillment order (`masterOrderUuid`).
       operationId: deleteMediaByMasterOrder
       parameters:
       - name: masterOrderUuid
@@ -39,9 +37,7 @@ paths:
       - Media
     get:
       summary: List media documents
-      description: 'Retrieve all media documents linked to a fulfillment order (`masterOrderUuid`).
-
-        '
+      description: Retrieve all media documents linked to a fulfillment order (`masterOrderUuid`).
       operationId: listMedia
       parameters:
       - in: query
@@ -118,9 +114,7 @@ paths:
   /api/fulfillment/v1/media/upload:
     post:
       summary: Upload PDF documents
-      description: 'Upload one or more PDF documents linked to a fulfillment order (`masterOrderUuid`). Each document may include its own UUID, or the backend can generate one if not provided.
-
-        '
+      description: Upload one or more PDF documents linked to a fulfillment order (`masterOrderUuid`). Each document may include its own UUID, or the backend can generate one if not provided.
       operationId: uploadMedia
       requestBody:
         required: true
@@ -188,6 +182,20 @@ paths:
       - Media
 components:
   schemas:
+    Media:
+      type: object
+      description: Representation of a media resource.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the uploaded document.
+        type:
+          type: string
+          example: media
+          description: Resource type (always `media`).
+        attributes:
+          $ref: '#/components/schemas/MediaAttributes'
     JsonApiObject:
       type: object
       description: JSON:API version information.
@@ -197,24 +205,6 @@ components:
           example: '1.0'
           description: JSON:API specification version.
       additionalProperties: false
-    ErrorMeta:
-      type: object
-      description: Additional metadata for an error.
-      properties:
-        filename:
-          type: string
-          description: Name of the file related to the error.
-      additionalProperties: true
-    ErrorList:
-      type: array
-      description: List of errors.
-      items:
-        $ref: '#/components/schemas/Error'
-    MediaList:
-      type: array
-      description: List of media resources.
-      items:
-        $ref: '#/components/schemas/Media'
     MediaAttributes:
       type: object
       description: Attributes describing an uploaded document.
@@ -247,6 +237,11 @@ components:
           description: 'Encoding format used for the content field. Only present when explicitly requested.
 
             '
+    MediaList:
+      type: array
+      description: List of media resources.
+      items:
+        $ref: '#/components/schemas/Media'
     Error:
       type: object
       description: A single error item.
@@ -268,17 +263,16 @@ components:
           description: Human-readable description of the error.
         meta:
           $ref: '#/components/schemas/ErrorMeta'
-    Media:
+    ErrorList:
+      type: array
+      description: List of errors.
+      items:
+        $ref: '#/components/schemas/Error'
+    ErrorMeta:
       type: object
-      description: Representation of a media resource.
+      description: Additional metadata for an error.
       properties:
-        id:
+        filename:
           type: string
-          format: uuid
-          description: Unique identifier of the uploaded document.
-        type:
-          type: string
-          example: media
-          description: Resource type (always `media`).
-        attributes:
-          $ref: '#/components/schemas/MediaAttributes'
+          description: Name of the file related to the error.
+      additionalProperties: true

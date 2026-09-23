@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Testing API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,7 +26,7 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: Testing
-  description: "ℹ️ This section is dedicated to the testing API during development process. \nThe listed endpoints are **not available** on production environment.\n\n### Creating Test Orders\n\nWhen using the public sandbox, a subsection of the API will be available to create test orders.\n\nThis endpoint `/api/testing/orders/create` can be called to create a new test order with a new retailer,\nand a couple of new products.\n\nYou can also pass in options to specify the exact retailer or products themselves.\nTo find out more, you can view the [endpoint specification here](a45de155779ff-create-test-order-sandbox-only).\n\n### Finding the Retailer ID\n\nThere is an option to specify the `retailerId` to use the same retailer for every test order, to find this, \nlogin as that retailer you created and open up the developer tools. You will see it logged to the console.\n"
+  description: ℹ️ This section is dedicated to the testing API during development process.
 paths:
   /api/testing/orders/create:
     post:
@@ -60,9 +34,7 @@ paths:
       operationId: brand-create-test-order
       description: 'Creates a test order ready to be confirmed based on the options provided.
 
-        **ONLY AVAILABLE IN SANDBOX ENVIRONMENT**.
-
-        '
+        **ONLY AVAILABLE IN SANDBOX ENVIRONMENT**.'
       tags:
       - Testing
       parameters:

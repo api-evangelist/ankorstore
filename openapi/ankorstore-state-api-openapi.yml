@@ -30,9 +30,7 @@ paths:
 
         One stock state entity is returned per product variant, so the identifier of each entity will correspond with
 
-        the product variant identifier for which quantities are returned.
-
-        '
+        the product variant identifier for which quantities are returned.'
       operationId: list-state
       parameters:
       - $ref: '#/components/parameters/acceptInHeader'
@@ -62,9 +60,7 @@ paths:
 
         * You may only specify either onHand or available for the same product variant and location, not both.
 
-        * Please include only absolute quantities.
-
-        '
+        * Please include only absolute quantities.'
       operationId: patch-state
       parameters:
       - $ref: '#/components/parameters/acceptInHeader'
@@ -79,160 +75,6 @@ paths:
           $ref: '#/components/responses/NoContent'
 components:
   schemas:
-    StockStatus:
-      type: string
-      enum:
-      - onHand
-      - available
-      - damaged
-      - reserved
-      - qualityControl
-      - blocked
-      - incoming
-    paginationPage:
-      description: Cursor pagination details
-      type: object
-      properties:
-        from:
-          type: string
-          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
-          nullable: true
-        to:
-          type: string
-          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
-          nullable: true
-        hasMore:
-          type: boolean
-        perPage:
-          type: integer
-      required:
-      - from
-      - to
-      - hasMore
-      - perPage
-    ErrorMeta:
-      type: object
-      properties:
-        stack:
-          type: array
-          items:
-            type: string
-    paginationMeta:
-      type: object
-      description: Meta with Pagination Details
-      additionalProperties: true
-      properties:
-        page:
-          $ref: '#/components/schemas/paginationPage'
-      required:
-      - page
-    ProductVariantStockStateResource:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        id:
-          $ref: '#/components/schemas/id'
-        attributes:
-          $ref: '#/components/schemas/ProductVariantStockState'
-      required:
-      - type
-      - id
-      - attributes
-    Lot:
-      type: object
-      properties:
-        number:
-          type: string
-        expiryDate:
-          type: string
-          nullable: true
-          format: date
-          x-go-type: civil.Date
-          x-go-type-import:
-            path: github.com/ankorstore/astral/pkg/civil
-            name: civil
-      required:
-      - number
-    id:
-      type: string
-      format: uuid
-      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
-    type:
-      type: string
-      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
-    LocationType:
-      type: string
-      enum:
-      - warehouse
-      - brand
-      - retailer
-    Error:
-      type: object
-      required:
-      - status
-      - title
-      properties:
-        status:
-          type: integer
-        source:
-          type: object
-          properties:
-            pointer:
-              type: string
-        title:
-          type: string
-        detail:
-          type: string
-        meta:
-          $ref: '#/components/schemas/ErrorMeta'
-    paginationLinks:
-      description: Pagination links
-      type: object
-      properties:
-        first:
-          type: string
-          example: https://www.ankorstore.com/api/v1/orders?page[limit]=15
-          nullable: true
-        prev:
-          type: string
-          example: https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15
-          nullable: true
-        next:
-          type: string
-          example: https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15
-          nullable: true
-      required:
-      - first
-      - next
-      - prev
-    ProductType:
-      type: string
-      enum:
-      - single
-      - bundle
-    jsonapi:
-      type: object
-      description: An object describing the server's implementation
-      additionalProperties: false
-      properties:
-        version:
-          type: string
-        meta:
-          $ref: '#/components/schemas/meta'
-    meta:
-      type: object
-      description: Non-standard meta-information that can not be represented as an attribute or relationship.
-    ProductVariantStockState:
-      type: object
-      title: ProductVariantStockState
-      properties:
-        quantities:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariantStockQuantity'
-      required:
-      - quantities
     ProductVariantStockQuantity:
       type: object
       title: ProductVariantStockQuantity
@@ -260,7 +102,193 @@ components:
       - locationType
       - status
       - unitMultiplier
+    id:
+      type: string
+      format: uuid
+      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
+    paginationLinks:
+      description: Pagination links
+      type: object
+      properties:
+        first:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[limit]=15
+          nullable: true
+        prev:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15
+          nullable: true
+        next:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15
+          nullable: true
+      required:
+      - first
+      - next
+      - prev
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+    ProductType:
+      type: string
+      enum:
+      - single
+      - bundle
+    meta:
+      type: object
+      description: Non-standard meta-information that can not be represented as an attribute or relationship.
+    LocationType:
+      type: string
+      enum:
+      - warehouse
+      - brand
+      - retailer
+    ProductVariantStockStateResource:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/ProductVariantStockState'
+      required:
+      - type
+      - id
+      - attributes
+    ErrorMeta:
+      type: object
+      properties:
+        stack:
+          type: array
+          items:
+            type: string
+    paginationPage:
+      description: Cursor pagination details
+      type: object
+      properties:
+        from:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        to:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        hasMore:
+          type: boolean
+        perPage:
+          type: integer
+      required:
+      - from
+      - to
+      - hasMore
+      - perPage
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+    Error:
+      type: object
+      required:
+      - status
+      - title
+      properties:
+        status:
+          type: integer
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+        title:
+          type: string
+        detail:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
+    paginationMeta:
+      type: object
+      description: Meta with Pagination Details
+      additionalProperties: true
+      properties:
+        page:
+          $ref: '#/components/schemas/paginationPage'
+      required:
+      - page
+    StockStatus:
+      type: string
+      enum:
+      - onHand
+      - available
+      - damaged
+      - reserved
+      - qualityControl
+      - blocked
+      - incoming
+    Lot:
+      type: object
+      properties:
+        number:
+          type: string
+        expiryDate:
+          type: string
+          nullable: true
+          format: date
+          x-go-type: civil.Date
+          x-go-type-import:
+            path: github.com/ankorstore/astral/pkg/civil
+            name: civil
+      required:
+      - number
+    ProductVariantStockState:
+      type: object
+      title: ProductVariantStockState
+      properties:
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantStockQuantity'
+      required:
+      - quantities
   parameters:
+    statusFilter:
+      name: filter[status][]
+      in: query
+      description: A set of statuses to check quantities for
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/StockStatus'
+    xAksBrandUuidHeader:
+      name: X-Aks-Brand-Uuid
+      in: header
+      description: Brand entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
+    productTypeFilter:
+      name: filter[productType]
+      in: query
+      description: A specific product type to check quantities for
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProductType'
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
     pageLimit:
       name: page[limit]
       in: query
@@ -270,6 +298,35 @@ components:
         type: integer
         format: int
         default: 10
+    productVariantIdFilter:
+      name: filter[productVariantIds][]
+      in: query
+      description: A set of identifiers representing the items to check quantities for
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          format: uuid
+    locationTypeFilter:
+      name: filter[locationTypes][]
+      in: query
+      description: A set of location types to check quantities at
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/LocationType'
+    pageBefore:
+      name: page[before]
+      in: query
+      description: show items before the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
     locationIdFilter:
       name: filter[locationIds][]
       in: query
@@ -281,10 +338,10 @@ components:
         items:
           type: string
           format: uuid
-    xAksBrandUuidHeader:
-      name: X-Aks-Brand-Uuid
+    xAksRetailerUuidHeader:
+      name: X-Aks-Retailer-Uuid
       in: header
-      description: Brand entity when none provided via auth token
+      description: Retailer entity when none provided via auth token
       schema:
         type: string
         format: uuid
@@ -297,28 +354,6 @@ components:
       schema:
         type: string
         format: uuid
-    acceptInHeader:
-      name: Accept
-      in: header
-      description: application/vnd.api+json
-      schema:
-        type: string
-        default: application/vnd.api+json
-    xAksRetailerUuidHeader:
-      name: X-Aks-Retailer-Uuid
-      in: header
-      description: Retailer entity when none provided via auth token
-      schema:
-        type: string
-        format: uuid
-        nullable: true
-    productTypeFilter:
-      name: filter[productType]
-      in: query
-      description: A specific product type to check quantities for
-      required: false
-      schema:
-        $ref: '#/components/schemas/ProductType'
     stateAt:
       name: stateAt
       in: query
@@ -326,45 +361,37 @@ components:
       required: false
       schema:
         type: integer
-    pageBefore:
-      name: page[before]
-      in: query
-      description: show items before the provided ID (uuid format)
-      required: false
-      schema:
-        type: string
-        format: uuid
-    statusFilter:
-      name: filter[status][]
-      in: query
-      description: A set of statuses to check quantities for
-      required: false
-      schema:
-        type: array
-        minItems: 1
-        items:
-          $ref: '#/components/schemas/StockStatus'
-    locationTypeFilter:
-      name: filter[locationTypes][]
-      in: query
-      description: A set of location types to check quantities at
-      required: false
-      schema:
-        type: array
-        minItems: 1
-        items:
-          $ref: '#/components/schemas/LocationType'
-    productVariantIdFilter:
-      name: filter[productVariantIds][]
-      in: query
-      description: A set of identifiers representing the items to check quantities for
-      required: false
-      schema:
-        type: array
-        minItems: 1
-        items:
-          type: string
-          format: uuid
+  requestBodies:
+    StockStateRequest:
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductVariantStockStateResource'
+            required:
+            - data
+          examples:
+            example-change-stock-state:
+              value:
+                data:
+                - type: stock-state
+                  id: 1ed86ab7-c16e-6002-b4d0-0242ac15000c
+                  attributes:
+                    quantities:
+                    - quantity: 10
+                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                      status: available
+                - type: stock-state
+                  id: 1841c9e9-33cc-4fd5-8045-32654adcc78a
+                  attributes:
+                    quantities:
+                    - quantity: 80
+                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                      status: onHand
   responses:
     StockStateCollectionResponse:
       description: Set of stock state records
@@ -438,8 +465,6 @@ components:
                 jsonapi:
                   version: string
                   meta: {}
-    NoContent:
-      description: No content
     ErrorResponse:
       description: Example response
       content:
@@ -455,37 +480,8 @@ components:
                 $ref: '#/components/schemas/jsonapi'
             required:
             - errors
-  requestBodies:
-    StockStateRequest:
-      content:
-        application/vnd.api+json:
-          schema:
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductVariantStockStateResource'
-            required:
-            - data
-          examples:
-            example-change-stock-state:
-              value:
-                data:
-                - type: stock-state
-                  id: 1ed86ab7-c16e-6002-b4d0-0242ac15000c
-                  attributes:
-                    quantities:
-                    - quantity: 10
-                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-                      status: available
-                - type: stock-state
-                  id: 1841c9e9-33cc-4fd5-8045-32654adcc78a
-                  attributes:
-                    quantities:
-                    - quantity: 80
-                      locationId: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-                      status: onHand
+    NoContent:
+      description: No content
   securitySchemes:
     CookieKey:
       type: apiKey

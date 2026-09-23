@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Brands API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -68,9 +42,7 @@ paths:
 
         in their case. Other authenticated consumers (retailers, admins, machine clients) see the
 
-        full filtered result.
-
-        '
+        full filtered result.'
       tags:
       - Brands
       parameters:
@@ -531,7 +503,6 @@ paths:
     get:
       summary: Get own brand details
       operationId: get-api-v1-own-brands
-      description: Get own brand details
       parameters:
       - name: Accept
         in: header
@@ -1437,10 +1408,8 @@ paths:
   /api/v1/brands/franco:
     get:
       operationId: list-brands-franco
-      summary: Returns Franco and fee for a given list of brands.
-      description: 'Returns Franco (free shipping threshold) and fee for a given list of brands.
-
-        '
+      summary: Returns Franco and fee for a given list of brands
+      description: Returns Franco (free shipping threshold) and fee for a given list of brands.
       tags:
       - Brands
       parameters:
@@ -1864,9 +1833,7 @@ paths:
     get:
       operationId: list-brands-franco-settings
       summary: List the Franco settings of the authenticated brand
-      description: 'List the Franco (free shipping threshold) settings of the authenticated brand.
-
-        '
+      description: List the Franco (free shipping threshold) settings of the authenticated brand.
       tags:
       - Brands
       parameters:
@@ -2276,9 +2243,7 @@ paths:
     post:
       operationId: create-brands-franco-settings
       summary: Save a new Franco Settings entry
-      description: 'If the values change for the given corridor, it saves a new Franco Settings entry and returns a 201 status code. If the values are identical, it only returns the existing entry with a 200 status code.
-
-        '
+      description: If the values change for the given corridor, it saves a new Franco Settings entry and returns a 201 status code. If the values are identical, it only returns the existing entry with a 200 status code.
       tags:
       - Brands
       parameters:
@@ -3284,9 +3249,7 @@ paths:
     post:
       operationId: create-brand-contact
       summary: Create a new brand contact
-      description: 'Create a new contact for the authenticated brand. The brand is resolved from the authenticated session. This endpoint can be used only by brands.
-
-        '
+      description: Create a new contact for the authenticated brand. The brand is resolved from the authenticated session. This endpoint can be used only by brands.
       tags:
       - Brands
       parameters:
@@ -3842,9 +3805,7 @@ paths:
     patch:
       operationId: update-brand-contact
       summary: Update an existing brand contact
-      description: 'Update the email or purposes of an existing brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.
-
-        '
+      description: Update the email or purposes of an existing brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.
       tags:
       - Brands
       parameters:
@@ -4355,9 +4316,7 @@ paths:
     delete:
       operationId: delete-brand-contact
       summary: Delete an existing brand contact
-      description: 'Delete a brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.
-
-        '
+      description: Delete a brand contact. This endpoint can be used only by brands and only on contacts owned by the authenticated brand.
       tags:
       - Brands
       parameters:

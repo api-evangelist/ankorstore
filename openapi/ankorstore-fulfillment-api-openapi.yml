@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Fulfillment API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,7 +26,7 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: Fulfillment
-  description: "ℹ️ Here you can find the information and endpoint specification related to fulfillment of the orders.\n\n## \U0001F4A1 About Fulfillment\n\n_Fulfillment_ is the process of preparing and shipping orders to customers via Ankorstore Fulfillment Centers.\nBrands that use fulfillment send their inventory to a warehouse in advance, and when orders come in, the warehouse\npicks, packs, and ships on the brand's behalf.\n\n### What does \"fulfillable\" mean?\n\nThe concept of a \"fulfillable\" is _that which is required to prepare and ship a product (variant)_.\nWhile a Fulfillment Centre deals exclusively with items, which represents a single item that an employee can pick up and prepare for shipping.\nA fulfillable is simply a set of one or more items, that together represent a product as ordered.\n\nUse the [List Fulfillables](#tag/Fulfillment/operation/fulfillment-list-fulfillable) endpoint to check stock\navailability for specific product variants before creating orders. For more detailed stock information —\nincluding quantities by location, status, and lot — use the\n[Stock State endpoint](/api/astral/v1/stock/state) from the Ankorstore Stock Tracking and Logistics API (ASTRAL).\n\n### Fulfillments\n\nWhen a _Master Order_ has fulfillment requested, one or more _Fulfillments_ are created. Multiple fulfillments\ncan be associated with a single master order (many-to-one). You can retrieve their details and track progress\nthrough the following statuses:\n\n| Status | Description |\n| --- | --- |\n| `requested` | Fulfillment has been requested for the order |\n| `created` | Fulfillment has been created in the warehouse system |\n| `scheduled` | Fulfillment is scheduled for picking |\n| `released` | Fulfillment has been released for picking |\n| `shipped` | Fulfillment has been shipped from the warehouse |\n| `cancelled` | Fulfillment has been cancelled |\n| `cancellation_requested` | A cancellation has been requested but not yet processed |\n\nPass `?include=statusUpdates` when retrieving a fulfillment to see the full history of status transitions.\n\n### Lots\n\nIf your products are lot-tracked or expiry-tracked, the [List Lots](#tag/Fulfillment/operation/fulfillment-list-lots)\nendpoint shows the current lot inventory in the warehouse, including lot numbers, available quantities, and\nexpiry/sell-by dates. You can filter and sort by available quantity, sell-by date range, and product name.\n\n### Fulfillment Costs\n\nUse the [Get Fulfillment Costs](#tag/Fulfillment/operation/fulfillment-costs-get-specifications) endpoint to estimate\nfulfillment costs before committing to an order. Provide the destination country, parcel dimensions, and picking\nquantity to receive a cost breakdown by category (shipping, pick fees by quantity tier).\n\n> ⚠️ The cost estimation does **not** include packing consumables. The actual invoiced amount may differ.\n\n## Replenishments\n\nReplenishments are required to send inventory to the warehouse. They follow a specific workflow:\n\n### Replenishment Workflow\n\n<pre class=\"mermaid\">\nstateDiagram-v2\n    direction LR\n    [*] --> created\n    created --> confirmed : Brand confirms\n    confirmed --> sent : Sent to warehouse\n    sent --> delivered : Arrives at warehouse\n    delivered --> received : Items put into stock\n    received --> [*]\n</pre>\n\n* **Created**: When a replenishment is initially created, it will be at status `created` and is considered a draft. In this state, it can be edited via PATCH requests or deleted.\n* **Confirmed**: Once editing is complete, the status should be updated to `confirmed` as part of a PATCH request. At this point, the replenishment information will be sent to the warehouse (asynchronously).\n* **Sent**: Once the replenishment information is sent to the warehouse, the status changes to `sent`. The replenishment will remain in this status while waiting for delivery.\n* **Delivered**: When the replenishment physically arrives at the warehouse, its status will be automatically updated to `delivered`.\n* **Received**: Once the items are put into stock at the warehouse, the status will be updated to `received`. At this stage, receipts are added with the received stock quantities and lots.\n\n### Creating a Replenishment\n\nEach replenishment requires a carrier name, shipment type, and a list of items with their fulfillment item IDs\nand quantities:\n\n```json5\n// POST /api/v1/fulfillment/replenishments\n{\n  \"fulfillmentBrandId\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n  \"warehouseId\": \"98765432-abcd-ef01-2345-678901234567\",\n  \"shippingCarrierName\": \"DHL\",\n  \"shipmentType\": \"PARCEL\",            // \"LTL\", \"FTL\", or \"PARCEL\"\n  \"items\": [\n    {\n      \"fulfillmentItemId\": \"d290f1ee-6c54-4b01-90e6-d701748f0851\",\n      \"quantity\": 100\n    }\n  ]\n}\n```\n\nAfter creating a replenishment, update its status to `confirmed` via PATCH when you are ready to notify the warehouse.\n\n### How Fulfillment Connects to Orders\n\nThe diagram below shows how fulfillment fits into the order lifecycle:\n\n<pre class=\"mermaid\">\ngraph LR\n    A[Master Order] --> D[Fulfillment 1]\n    A --> E[Fulfillment 2]\n    F[Replenishment] --> G[Warehouse Stock]\n    G --> D\n    G --> E\n</pre>\n\n1. Brands send inventory to the warehouse via _Replenishments_\n2. When fulfillment is requested for a _Master Order_, one or more _Fulfillments_ are created\n3. The warehouse picks items from stock and ships each fulfillment\n4. Use the fulfillment endpoints to track both your inventory and fulfillment status\n"
+  description: ℹ️ Here you can find the information and endpoint specification related to fulfillment of the orders.
 paths:
   /api/v1/product-variants/{productVariant}/declare-fulfillment-item:
     post:
@@ -3342,9 +3316,7 @@ paths:
       operationId: fulfillment-create-item
       description: 'Create a fulfillment item for the authenticated brand.
 
-        The referenced product variant must belong to the authenticated brand.
-
-        '
+        The referenced product variant must belong to the authenticated brand.'
       tags:
       - Fulfillment
       parameters:
@@ -6321,9 +6293,7 @@ paths:
 
         - HS codes are present for non-EU destinations (`missing_hs_code_for_international_order`)
 
-        - Items are available in the warehouse with sufficient stock and shelf life (`unavailable_items`)
-
-        '
+        - Items are available in the warehouse with sufficient stock and shelf life (`unavailable_items`)'
       tags:
       - Fulfillment
       parameters:
@@ -8409,7 +8379,6 @@ paths:
     patch:
       summary: Update a replenishment
       operationId: fulfillment-patch-replenishment
-      description: Update a replenishment
       tags:
       - Fulfillment
       parameters:
@@ -9084,7 +9053,6 @@ paths:
     delete:
       summary: Delete a draft replenishment
       operationId: fulfillment-delete-draft-replenishment
-      description: Delete a draft replenishment
       tags:
       - Fulfillment
       parameters:

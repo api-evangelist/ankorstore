@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Deprecated API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,36 +26,7 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: Deprecated
-  description: 'ℹ️ Here you can find the endpoints which are currently deprecated and will be removed in the future versions of the API.
-
-    We strongly encourage you to migrate away from these endpoints in order to prevent any future problems with API.
-
-
-    ## ❄️ Shipping an Order
-
-
-    | ⚡ This documentation is deprecated |
-
-    |------------------------------------|
-
-    ### Schedule a Pickup
-
-
-    If the brand is not taking the parcels to the local drop-off point for the carrier the brand can schedule a pickup for this order. A pickup can only be scheduled on a working day (monday to friday). For full information please refer to the API documentation.
-
-
-    <div class="info">
-
-
-    #### Pickup is not accepted
-
-
-    For now, Ankorstore does not know in advance which date/time configuration is available, if the requested pickup is denied please try a different date or time frame.
-
-
-    </div>
-
-    '
+  description: ℹ️ Here you can find the endpoints which are currently deprecated and will be removed in the future versions of the API.
 paths:
   /api/v1/orders/{order}/accept:
     post:

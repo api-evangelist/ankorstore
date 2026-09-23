@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Order Pay API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,15 +26,13 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: OrderPay
-  description: "ℹ️ This section describes the API endpoints for managing _OrderPay_ orders and customers. OrderPay allows brands\nto create and manage orders for their own customers, handle payments, and track order lifecycle — all through the\nAnkorstore platform.\n\n## \U0001F4A1 General Concepts\n\n- _OrderPay Order_ - An order created by a brand on behalf of one of its customers. Unlike _Internal Orders_ (placed\n  by retailers on the Ankorstore marketplace), OrderPay orders are initiated by the brand itself. This enables brands\n  to sell to customers outside the marketplace while still leveraging Ankorstore's payment processing, invoicing, and\n  optionally, fulfillment services.\n- _OrderPay Customer_ - A customer entity managed by the brand. Each customer has billing and shipping addresses,\n  contact details, and associated payment methods. Customers must be created before orders can be placed for them.\n- _Custom Items_ - Additional charges on an order beyond product line items, such as shipping fees, excise duties,\n  or eco-taxes.\n\n## \U0001F4A1 Working with Customers\n\nBefore creating an order, you need to register the customer. Use the customer endpoints to create and manage your\ncustomer base.\n\n### Creating a Customer\n\nA customer requires at minimum: store name, email, first/last name, phone number, and both billing and shipping\naddresses.\n\n```json5\n// POST /api/v1/order-pay/order-pay-customer\n{\n  \"data\": {\n    \"type\": \"order-pay-customer\",\n    \"attributes\": {\n      \"storeName\": \"La Boutique Verte\",\n      \"email\": \"contact@laboutiqueverte.fr\",\n      \"firstName\": \"Marie\",\n      \"lastName\": \"Dupont\",\n      \"company\": {\n        \"phoneNumber\": \"+33612345678\",\n        \"vatNumber\": \"FR12345678901\",\n        \"vatExemption\": false\n      },\n      \"billingAddress\": {\n        \"street\": \"12 Rue de la Paix\",\n        \"postalCode\": \"75002\",\n        \"city\": \"Paris\",\n        \"countryCode\": \"FR\"\n      },\n      \"shippingAddress\": {\n        \"street\": \"12 Rue de la Paix\",\n        \"postalCode\": \"75002\",\n        \"city\": \"Paris\",\n        \"countryCode\": \"FR\"\n      }\n    }\n  }\n}\n```\n\n### Listing and Filtering Customers\n\nYou can retrieve your customers with optional filters:\n\n```\n[GET] /api/v1/order-pay/order-pay-customer?filter[storeName]=boutique&sort=storeName\n```\n\nThe response uses page-based pagination with `page[number]` and `page[size]` parameters.\n\n### Including Payment Methods\n\nWhen retrieving a single customer, pass `?include=paymentMethods` to see the customer's stored payment methods.\n\n## \U0001F4A1 Working with Orders\n\n### Order Lifecycle\n\nAn OrderPay order goes through the following statuses:\n\n<pre class=\"mermaid\">\nstateDiagram-v2\n    [*] --> created\n    created --> brand_confirmed : Brand confirms\n    created --> cancelled : Brand cancels\n    brand_confirmed --> payment_confirmed : Payment processed\n    brand_confirmed --> cancelled : Brand cancels\n    payment_confirmed --> waiting_shipping\n    waiting_shipping --> shipped\n    shipped --> received\n    received --> invoiced\n    invoiced --> brand_paid\n    brand_paid --> [*]\n    cancelled --> [*]\n</pre>\n\n| Status | Description |\n| --- | --- |\n| `created` | Order has been created but not yet confirmed by the brand |\n| `brand_confirmed` | Brand has confirmed the order, payment will be processed |\n| `payment_confirmed` | Payment has been successfully processed |\n| `waiting_shipping` | Order is awaiting shipment |\n| `shipped` | Order has been shipped |\n| `received` | Customer has received the order |\n| `invoiced` | Invoice has been generated |\n| `brand_paid` | Brand has been paid for the order |\n| `cancelled` | Order has been cancelled |\n\n### Creating an Order\n\nTo create an order you need the customer UUID and at least one product line item. Each item requires a\n`productVariantUuid`, a `quantity` (in packs), and pricing in the brand's currency.\n\n> ⚠️ The `quantity` field represents the number of **packs**, not individual units. For example, if a product variant is\n> sold in packs of 6, a quantity of 2 means 12 individual units.\n\n```json5\n// POST /api/v1/order-pay/order-pay-orders\n{\n  \"data\": {\n    \"type\": \"order-pay-orders\",\n    \"attributes\": {\n      \"customerUuid\": \"f47ac10b-58cc-4372-a567-0e02b2c3d479\",\n      \"customReference\": \"SHOP-12345\",  // Your reference, shown on customer invoice\n      \"items\": [\n        {\n          \"productVariantUuid\": \"d290f1ee-6c54-4b01-90e6-d701748f0851\",\n          \"quantity\": 2,\n          \"amounts\": {\n            \"brandUnitPrice\": 1500,       // 15.00 EUR in cents\n            \"discountRate\": 10            // 10% discount\n          }\n        }\n      ],\n      \"customItems\": [\n        {\n          \"type\": \"shippingFees\",\n          \"amount\": 800                   // 8.00 EUR in cents, excl. VAT\n        }\n      ],\n      \"shippingMethod\": \"custom\"          // \"custom\" or \"fulfillment\"\n    }\n  }\n}\n```\n\n### Shipping Methods\n\n| Method | Description |\n| --- | --- |\n| `custom` | You ship the order using your own carrier |\n| `fulfillment` | The order is fulfilled via AnkorLogistics Fulfillment Centre |\n\nWhen using `fulfillment`, you can optionally provide delivery instructions:\n\n- `deliverySchedule` - Customer opening times with day-of-week and time slots\n- `packingInstruction` - Services like `PALLETISE`, `CUSTOM_BUILD`, or `DOCS`\n- `deliveryAppointment` - Whether an appointment is required for delivery\n\n### Custom Items\n\nUse `customItems` to add charges beyond product line items:\n\n| Type | Description |\n| --- | --- |\n| `shippingFees` | Shipping charges |\n| `exciseDuties` | Excise duties (e.g., on alcohol) |\n| `ecoTax` | Environmental taxes |\n\n> ⚠️ The `amounts.shippingFeesAmount` field is **deprecated**. Use `customItems` with type `shippingFees` instead.\n\n### Custom Reference\n\nUse the `customReference` field to link orders back to your own system (e.g., a Shopify order ID). This reference\nappears on the customer's invoice and can be up to 64 characters.\n\n### Confirming and Cancelling Orders\n\nAfter creating an order, you can:\n\n- **Confirm** it via `POST /api/v1/order-pay/order-pay-orders/{id}/-actions/confirm` — this triggers payment processing\n- **Cancel** it via `POST /api/v1/order-pay/order-pay-orders/{id}/-actions/cancel` — with an optional reason\n\n### Including Payment Details\n\nWhen retrieving an order, pass `?include=payment` or `?include=payment.transactions` to see payment status and\ntransaction details.\n\n## \U0001F4A1 Amounts and Currencies\n\nAll monetary amounts are represented as **integers in the lowest denomination** of the currency (e.g., cents for EUR).\nEvery order response includes both brand-currency and customer-currency amounts, with formatted string equivalents\nfor display purposes.\n\nFor example, a line item response includes fields like:\n- `brandUnitPrice`: `1500` (integer, cents)\n- `brandUnitPriceFormatted`: `\"15.00 EUR\"` (string, for display)\n- `customerUnitPrice`: `1320` (integer, cents in customer currency)\n- `customerUnitPriceFormatted`: `\"13.20 GBP\"` (string, for display)\n\nVAT is calculated automatically based on the customer's address and product configuration.\n"
+  description: ℹ️ This section describes the API endpoints for managing _OrderPay_ orders and customers.
 paths:
   /api/v1/order-pay/order-pay-customer:
     get:
       operationId: list-order-pay-customer
       summary: List customers
-      description: 'Retrieves a list of customers associated with an OrderPay account. The result is paginated. Furthermore a filter can be applied on the result.
-
-        '
+      description: Retrieves a list of customers associated with an OrderPay account. The result is paginated. Furthermore a filter can be applied on the result.
       tags:
       - OrderPay
       parameters:

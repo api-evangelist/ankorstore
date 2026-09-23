@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public User API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,72 +26,7 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: User
-  description: 'ℹ️ This section describes the API endpoints for retrieving user and platform configuration.
-
-
-    ## 💡 User Configuration
-
-
-    The user configuration endpoints return locale and currency settings for the authenticated user. This is useful
-
-    for adapting your integration to the user''s preferences.
-
-
-    ### Current User
-
-
-    Retrieve the configuration for the currently authenticated user:
-
-
-    ```
-
-    [GET] /api/v1/me/config
-
-    ```
-
-
-    Returns:
-
-    - `currency` - The user''s preferred currency (e.g., `"EUR"`, `"GBP"`)
-
-    - `country` - The user''s country code (e.g., `"FR"`, `"DE"`)
-
-    - `browserId` - A browser-session identifier
-
-
-    ### Specific User
-
-
-    You can also retrieve configuration for a specific user by UUID:
-
-
-    ```
-
-    [GET] /api/v1/users/{id}/config
-
-    ```
-
-
-    ## 💡 Platform Configuration
-
-
-    The platform configuration endpoint returns global settings that apply to all users:
-
-
-    ```
-
-    [GET] /api/v1/platform/config
-
-    ```
-
-
-    Returns:
-
-    - `cdn` - The CDN base URL for loading assets (e.g., product images)
-
-    - `stripePublicKey` - The Stripe public key, needed if your integration handles payment flows client-side
-
-    '
+  description: ℹ️ This section describes the API endpoints for retrieving user and platform configuration.
 paths:
   /api/v1/me/config:
     get:

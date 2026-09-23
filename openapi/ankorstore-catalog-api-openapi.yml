@@ -4,33 +4,7 @@ info:
   title: Ankorstore Public Catalog API
   description: 'The Ankorstore API enables brands and their partners to programmatically manage their presence on the
 
-    Ankorstore wholesale marketplace. Through the API you can manage your product catalog and stock, process
-
-    orders, handle shipping and fulfillment, and receive real-time event notifications via webhooks.
-
-
-    ### Quick Links
-
-
-    - **[Getting Started](#section/Getting-Started)** — Register an application, authenticate, and make your first API call
-
-    - **[Available APIs](#section/Available-APIs)** — Overview of all API capabilities
-
-    - **[Authentication](#section/Authentication)** — OAuth2 setup and rate limits
-
-    - **[How to work with API](#section/How-to-work-with-API)** — JSON:API conventions, pagination, filters, and includes
-
-    - **[Testing API](#section/Testing-API)** — Sandbox environment and test data
-
-    - **[Webhook Subscription](#section/Webhook-Subscription)** — Real-time event notifications
-
-
-    ### Support
-
-
-    For API support, contact us at [api@ankorstore.com](mailto:api@ankorstore.com).
-
-    '
+    Ankorstore wholesale marketplace.'
   contact:
     name: Ankorstore Support
     email: api@ankorstore.com
@@ -52,7 +26,7 @@ security:
 - ProductionOAuth2ClientCredentials: []
 tags:
 - name: Catalog
-  description: "ℹ️ This section describes the API endpoints that you can use to manage your catalog resources, such as products, product variants etc.\n\n## \U0001F4A1 Working with Products\n\nHere you will find information about the product resource and its sub-resources. If you need further information please refer to the API specification.\n\n### Including Product Variants\n\nWhen retrieving the individual product via the API, you may pass an `?include=productVariants` query parameter that will return associated product variants inside the `included` root level object.\n\n### Important Fields within Product Resource\n\nIf the field contains no data, it will be `null`.\n\n## \U0001F4A1 Stock Management\n\nThis API allows you to manage your product variants stock for the marketplace in both single- and bulk-operation mode.\nThere are 2 opposite options available for the stock update requests - set an explicit product quantity\nor mark the corresponding product as \"always in stock\".\n\n### Stock statuses\nStock for the marketplace can be in one of two states. It can be `available` to order on the marketplace, or `reserved` for an order that has been submitted, but not yet shipped.\nAdded together, these quantities make up the `onHand` state, which reflects the total quantity of the product variant \"on hand\" at your storage location(s).\n\n> ⚠️ **Unless specified otherwise, `stockQuantity` used in the following APIs refers to `onHand` quantity**\n\nSee also [Stock State](#tag/folderName_Stock-Concepts/Stock-state) for more general information about stock states used in the Stock Tracking  APIs.\n\n#### Example\n* 100 units of the product variant X are stock at your location (`onHand`).\n* 30 units of product variant X are `reserved` for Ankorstore orders that have not yet been shipped.\n* Then 70 units of product variant X are `available` to order on the marketplace.\n\nNow consider you produce 50 more units of product variant X, and sell 27 units on another marketplace. Your input for the stock update API would be:\n```\n// 100 + 50 - 27 = 133\n\"stockQuantity\": 123\n```\n\n### Set product variant stock explicit quantity\n\nTo set an explicit quantity for the particular product variant, you should specify the amount in the payload.\nIn case if the target product variant was previously marked as \"always in stock\", this option will be disabled and the stock\nwill be set to given value.\n\nExample of the payload to set a product variant stock to the given value (single-operation mode):\n\n`PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`\n```json\n{\n  \"data\": {\n    \"attributes\": {\n      \"stockQuantity\": 123\n    }\n  }\n}\n```\nMore details can be found in the endpoint specification\n\n### Set product variant as \"always in stock\"\n\nTo mark a particular product variant as \"always in stock\" and do not care about the stock amounts, you should include a\nflag `isAlwaysInStock` into the request payload. In case if the target product variant had explicit stock amount set previously,\nit will be reset.\n\nExample of the payload to set a product variant stock to the given value (single-operation mode):\n\n`PATCH /api/v1/product-variants/1ed18988-6651-610e-8223-aa5cd9844f96/stock`\n```json\n{\n  \"data\": {\n    \"attributes\": {\n      \"isAlwaysInStock\": true\n    }\n  }\n}\n```\nMore details can be found in the endpoint specification\n\n### Update stocks of multiple product variants in single request (bulk-operation mode)\n\nThis API allows to update stocks of multiple product variants in single request. There is a specific endpoint which\naccepts up to 50 operations per request. Validation, business rules and payload of each operation is identical to the\nsingle-operation mode, described above.\n\nExample of the payload to update stocks of multiple product variants in single request:\n\n`POST /api/v1/operations`\n```json\n{\n  \"atomic:operations\": [\n    {\n      \"op\": \"update\",\n      \"data\": {\n        \"type\": \"productVariants\",\n        \"id\": \"1ed18988-3253-610e-8223-aa5cd9844001\",\n        \"attributes\": {\n          \"isAlwaysInStock\": true\n        }\n      }\n    },\n    {\n      \"op\": \"update\",\n      \"data\": {\n        \"type\": \"productVariants\",\n        \"id\": \"1ed18988-6651-610e-8223-aa5cd9844f96\",\n        \"attributes\": {\n          \"stockQuantity\": 123\n        }\n      }\n    }\n  ]\n}\n```\nMore details can be found in the endpoint specification\n"
+  description: ℹ️ This section describes the API endpoints that you can use to manage your catalog resources, such as products, product variants etc.
 paths:
   /api/v1/products:
     get:
@@ -3133,7 +3107,6 @@ paths:
   /api/v1/product-variants/{productVariant}/prices:
     patch:
       summary: Update wholesale and retail prices of a product variant
-      description: Update wholesale and retail prices of a product variant
       operationId: update-product-variant-prices
       tags:
       - Catalog
@@ -4192,9 +4165,7 @@ paths:
 
         Variants not found or not priceable for the authenticated retailer are
 
-        silently omitted from the response.
-
-        '
+        silently omitted from the response.'
       operationId: get-product-variant-prices
       tags:
       - Catalog
