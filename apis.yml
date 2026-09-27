@@ -76,7 +76,7 @@ apis:
   name: Ankorstore Applications API
   description: The Applications API from Ankorstore — 1 operation(s) for applications.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Application
   tags_raw:
@@ -88,7 +88,7 @@ apis:
   name: Ankorstore Brands API
   description: The Brands API from Ankorstore — 8 operation(s) for brands.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Brands
   properties:
@@ -281,7 +281,7 @@ apis:
 
     More details can be found in the endpoint specification
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Catalog
   properties:
@@ -291,7 +291,7 @@ apis:
   name: Ankorstore Catalog Exchange API
   description: The Catalog Exchange API from Ankorstore — 3 operation(s) for catalog exchange.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Catalog Exchange
   properties:
@@ -724,7 +724,7 @@ apis:
 
     | `delete` | Will not have any impact on existing drafts.                                                                                                                               |
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Catalog Integrations
   properties:
@@ -767,7 +767,7 @@ apis:
 
     </div>
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Deprecated
   properties:
@@ -972,7 +972,7 @@ apis:
 
     4. Use the fulfillment endpoints to track both your inventory and fulfillment status
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Fulfillment
   properties:
@@ -1019,7 +1019,7 @@ apis:
 
     different currency zones.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags: []
   tags_raw:
   - General
@@ -1030,7 +1030,7 @@ apis:
   name: Ankorstore Integration API
   description: The Integration API from Ankorstore — 1 operation(s) for integration.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Integration
   properties:
@@ -1040,7 +1040,7 @@ apis:
   name: Ankorstore Locations API
   description: The Locations API from Ankorstore — 1 operation(s) for locations.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: http://www.ankorlocal.com:8000
   tags:
   - Location
   tags_raw:
@@ -1052,7 +1052,7 @@ apis:
   name: Ankorstore Media API
   description: Operations for documents linked to fulfillment requests
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: http://www.ankorlocal.com:8000
   tags:
   - Media
   properties:
@@ -1062,7 +1062,7 @@ apis:
   name: Ankorstore Movements API
   description: The Movements API from Ankorstore — 2 operation(s) for movements.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: http://www.ankorlocal.com:8000
   tags:
   - Movements
   properties:
@@ -2076,7 +2076,7 @@ apis:
 
     </div>
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Ordering
   properties:
@@ -2387,7 +2387,7 @@ apis:
 
     VAT is calculated automatically based on the customer's address and product configuration.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - OrderPay
   properties:
@@ -2765,7 +2765,7 @@ apis:
 
     </div>
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Shipping
   properties:
@@ -2775,7 +2775,7 @@ apis:
   name: Ankorstore State API
   description: The State API from Ankorstore — 1 operation(s) for state.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: http://www.ankorlocal.com:8000
   tags:
   - States
   tags_raw:
@@ -2787,7 +2787,7 @@ apis:
   name: Ankorstore Stock Management API
   description: The Stock Management API from Ankorstore — 1 operation(s) for stock management.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Stock Management
   properties:
@@ -2805,7 +2805,7 @@ apis:
     \ for every test order, to find this, \nlogin as that retailer you created and open up the developer\
     \ tools. You will see it logged to the console."
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Testing
   properties:
@@ -2880,7 +2880,7 @@ apis:
 
     - `stripePublicKey` - The Stripe public key, needed if your integration handles payment flows client-side
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - User
   properties:
@@ -2890,7 +2890,7 @@ apis:
   name: Ankorstore Users API
   description: The Users API from Ankorstore — 1 operation(s) for users.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - User
   tags_raw:
@@ -3134,7 +3134,7 @@ apis:
 
     for detailed information.
   humanURL: https://ankorstore.github.io/api-docs/
-  baseURL: https://www.ankorstore.com
+  baseURL: https://www.public.ankorstore-sandbox.com
   tags:
   - Webhook
   tags_raw:

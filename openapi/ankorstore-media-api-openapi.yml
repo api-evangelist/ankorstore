@@ -182,29 +182,6 @@ paths:
       - Media
 components:
   schemas:
-    Media:
-      type: object
-      description: Representation of a media resource.
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier of the uploaded document.
-        type:
-          type: string
-          example: media
-          description: Resource type (always `media`).
-        attributes:
-          $ref: '#/components/schemas/MediaAttributes'
-    JsonApiObject:
-      type: object
-      description: JSON:API version information.
-      properties:
-        version:
-          type: string
-          example: '1.0'
-          description: JSON:API specification version.
-      additionalProperties: false
     MediaAttributes:
       type: object
       description: Attributes describing an uploaded document.
@@ -237,11 +214,47 @@ components:
           description: 'Encoding format used for the content field. Only present when explicitly requested.
 
             '
+    Media:
+      type: object
+      description: Representation of a media resource.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the uploaded document.
+        type:
+          type: string
+          example: media
+          description: Resource type (always `media`).
+        attributes:
+          $ref: '#/components/schemas/MediaAttributes'
+    JsonApiObject:
+      type: object
+      description: JSON:API version information.
+      properties:
+        version:
+          type: string
+          example: '1.0'
+          description: JSON:API specification version.
+      additionalProperties: false
+    ErrorMeta:
+      type: object
+      description: Additional metadata for an error.
+      properties:
+        filename:
+          type: string
+          description: Name of the file related to the error.
+      additionalProperties: true
     MediaList:
       type: array
       description: List of media resources.
       items:
         $ref: '#/components/schemas/Media'
+    ErrorList:
+      type: array
+      description: List of errors.
+      items:
+        $ref: '#/components/schemas/Error'
     Error:
       type: object
       description: A single error item.
@@ -263,16 +276,3 @@ components:
           description: Human-readable description of the error.
         meta:
           $ref: '#/components/schemas/ErrorMeta'
-    ErrorList:
-      type: array
-      description: List of errors.
-      items:
-        $ref: '#/components/schemas/Error'
-    ErrorMeta:
-      type: object
-      description: Additional metadata for an error.
-      properties:
-        filename:
-          type: string
-          description: Name of the file related to the error.
-      additionalProperties: true

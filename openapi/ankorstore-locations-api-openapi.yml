@@ -44,10 +44,6 @@ paths:
           $ref: '#/components/responses/LocationCollectionResponse'
 components:
   schemas:
-    id:
-      type: string
-      format: uuid
-      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
     paginationLinks:
       description: Pagination links
       type: object
@@ -68,36 +64,15 @@ components:
       - first
       - next
       - prev
-    jsonapi:
+    paginationMeta:
       type: object
-      description: An object describing the server's implementation
-      additionalProperties: false
+      description: Meta with Pagination Details
+      additionalProperties: true
       properties:
-        version:
-          type: string
-        meta:
-          $ref: '#/components/schemas/meta'
-    meta:
-      type: object
-      description: Non-standard meta-information that can not be represented as an attribute or relationship.
-    Location:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/LocationType'
-        externalId:
-          description: Identifier of the external entity that this location refers to (brandUuid, warehouseUuid, etc)
-          type: string
-          format: uuid
+        page:
+          $ref: '#/components/schemas/paginationPage'
       required:
-      - type
-      - externalId
-    LocationType:
-      type: string
-      enum:
-      - warehouse
-      - brand
-      - retailer
+      - page
     LocationResource:
       type: object
       properties:
@@ -118,6 +93,59 @@ components:
           type: array
           items:
             type: string
+    Error:
+      type: object
+      required:
+      - status
+      - title
+      properties:
+        status:
+          type: integer
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+        title:
+          type: string
+        detail:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+    LocationType:
+      type: string
+      enum:
+      - warehouse
+      - brand
+      - retailer
+    Location:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/LocationType'
+        externalId:
+          description: Identifier of the external entity that this location refers to (brandUuid, warehouseUuid, etc)
+          type: string
+          format: uuid
+      required:
+      - type
+      - externalId
+    id:
+      type: string
+      format: uuid
+      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
     paginationPage:
       description: Cursor pagination details
       type: object
@@ -139,38 +167,26 @@ components:
       - to
       - hasMore
       - perPage
-    type:
-      type: string
-      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
-    Error:
+    meta:
       type: object
-      required:
-      - status
-      - title
-      properties:
-        status:
-          type: integer
-        source:
-          type: object
-          properties:
-            pointer:
-              type: string
-        title:
-          type: string
-        detail:
-          type: string
-        meta:
-          $ref: '#/components/schemas/ErrorMeta'
-    paginationMeta:
-      type: object
-      description: Meta with Pagination Details
-      additionalProperties: true
-      properties:
-        page:
-          $ref: '#/components/schemas/paginationPage'
-      required:
-      - page
+      description: Non-standard meta-information that can not be represented as an attribute or relationship.
   parameters:
+    xAksRetailerUuidHeader:
+      name: X-Aks-Retailer-Uuid
+      in: header
+      description: Retailer entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
+    externalIdFilter:
+      name: filter[externalId]
+      in: query
+      description: An external identifier to match on
+      required: false
+      schema:
+        type: string
+        format: uuid
     xAksBrandUuidHeader:
       name: X-Aks-Brand-Uuid
       in: header
@@ -179,26 +195,10 @@ components:
         type: string
         format: uuid
         nullable: true
-    acceptInHeader:
-      name: Accept
-      in: header
-      description: application/vnd.api+json
-      schema:
-        type: string
-        default: application/vnd.api+json
-    pageLimit:
-      name: page[limit]
+    pageBefore:
+      name: page[before]
       in: query
-      description: limit the amount of results returned
-      required: false
-      schema:
-        type: integer
-        format: int
-        default: 10
-    externalIdFilter:
-      name: filter[externalId]
-      in: query
-      description: An external identifier to match on
+      description: show items before the provided ID (uuid format)
       required: false
       schema:
         type: string
@@ -213,22 +213,6 @@ components:
         minItems: 1
         items:
           $ref: '#/components/schemas/LocationType'
-    pageBefore:
-      name: page[before]
-      in: query
-      description: show items before the provided ID (uuid format)
-      required: false
-      schema:
-        type: string
-        format: uuid
-    xAksRetailerUuidHeader:
-      name: X-Aks-Retailer-Uuid
-      in: header
-      description: Retailer entity when none provided via auth token
-      schema:
-        type: string
-        format: uuid
-        nullable: true
     pageAfter:
       name: page[after]
       in: query
@@ -237,6 +221,22 @@ components:
       schema:
         type: string
         format: uuid
+    pageLimit:
+      name: page[limit]
+      in: query
+      description: limit the amount of results returned
+      required: false
+      schema:
+        type: integer
+        format: int
+        default: 10
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
   responses:
     ErrorResponse:
       description: Example response
