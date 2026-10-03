@@ -44,6 +44,22 @@ paths:
           $ref: '#/components/responses/LocationCollectionResponse'
 components:
   schemas:
+    LocationResource:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/Location'
+      required:
+      - type
+      - id
+      - attributes
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
     paginationLinks:
       description: Pagination links
       type: object
@@ -73,79 +89,12 @@ components:
           $ref: '#/components/schemas/paginationPage'
       required:
       - page
-    LocationResource:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        id:
-          $ref: '#/components/schemas/id'
-        attributes:
-          $ref: '#/components/schemas/Location'
-      required:
-      - type
-      - id
-      - attributes
-    ErrorMeta:
-      type: object
-      properties:
-        stack:
-          type: array
-          items:
-            type: string
-    Error:
-      type: object
-      required:
-      - status
-      - title
-      properties:
-        status:
-          type: integer
-        source:
-          type: object
-          properties:
-            pointer:
-              type: string
-        title:
-          type: string
-        detail:
-          type: string
-        meta:
-          $ref: '#/components/schemas/ErrorMeta'
-    type:
-      type: string
-      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
     LocationType:
       type: string
       enum:
       - warehouse
       - brand
       - retailer
-    Location:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/LocationType'
-        externalId:
-          description: Identifier of the external entity that this location refers to (brandUuid, warehouseUuid, etc)
-          type: string
-          format: uuid
-      required:
-      - type
-      - externalId
-    id:
-      type: string
-      format: uuid
-      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
-    jsonapi:
-      type: object
-      description: An object describing the server's implementation
-      additionalProperties: false
-      properties:
-        version:
-          type: string
-        meta:
-          $ref: '#/components/schemas/meta'
     paginationPage:
       description: Cursor pagination details
       type: object
@@ -167,6 +116,57 @@ components:
       - to
       - hasMore
       - perPage
+    ErrorMeta:
+      type: object
+      properties:
+        stack:
+          type: array
+          items:
+            type: string
+    Location:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/LocationType'
+        externalId:
+          description: Identifier of the external entity that this location refers to (brandUuid, warehouseUuid, etc)
+          type: string
+          format: uuid
+      required:
+      - type
+      - externalId
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+    Error:
+      type: object
+      required:
+      - status
+      - title
+      properties:
+        status:
+          type: integer
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+        title:
+          type: string
+        detail:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
+    id:
+      type: string
+      format: uuid
+      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
     meta:
       type: object
       description: Non-standard meta-information that can not be represented as an attribute or relationship.
@@ -179,30 +179,6 @@ components:
         type: string
         format: uuid
         nullable: true
-    externalIdFilter:
-      name: filter[externalId]
-      in: query
-      description: An external identifier to match on
-      required: false
-      schema:
-        type: string
-        format: uuid
-    xAksBrandUuidHeader:
-      name: X-Aks-Brand-Uuid
-      in: header
-      description: Brand entity when none provided via auth token
-      schema:
-        type: string
-        format: uuid
-        nullable: true
-    pageBefore:
-      name: page[before]
-      in: query
-      description: show items before the provided ID (uuid format)
-      required: false
-      schema:
-        type: string
-        format: uuid
     locationTypeFilter:
       name: filter[locationTypes][]
       in: query
@@ -213,6 +189,37 @@ components:
         minItems: 1
         items:
           $ref: '#/components/schemas/LocationType'
+    externalIdFilter:
+      name: filter[externalId]
+      in: query
+      description: An external identifier to match on
+      required: false
+      schema:
+        type: string
+        format: uuid
+    pageBefore:
+      name: page[before]
+      in: query
+      description: show items before the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
+    xAksBrandUuidHeader:
+      name: X-Aks-Brand-Uuid
+      in: header
+      description: Brand entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
     pageAfter:
       name: page[after]
       in: query
@@ -230,29 +237,7 @@ components:
         type: integer
         format: int
         default: 10
-    acceptInHeader:
-      name: Accept
-      in: header
-      description: application/vnd.api+json
-      schema:
-        type: string
-        default: application/vnd.api+json
   responses:
-    ErrorResponse:
-      description: Example response
-      content:
-        application/vnd.api+json:
-          schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
-              jsonapi:
-                $ref: '#/components/schemas/jsonapi'
-            required:
-            - errors
     LocationCollectionResponse:
       description: Set of locations
       content:
@@ -273,6 +258,21 @@ components:
             required:
             - data
             - jsonapi
+    ErrorResponse:
+      description: Example response
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+              jsonapi:
+                $ref: '#/components/schemas/jsonapi'
+            required:
+            - errors
   securitySchemes:
     CookieKey:
       type: apiKey

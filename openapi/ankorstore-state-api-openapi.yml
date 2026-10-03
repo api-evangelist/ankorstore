@@ -75,6 +75,9 @@ paths:
           $ref: '#/components/responses/NoContent'
 components:
   schemas:
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
     paginationLinks:
       description: Pagination links
       type: object
@@ -95,6 +98,21 @@ components:
       - first
       - next
       - prev
+    ProductVariantStockState:
+      type: object
+      title: ProductVariantStockState
+      properties:
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantStockQuantity'
+      required:
+      - quantities
+    ProductType:
+      type: string
+      enum:
+      - single
+      - bundle
     paginationMeta:
       type: object
       description: Meta with Pagination Details
@@ -104,97 +122,12 @@ components:
           $ref: '#/components/schemas/paginationPage'
       required:
       - page
-    ErrorMeta:
-      type: object
-      properties:
-        stack:
-          type: array
-          items:
-            type: string
-    Error:
-      type: object
-      required:
-      - status
-      - title
-      properties:
-        status:
-          type: integer
-        source:
-          type: object
-          properties:
-            pointer:
-              type: string
-        title:
-          type: string
-        detail:
-          type: string
-        meta:
-          $ref: '#/components/schemas/ErrorMeta'
-    type:
-      type: string
-      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
-    Lot:
-      type: object
-      properties:
-        number:
-          type: string
-        expiryDate:
-          type: string
-          nullable: true
-          format: date
-          x-go-type: civil.Date
-          x-go-type-import:
-            path: github.com/ankorstore/astral/pkg/civil
-            name: civil
-      required:
-      - number
-    ProductVariantStockStateResource:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        id:
-          $ref: '#/components/schemas/id'
-        attributes:
-          $ref: '#/components/schemas/ProductVariantStockState'
-      required:
-      - type
-      - id
-      - attributes
     LocationType:
       type: string
       enum:
       - warehouse
       - brand
       - retailer
-    ProductType:
-      type: string
-      enum:
-      - single
-      - bundle
-    StockStatus:
-      type: string
-      enum:
-      - onHand
-      - available
-      - damaged
-      - reserved
-      - qualityControl
-      - blocked
-      - incoming
-    id:
-      type: string
-      format: uuid
-      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
-    jsonapi:
-      type: object
-      description: An object describing the server's implementation
-      additionalProperties: false
-      properties:
-        version:
-          type: string
-        meta:
-          $ref: '#/components/schemas/meta'
     ProductVariantStockQuantity:
       type: object
       title: ProductVariantStockQuantity
@@ -222,16 +155,21 @@ components:
       - locationType
       - status
       - unitMultiplier
-    ProductVariantStockState:
+    Lot:
       type: object
-      title: ProductVariantStockState
       properties:
-        quantities:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariantStockQuantity'
+        number:
+          type: string
+        expiryDate:
+          type: string
+          nullable: true
+          format: date
+          x-go-type: civil.Date
+          x-go-type-import:
+            path: github.com/ankorstore/astral/pkg/civil
+            name: civil
       required:
-      - quantities
+      - number
     paginationPage:
       description: Cursor pagination details
       type: object
@@ -253,25 +191,72 @@ components:
       - to
       - hasMore
       - perPage
+    StockStatus:
+      type: string
+      enum:
+      - onHand
+      - available
+      - damaged
+      - reserved
+      - qualityControl
+      - blocked
+      - incoming
+    ErrorMeta:
+      type: object
+      properties:
+        stack:
+          type: array
+          items:
+            type: string
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+    ProductVariantStockStateResource:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/ProductVariantStockState'
+      required:
+      - type
+      - id
+      - attributes
+    Error:
+      type: object
+      required:
+      - status
+      - title
+      properties:
+        status:
+          type: integer
+        source:
+          type: object
+          properties:
+            pointer:
+              type: string
+        title:
+          type: string
+        detail:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
+    id:
+      type: string
+      format: uuid
+      description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
     meta:
       type: object
       description: Non-standard meta-information that can not be represented as an attribute or relationship.
   parameters:
-    xAksRetailerUuidHeader:
-      name: X-Aks-Retailer-Uuid
-      in: header
-      description: Retailer entity when none provided via auth token
-      schema:
-        type: string
-        format: uuid
-        nullable: true
-    productTypeFilter:
-      name: filter[productType]
-      in: query
-      description: A specific product type to check quantities for
-      required: false
-      schema:
-        $ref: '#/components/schemas/ProductType'
     stateAt:
       name: stateAt
       in: query
@@ -279,20 +264,21 @@ components:
       required: false
       schema:
         type: integer
-    statusFilter:
-      name: filter[status][]
+    locationIdFilter:
+      name: filter[locationIds][]
       in: query
-      description: A set of statuses to check quantities for
+      description: A set of identifiers representing the locations to check quantities at
       required: false
       schema:
         type: array
         minItems: 1
         items:
-          $ref: '#/components/schemas/StockStatus'
-    xAksBrandUuidHeader:
-      name: X-Aks-Brand-Uuid
+          type: string
+          format: uuid
+    xAksRetailerUuidHeader:
+      name: X-Aks-Retailer-Uuid
       in: header
-      description: Brand entity when none provided via auth token
+      description: Retailer entity when none provided via auth token
       schema:
         type: string
         format: uuid
@@ -308,25 +294,6 @@ components:
         items:
           type: string
           format: uuid
-    locationIdFilter:
-      name: filter[locationIds][]
-      in: query
-      description: A set of identifiers representing the locations to check quantities at
-      required: false
-      schema:
-        type: array
-        minItems: 1
-        items:
-          type: string
-          format: uuid
-    pageBefore:
-      name: page[before]
-      in: query
-      description: show items before the provided ID (uuid format)
-      required: false
-      schema:
-        type: string
-        format: uuid
     locationTypeFilter:
       name: filter[locationTypes][]
       in: query
@@ -337,6 +304,46 @@ components:
         minItems: 1
         items:
           $ref: '#/components/schemas/LocationType'
+    statusFilter:
+      name: filter[status][]
+      in: query
+      description: A set of statuses to check quantities for
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/StockStatus'
+    productTypeFilter:
+      name: filter[productType]
+      in: query
+      description: A specific product type to check quantities for
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProductType'
+    pageBefore:
+      name: page[before]
+      in: query
+      description: show items before the provided ID (uuid format)
+      required: false
+      schema:
+        type: string
+        format: uuid
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
+    xAksBrandUuidHeader:
+      name: X-Aks-Brand-Uuid
+      in: header
+      description: Brand entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
     pageAfter:
       name: page[after]
       in: query
@@ -354,14 +361,9 @@ components:
         type: integer
         format: int
         default: 10
-    acceptInHeader:
-      name: Accept
-      in: header
-      description: application/vnd.api+json
-      schema:
-        type: string
-        default: application/vnd.api+json
   responses:
+    NoContent:
+      description: No content
     StockStateCollectionResponse:
       description: Set of stock state records
       content:
@@ -449,8 +451,6 @@ components:
                 $ref: '#/components/schemas/jsonapi'
             required:
             - errors
-    NoContent:
-      description: No content
   requestBodies:
     StockStateRequest:
       content:

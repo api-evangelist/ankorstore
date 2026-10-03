@@ -134,26 +134,20 @@ paths:
           $ref: '#/components/responses/TransactionCollectionResponse'
 components:
   schemas:
-    paginationLinks:
-      description: Pagination links
+    linkage:
+      description: Resource identification present in Resource Objects and Resource Identifier Objects.
       type: object
-      properties:
-        first:
-          type: string
-          example: https://www.ankorstore.com/api/v1/orders?page[limit]=15
-          nullable: true
-        prev:
-          type: string
-          example: https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15
-          nullable: true
-        next:
-          type: string
-          example: https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15
-          nullable: true
       required:
-      - first
-      - next
-      - prev
+      - id
+      - type
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        type:
+          $ref: '#/components/schemas/type'
+        meta:
+          $ref: '#/components/schemas/meta'
+      additionalProperties: false
     TransactionCollection:
       type: object
       properties:
@@ -175,6 +169,279 @@ components:
       required:
       - data
       - jsonapi
+    type:
+      type: string
+      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+    paginationLinks:
+      description: Pagination links
+      type: object
+      properties:
+        first:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[limit]=15
+          nullable: true
+        prev:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[before]=1189606a-139e-4b4e-917c-b0c992498bad2&page[limit]=15
+          nullable: true
+        next:
+          type: string
+          example: https://www.ankorstore.com/api/v1/orders?page[after]=1189606a-139e-4b4e-917c-b0c992498bad&page[limit]=15
+          nullable: true
+      required:
+      - first
+      - next
+      - prev
+    PostingRelationshipsTransactions:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/relationshipToOne'
+    relationshipToOne:
+      description: References to other resource objects in a to-one (`relationship`). Relationships can be specified by including a member in a resource's links object.
+      $ref: '#/components/schemas/linkage'
+    TransactionResource:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/Transaction'
+        relationships:
+          $ref: '#/components/schemas/TransactionRelationships'
+      required:
+      - type
+      - id
+      - attributes
+    ProductVariantStockState:
+      type: object
+      title: ProductVariantStockState
+      properties:
+        quantities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductVariantStockQuantity'
+      required:
+      - quantities
+    ProductType:
+      type: string
+      enum:
+      - single
+      - bundle
+    paginationMeta:
+      type: object
+      description: Meta with Pagination Details
+      additionalProperties: true
+      properties:
+        page:
+          $ref: '#/components/schemas/paginationPage'
+      required:
+      - page
+    LocationStatus:
+      type: string
+      enum:
+      - available
+      - damaged
+      - reserved
+      - qualityControl
+      - blocked
+      - incoming
+      - void
+    PostingsRelationships:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/PostingRelationshipsTransactions'
+        state:
+          $ref: '#/components/schemas/PostingRelationshipsStates'
+    PostingCollection:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostingResource'
+        jsonapi:
+          $ref: '#/components/schemas/jsonapi'
+        meta:
+          $ref: '#/components/schemas/paginationMeta'
+        links:
+          $ref: '#/components/schemas/paginationLinks'
+        included:
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/TransactionResource'
+            - $ref: '#/components/schemas/ProductVariantStockStateResource'
+      required:
+      - data
+      - jsonapi
+    LocationType:
+      type: string
+      enum:
+      - warehouse
+      - brand
+      - retailer
+    PostingRelationshipsStates:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/relationshipToOne'
+    ProductVariantStockQuantity:
+      type: object
+      title: ProductVariantStockQuantity
+      properties:
+        quantity:
+          type: integer
+        locationId:
+          type: string
+          format: uuid
+        locationType:
+          $ref: '#/components/schemas/LocationType'
+        status:
+          $ref: '#/components/schemas/StockStatus'
+        lot:
+          $ref: '#/components/schemas/Lot'
+        unitMultiplier:
+          type: integer
+          minimum: 1
+          description: The number of units each product variant (batch) consists of
+        productType:
+          $ref: '#/components/schemas/ProductType'
+      required:
+      - quantity
+      - locationId
+      - locationType
+      - status
+      - unitMultiplier
+    MovementType:
+      type: string
+      enum:
+      - order_created
+      - order_cancelled
+      - order_reserved
+      - order_shipped
+      - order_received
+      - replenishment
+      - snapshot
+      - manual
+      - broken
+      - lost
+      - found
+      - destroyed
+      - replenishment_mismatch
+      - delivery_refused
+      - returned_to_brand
+      - adjustment_reversed
+      - quality_control
+      - expired
+      - brand_request
+      - blocked_by_provider
+      - unblocked
+      - batched
+      - unbatched
+      - returned
+      - batch_modified
+      - expiry_date_modified
+    metadata:
+      type: object
+      additionalProperties:
+        type: string
+    Lot:
+      type: object
+      properties:
+        number:
+          type: string
+        expiryDate:
+          type: string
+          nullable: true
+          format: date
+          x-go-type: civil.Date
+          x-go-type-import:
+            path: github.com/ankorstore/astral/pkg/civil
+            name: civil
+      required:
+      - number
+    paginationPage:
+      description: Cursor pagination details
+      type: object
+      properties:
+        from:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        to:
+          type: string
+          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+          nullable: true
+        hasMore:
+          type: boolean
+        perPage:
+          type: integer
+      required:
+      - from
+      - to
+      - hasMore
+      - perPage
+    StockStatus:
+      type: string
+      enum:
+      - onHand
+      - available
+      - damaged
+      - reserved
+      - qualityControl
+      - blocked
+      - incoming
+    TransactionRelationships:
+      type: object
+      properties:
+        postings:
+          $ref: '#/components/schemas/TransactionRelationshipsPostings'
+    relationshipToMany:
+      description: An array of objects each containing `type` and `id` members for to-many relationships.
+      type: array
+      items:
+        $ref: '#/components/schemas/linkage'
+      uniqueItems: true
+    ErrorMeta:
+      type: object
+      properties:
+        stack:
+          type: array
+          items:
+            type: string
+    Transaction:
+      type: object
+      title: Transaction
+      properties:
+        relatedId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        metadata:
+          $ref: '#/components/schemas/metadata'
+      required:
+      - relatedId
+      - createdAt
+      - metadata
+    jsonapi:
+      type: object
+      description: An object describing the server's implementation
+      additionalProperties: false
+      properties:
+        version:
+          type: string
+        meta:
+          $ref: '#/components/schemas/meta'
+    TransactionRelationshipsPostings:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/relationshipToMany'
     Posting:
       type: object
       title: Posting
@@ -212,46 +479,34 @@ components:
       - quantity
       - movementType
       - unitMultiplier
-    TransactionRelationships:
+    PostingResource:
       type: object
       properties:
-        postings:
-          $ref: '#/components/schemas/TransactionRelationshipsPostings'
-    paginationMeta:
-      type: object
-      description: Meta with Pagination Details
-      additionalProperties: true
-      properties:
-        page:
-          $ref: '#/components/schemas/paginationPage'
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/Posting'
+        relationships:
+          $ref: '#/components/schemas/PostingsRelationships'
       required:
-      - page
-    relationshipToMany:
-      description: An array of objects each containing `type` and `id` members for to-many relationships.
-      type: array
-      items:
-        $ref: '#/components/schemas/linkage'
-      uniqueItems: true
-    TransactionRelationshipsPostings:
+      - type
+      - id
+      - attributes
+    ProductVariantStockStateResource:
       type: object
       properties:
-        data:
-          $ref: '#/components/schemas/relationshipToMany'
-    ErrorMeta:
-      type: object
-      properties:
-        stack:
-          type: array
-          items:
-            type: string
-    PostingRelationshipsStates:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/relationshipToOne'
-    type:
-      type: string
-      description: '[resource object type](https://jsonapi.org/format/#document-resource-object-identification)'
+        type:
+          $ref: '#/components/schemas/type'
+        id:
+          $ref: '#/components/schemas/id'
+        attributes:
+          $ref: '#/components/schemas/ProductVariantStockState'
+      required:
+      - type
+      - id
+      - attributes
     Error:
       type: object
       required:
@@ -271,269 +526,25 @@ components:
           type: string
         meta:
           $ref: '#/components/schemas/ErrorMeta'
-    Lot:
-      type: object
-      properties:
-        number:
-          type: string
-        expiryDate:
-          type: string
-          nullable: true
-          format: date
-          x-go-type: civil.Date
-          x-go-type-import:
-            path: github.com/ankorstore/astral/pkg/civil
-            name: civil
-      required:
-      - number
-    PostingsRelationships:
-      type: object
-      properties:
-        transaction:
-          $ref: '#/components/schemas/PostingRelationshipsTransactions'
-        state:
-          $ref: '#/components/schemas/PostingRelationshipsStates'
-    ProductVariantStockStateResource:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        id:
-          $ref: '#/components/schemas/id'
-        attributes:
-          $ref: '#/components/schemas/ProductVariantStockState'
-      required:
-      - type
-      - id
-      - attributes
-    TransactionResource:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        id:
-          $ref: '#/components/schemas/id'
-        attributes:
-          $ref: '#/components/schemas/Transaction'
-        relationships:
-          $ref: '#/components/schemas/TransactionRelationships'
-      required:
-      - type
-      - id
-      - attributes
-    MovementType:
-      type: string
-      enum:
-      - order_created
-      - order_cancelled
-      - order_reserved
-      - order_shipped
-      - order_received
-      - replenishment
-      - snapshot
-      - manual
-      - broken
-      - lost
-      - found
-      - destroyed
-      - replenishment_mismatch
-      - delivery_refused
-      - returned_to_brand
-      - adjustment_reversed
-      - quality_control
-      - expired
-      - brand_request
-      - blocked_by_provider
-      - unblocked
-      - batched
-      - unbatched
-      - returned
-      - batch_modified
-      - expiry_date_modified
-    relationshipToOne:
-      description: References to other resource objects in a to-one (`relationship`). Relationships can be specified by including a member in a resource's links object.
-      $ref: '#/components/schemas/linkage'
-    LocationType:
-      type: string
-      enum:
-      - warehouse
-      - brand
-      - retailer
-    ProductType:
-      type: string
-      enum:
-      - single
-      - bundle
-    StockStatus:
-      type: string
-      enum:
-      - onHand
-      - available
-      - damaged
-      - reserved
-      - qualityControl
-      - blocked
-      - incoming
     id:
       type: string
       format: uuid
       description: '[resource object identifier](https://jsonapi.org/format/#document-resource-object-identification)'
-    PostingResource:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/type'
-        id:
-          $ref: '#/components/schemas/id'
-        attributes:
-          $ref: '#/components/schemas/Posting'
-        relationships:
-          $ref: '#/components/schemas/PostingsRelationships'
-      required:
-      - type
-      - id
-      - attributes
-    metadata:
-      type: object
-      additionalProperties:
-        type: string
-    jsonapi:
-      type: object
-      description: An object describing the server's implementation
-      additionalProperties: false
-      properties:
-        version:
-          type: string
-        meta:
-          $ref: '#/components/schemas/meta'
-    PostingCollection:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/PostingResource'
-        jsonapi:
-          $ref: '#/components/schemas/jsonapi'
-        meta:
-          $ref: '#/components/schemas/paginationMeta'
-        links:
-          $ref: '#/components/schemas/paginationLinks'
-        included:
-          type: array
-          items:
-            anyOf:
-            - $ref: '#/components/schemas/TransactionResource'
-            - $ref: '#/components/schemas/ProductVariantStockStateResource'
-      required:
-      - data
-      - jsonapi
-    LocationStatus:
-      type: string
-      enum:
-      - available
-      - damaged
-      - reserved
-      - qualityControl
-      - blocked
-      - incoming
-      - void
-    ProductVariantStockQuantity:
-      type: object
-      title: ProductVariantStockQuantity
-      properties:
-        quantity:
-          type: integer
-        locationId:
-          type: string
-          format: uuid
-        locationType:
-          $ref: '#/components/schemas/LocationType'
-        status:
-          $ref: '#/components/schemas/StockStatus'
-        lot:
-          $ref: '#/components/schemas/Lot'
-        unitMultiplier:
-          type: integer
-          minimum: 1
-          description: The number of units each product variant (batch) consists of
-        productType:
-          $ref: '#/components/schemas/ProductType'
-      required:
-      - quantity
-      - locationId
-      - locationType
-      - status
-      - unitMultiplier
-    ProductVariantStockState:
-      type: object
-      title: ProductVariantStockState
-      properties:
-        quantities:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductVariantStockQuantity'
-      required:
-      - quantities
-    linkage:
-      description: Resource identification present in Resource Objects and Resource Identifier Objects.
-      type: object
-      required:
-      - id
-      - type
-      properties:
-        id:
-          $ref: '#/components/schemas/id'
-        type:
-          $ref: '#/components/schemas/type'
-        meta:
-          $ref: '#/components/schemas/meta'
-      additionalProperties: false
     meta:
       type: object
       description: Non-standard meta-information that can not be represented as an attribute or relationship.
-    paginationPage:
-      description: Cursor pagination details
-      type: object
-      properties:
-        from:
-          type: string
-          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
-          nullable: true
-        to:
-          type: string
-          pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
-          nullable: true
-        hasMore:
-          type: boolean
-        perPage:
-          type: integer
-      required:
-      - from
-      - to
-      - hasMore
-      - perPage
-    Transaction:
-      type: object
-      title: Transaction
-      properties:
-        relatedId:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        metadata:
-          $ref: '#/components/schemas/metadata'
-      required:
-      - relatedId
-      - createdAt
-      - metadata
-    PostingRelationshipsTransactions:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/relationshipToOne'
   parameters:
+    locationIdFilter:
+      name: filter[locationIds][]
+      in: query
+      description: A set of identifiers representing the locations to check quantities at
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          format: uuid
     xAksRetailerUuidHeader:
       name: X-Aks-Retailer-Uuid
       in: header
@@ -542,47 +553,10 @@ components:
         type: string
         format: uuid
         nullable: true
-    pageAfterUuidTimestamp:
-      name: page[after]
-      in: query
-      description: show items after the provided cursors (uuid<,timestamp> format)
-      required: false
-      schema:
-        type: string
-        pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
-    locationStatusFilter:
-      name: filter[locationStatus][]
-      in: query
-      description: A set of (location) statuses to check quantities for
-      required: false
-      schema:
-        type: array
-        minItems: 1
-        items:
-          $ref: '#/components/schemas/LocationStatus'
-    xAksBrandUuidHeader:
-      name: X-Aks-Brand-Uuid
-      in: header
-      description: Brand entity when none provided via auth token
-      schema:
-        type: string
-        format: uuid
-        nullable: true
     productVariantIdFilter:
       name: filter[productVariantIds][]
       in: query
       description: A set of identifiers representing the items to check quantities for
-      required: false
-      schema:
-        type: array
-        minItems: 1
-        items:
-          type: string
-          format: uuid
-    locationIdFilter:
-      name: filter[locationIds][]
-      in: query
-      description: A set of identifiers representing the locations to check quantities at
       required: false
       schema:
         type: array
@@ -600,6 +574,39 @@ components:
         minItems: 1
         items:
           $ref: '#/components/schemas/LocationType'
+    locationStatusFilter:
+      name: filter[locationStatus][]
+      in: query
+      description: A set of (location) statuses to check quantities for
+      required: false
+      schema:
+        type: array
+        minItems: 1
+        items:
+          $ref: '#/components/schemas/LocationStatus'
+    pageAfterUuidTimestamp:
+      name: page[after]
+      in: query
+      description: show items after the provided cursors (uuid<,timestamp> format)
+      required: false
+      schema:
+        type: string
+        pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
+    acceptInHeader:
+      name: Accept
+      in: header
+      description: application/vnd.api+json
+      schema:
+        type: string
+        default: application/vnd.api+json
+    xAksBrandUuidHeader:
+      name: X-Aks-Brand-Uuid
+      in: header
+      description: Brand entity when none provided via auth token
+      schema:
+        type: string
+        format: uuid
+        nullable: true
     pageLimit:
       name: page[limit]
       in: query
@@ -609,13 +616,6 @@ components:
         type: integer
         format: int
         default: 10
-    acceptInHeader:
-      name: Accept
-      in: header
-      description: application/vnd.api+json
-      schema:
-        type: string
-        default: application/vnd.api+json
     pageBeforeUuidTimestamp:
       name: page[before]
       in: query
@@ -625,21 +625,6 @@ components:
         type: string
         pattern: ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}(,\d{10})?$
   responses:
-    ErrorResponse:
-      description: Example response
-      content:
-        application/vnd.api+json:
-          schema:
-            type: object
-            properties:
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
-              jsonapi:
-                $ref: '#/components/schemas/jsonapi'
-            required:
-            - errors
     TransactionCollectionResponse:
       description: Set of transactions
       content:
@@ -867,6 +852,21 @@ components:
                       unitMultiplier: 2
                       lotNumber: lot-X
                       expiryDate: '2025-01-01'
+    ErrorResponse:
+      description: Example response
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+              jsonapi:
+                $ref: '#/components/schemas/jsonapi'
+            required:
+            - errors
   securitySchemes:
     CookieKey:
       type: apiKey

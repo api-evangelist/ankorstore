@@ -182,6 +182,27 @@ paths:
       - Media
 components:
   schemas:
+    Error:
+      type: object
+      description: A single error item.
+      properties:
+        status:
+          type: string
+          example: '422'
+          description: HTTP status code.
+        code:
+          type: string
+          enum:
+          - invalid_file_extension
+          - file_too_large
+          - max_files_reached
+          - cannot_download_document
+          description: "Error code:\n  * `invalid_file_extension`: at least one submitted file has an invalid extension.\n  * `file_too_large`: at least one file exceeds the maximum allowed size.\n  * `max_files_reached`: the maximum number of files for the master order has been reached.\n  * `cannot_download_document`: failed to download document from storage.\n"
+        description:
+          type: string
+          description: Human-readable description of the error.
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
     MediaAttributes:
       type: object
       description: Attributes describing an uploaded document.
@@ -214,20 +235,11 @@ components:
           description: 'Encoding format used for the content field. Only present when explicitly requested.
 
             '
-    Media:
-      type: object
-      description: Representation of a media resource.
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: Unique identifier of the uploaded document.
-        type:
-          type: string
-          example: media
-          description: Resource type (always `media`).
-        attributes:
-          $ref: '#/components/schemas/MediaAttributes'
+    MediaList:
+      type: array
+      description: List of media resources.
+      items:
+        $ref: '#/components/schemas/Media'
     JsonApiObject:
       type: object
       description: JSON:API version information.
@@ -245,34 +257,22 @@ components:
           type: string
           description: Name of the file related to the error.
       additionalProperties: true
-    MediaList:
-      type: array
-      description: List of media resources.
-      items:
-        $ref: '#/components/schemas/Media'
+    Media:
+      type: object
+      description: Representation of a media resource.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the uploaded document.
+        type:
+          type: string
+          example: media
+          description: Resource type (always `media`).
+        attributes:
+          $ref: '#/components/schemas/MediaAttributes'
     ErrorList:
       type: array
       description: List of errors.
       items:
         $ref: '#/components/schemas/Error'
-    Error:
-      type: object
-      description: A single error item.
-      properties:
-        status:
-          type: string
-          example: '422'
-          description: HTTP status code.
-        code:
-          type: string
-          enum:
-          - invalid_file_extension
-          - file_too_large
-          - max_files_reached
-          - cannot_download_document
-          description: "Error code:\n  * `invalid_file_extension`: at least one submitted file has an invalid extension.\n  * `file_too_large`: at least one file exceeds the maximum allowed size.\n  * `max_files_reached`: the maximum number of files for the master order has been reached.\n  * `cannot_download_document`: failed to download document from storage.\n"
-        description:
-          type: string
-          description: Human-readable description of the error.
-        meta:
-          $ref: '#/components/schemas/ErrorMeta'
