@@ -182,27 +182,42 @@ paths:
       - Media
 components:
   schemas:
-    Error:
+    MediaList:
+      type: array
+      description: List of media resources.
+      items:
+        $ref: '#/components/schemas/Media'
+    JsonApiObject:
       type: object
-      description: A single error item.
+      description: JSON:API version information.
       properties:
-        status:
+        version:
           type: string
-          example: '422'
-          description: HTTP status code.
-        code:
+          example: '1.0'
+          description: JSON:API specification version.
+      additionalProperties: false
+    Media:
+      type: object
+      description: Representation of a media resource.
+      properties:
+        id:
           type: string
-          enum:
-          - invalid_file_extension
-          - file_too_large
-          - max_files_reached
-          - cannot_download_document
-          description: "Error code:\n  * `invalid_file_extension`: at least one submitted file has an invalid extension.\n  * `file_too_large`: at least one file exceeds the maximum allowed size.\n  * `max_files_reached`: the maximum number of files for the master order has been reached.\n  * `cannot_download_document`: failed to download document from storage.\n"
-        description:
+          format: uuid
+          description: Unique identifier of the uploaded document.
+        type:
           type: string
-          description: Human-readable description of the error.
-        meta:
-          $ref: '#/components/schemas/ErrorMeta'
+          example: media
+          description: Resource type (always `media`).
+        attributes:
+          $ref: '#/components/schemas/MediaAttributes'
+    ErrorMeta:
+      type: object
+      description: Additional metadata for an error.
+      properties:
+        filename:
+          type: string
+          description: Name of the file related to the error.
+      additionalProperties: true
     MediaAttributes:
       type: object
       description: Attributes describing an uploaded document.
@@ -235,42 +250,27 @@ components:
           description: 'Encoding format used for the content field. Only present when explicitly requested.
 
             '
-    MediaList:
-      type: array
-      description: List of media resources.
-      items:
-        $ref: '#/components/schemas/Media'
-    JsonApiObject:
+    Error:
       type: object
-      description: JSON:API version information.
+      description: A single error item.
       properties:
-        version:
+        status:
           type: string
-          example: '1.0'
-          description: JSON:API specification version.
-      additionalProperties: false
-    ErrorMeta:
-      type: object
-      description: Additional metadata for an error.
-      properties:
-        filename:
+          example: '422'
+          description: HTTP status code.
+        code:
           type: string
-          description: Name of the file related to the error.
-      additionalProperties: true
-    Media:
-      type: object
-      description: Representation of a media resource.
-      properties:
-        id:
+          enum:
+          - invalid_file_extension
+          - file_too_large
+          - max_files_reached
+          - cannot_download_document
+          description: "Error code:\n  * `invalid_file_extension`: at least one submitted file has an invalid extension.\n  * `file_too_large`: at least one file exceeds the maximum allowed size.\n  * `max_files_reached`: the maximum number of files for the master order has been reached.\n  * `cannot_download_document`: failed to download document from storage.\n"
+        description:
           type: string
-          format: uuid
-          description: Unique identifier of the uploaded document.
-        type:
-          type: string
-          example: media
-          description: Resource type (always `media`).
-        attributes:
-          $ref: '#/components/schemas/MediaAttributes'
+          description: Human-readable description of the error.
+        meta:
+          $ref: '#/components/schemas/ErrorMeta'
     ErrorList:
       type: array
       description: List of errors.
