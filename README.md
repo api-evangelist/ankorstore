@@ -64,6 +64,157 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Ankorstore is a company surfaced as a portfolio company of index-ventures and added to the API Evangelist network as a stub for enrichment. Sector: retail. This profile is a lead awaiting the enrichment pipeline.
+Ankorstore is a European B2B wholesale marketplace that connects independent brands with independent retailers across Europe. Its public developer platform lets brands and their technical partners programmatically manage their presence on the marketplace: sync product catalogs and stock, update prices, process and transition orders, request shipping quotes and schedule pickups, manage Ankorstore Fulfillment Center replenishments, run OrderPay flows for a brand's own customers, and subscribe to real-time webhook notifications. The API is built on the JSON:API specification, secured with OAuth2 client credentials, and ships alongside the ASTRAL stock-tracking/logistics API and a fulfillment media service, with a public sandbox environment and a downloadable mock server for testing.
 
-Source: portfolio company of [index-ventures](https://github.com/api-evangelist/index-ventures) — https://www.ankorstore.com
+**Areas:** Company · Retail · Wholesale · Marketplace · E-Commerce · Ordering · Fulfillment · Catalog · Webhook · JSON:API
+
+## Ankorstore on APIs.io
+
+Everything profiled for Ankorstore is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/ankorstore/](https://apis.io/providers/ankorstore/)** — or go straight to one of the APIs or properties below.
+
+### APIs (21)
+
+- [Ankorstore Applications API](https://apis.io/apis/ankorstore/ankorstore-applications-api/) — The Applications API from Ankorstore — 1 operation(s) for applications.
+- [Ankorstore Brands API](https://apis.io/apis/ankorstore/ankorstore-brands-api/) — The Brands API from Ankorstore — 8 operation(s) for brands.
+- [Ankorstore Catalog API](https://apis.io/apis/ankorstore/ankorstore-catalog-api/) — ℹ️ This section describes the API endpoints that you can use to manage your catalog resources, such as products, product variants etc. ## 💡 Working with…
+- [Ankorstore Catalog Exchange API](https://apis.io/apis/ankorstore/ankorstore-catalog-exchange-api/) — The Catalog Exchange API from Ankorstore — 3 operation(s) for catalog exchange.
+- [Ankorstore Catalog Integrations API](https://apis.io/apis/ankorstore/ankorstore-catalog-integrations-api/) — ## 👋 Getting Started The catalogue integration process relies on the concept of operations. An operation is a batch of records representing the products to…
+- [Ankorstore Deprecated API](https://apis.io/apis/ankorstore/ankorstore-deprecated-api/) — ℹ️ Here you can find the endpoints which are currently deprecated and will be removed in the future versions of the API. We strongly encourage you to…
+- [Ankorstore Fulfillment API](https://apis.io/apis/ankorstore/ankorstore-fulfillment-api/) — ℹ️ Here you can find the information and endpoint specification related to fulfillment of the orders. ## 💡 About Fulfillment _Fulfillment_ is the process of…
+- [Ankorstore General API](https://apis.io/apis/ankorstore/ankorstore-general-api/) — ℹ️ This section contains general-purpose endpoints that are transversal to the system. These endpoints provide reference data useful across different…
+- [Ankorstore Integration API](https://apis.io/apis/ankorstore/ankorstore-integration-api/) — The Integration API from Ankorstore — 1 operation(s) for integration.
+- [Ankorstore Locations API](https://apis.io/apis/ankorstore/ankorstore-locations-api/) — The Locations API from Ankorstore — 1 operation(s) for locations.
+- [Ankorstore Media API](https://apis.io/apis/ankorstore/ankorstore-media-api/) — Operations for documents linked to fulfillment requests
+- [Ankorstore Movements API](https://apis.io/apis/ankorstore/ankorstore-movements-api/) — The Movements API from Ankorstore — 2 operation(s) for movements.
+- [Ankorstore Ordering API](https://apis.io/apis/ankorstore/ankorstore-ordering-api/) — ℹ️ This section of API allows to manage different types of orders in the system. Depending on the order type, there are different endpoints available to…
+- [Ankorstore OrderPay API](https://apis.io/apis/ankorstore/ankorstore-orderpay-api/) — ℹ️ This section describes the API endpoints for managing _OrderPay_ orders and customers. OrderPay allows brands to create and manage orders for their own…
+- [Ankorstore Shipping API](https://apis.io/apis/ankorstore/ankorstore-shipping-api/) — ℹ️ Here your can find endpoints related to different types of shipping, available on the platform. <div class="warning"> Please note, that shipping…
+- [Ankorstore State API](https://apis.io/apis/ankorstore/ankorstore-state-api/) — The State API from Ankorstore — 1 operation(s) for state.
+- [Ankorstore Stock Management API](https://apis.io/apis/ankorstore/ankorstore-stock-management-api/) — The Stock Management API from Ankorstore — 1 operation(s) for stock management.
+- [Ankorstore Testing API](https://apis.io/apis/ankorstore/ankorstore-testing-api/) — ℹ️ This section is dedicated to the testing API during development process. The listed endpoints are **not available** on production environment. ###…
+- [Ankorstore User API](https://apis.io/apis/ankorstore/ankorstore-user-api/) — ℹ️ This section describes the API endpoints for retrieving user and platform configuration. ## 💡 User Configuration The user configuration endpoints return…
+- [Ankorstore Users API](https://apis.io/apis/ankorstore/ankorstore-users-api/) — The Users API from Ankorstore — 1 operation(s) for users.
+- [Ankorstore Webhooks API](https://apis.io/apis/ankorstore/ankorstore-webhooks-api/) — ℹ️ This section describes the API endpoints which can be used for managing webhook subscriptions. ## 💡 Overview In order to be able to manage Webhook…
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### AsyncAPI (1)
+
+Event-driven and webhook contracts.
+
+- [Ankorstore Webhooks](https://apis.io/asyncapis/ankorstore/ankorstore-webhooks/)
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [ankorstore](https://apis.io/servers/ankorstore/ankorstore/)
+
+#### Collections (21)
+
+Postman and Open Collection request collections.
+
+- [Ankorstore Stock Tracking and Logistics Applications API](https://apis.io/collections/ankorstore/open-ankorstore-applications-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Brands API](https://apis.io/collections/ankorstore/open-ankorstore-brands-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Catalog API](https://apis.io/collections/ankorstore/open-ankorstore-catalog-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Catalog Exchange API](https://apis.io/collections/ankorstore/open-ankorstore-catalog-exchange-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Catalog Integrations API](https://apis.io/collections/ankorstore/open-ankorstore-catalog-integrations-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Deprecated API](https://apis.io/collections/ankorstore/open-ankorstore-deprecated-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Fulfillment API](https://apis.io/collections/ankorstore/open-ankorstore-fulfillment-api/)
+- [Ankorstore Stock Tracking and Logistics Applications General API](https://apis.io/collections/ankorstore/open-ankorstore-general-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Integration API](https://apis.io/collections/ankorstore/open-ankorstore-integration-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Locations API](https://apis.io/collections/ankorstore/open-ankorstore-locations-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Media API](https://apis.io/collections/ankorstore/open-ankorstore-media-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Movements API](https://apis.io/collections/ankorstore/open-ankorstore-movements-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Ordering API](https://apis.io/collections/ankorstore/open-ankorstore-ordering-api/)
+- [Ankorstore Stock Tracking and Logistics Applications OrderPay API](https://apis.io/collections/ankorstore/open-ankorstore-orderpay-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Shipping API](https://apis.io/collections/ankorstore/open-ankorstore-shipping-api/)
+- [Ankorstore Stock Tracking and Logistics Applications State API](https://apis.io/collections/ankorstore/open-ankorstore-state-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Stock Management API](https://apis.io/collections/ankorstore/open-ankorstore-stock-management-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Testing API](https://apis.io/collections/ankorstore/open-ankorstore-testing-api/)
+- [Ankorstore Stock Tracking and Logistics Applications User API](https://apis.io/collections/ankorstore/open-ankorstore-user-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Users API](https://apis.io/collections/ankorstore/open-ankorstore-users-api/)
+- [Ankorstore Stock Tracking and Logistics Applications Webhooks API](https://apis.io/collections/ankorstore/open-ankorstore-webhooks-api/)
+
+#### Overlays (3)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Ankorstore Astral Overlay](https://apis.io/overlays/ankorstore/ankorstore-astral-overlay/)
+- [Ankorstore Fulfillment Overlay](https://apis.io/overlays/ankorstore/ankorstore-fulfillment-overlay/)
+- [Ankorstore Main Overlay](https://apis.io/overlays/ankorstore/ankorstore-main-overlay/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Ankorstore Authentication](https://apis.io/security/ankorstore/ankorstore-authentication/)
+- [Ankorstore Domain Security](https://apis.io/security/ankorstore/ankorstore-domain-security/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://www.ankorstore.com)
+- [Documentation](https://ankorstore.github.io/api-docs/)
+- [Getting started](https://ankorstore.github.io/api-docs/#section/Getting-Started)
+- [API reference](https://ankorstore.github.io/api-docs/)
+- [Sign up](https://www.ankorstore.com/register)
+- [GitHub](https://github.com/ankorstore)
+
+## API Evangelist rating
+
+**Kin Score 43.3** — developing · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 78.6 |
+| Contract quality | 58.6 |
+| Contract governance | 4.5 |
+| Operational transparency | 34.2 |
+| Developer ergonomics | 54.2 |
+| Access clarity | 13.2 |
+
+**Agent readiness 38.9** — agent-native
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | — |
+| Auth Clarity | negotiable (partial credit) |
+| Idempotency | documented (partial credit) |
+| Error Semantics | documented (partial credit) |
+| OpenAPI Examples | verified |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | yes |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+| Pagination Ratio | — |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 16.7** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/ankorstore/](https://apis.io/providers/ankorstore/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Ankorstore: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/ankorstore/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
